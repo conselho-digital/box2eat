@@ -1,10 +1,24 @@
-# nexoraIA
+# Roteiro Animado
 
-Painel de vendas (`index.html`), publicado via GitHub Pages.
+Ferramenta 100% client-side (sem backend, sem custo de API) para criar vídeos simples de avatares conversando. Publicada via GitHub Pages através do `index.html`, funciona em desktop e mobile.
 
-## Criação de vídeos
+## Como usar
 
-O diretório [`remotion-videos/`](./remotion-videos) contém um projeto [Remotion](https://www.remotion.dev/) para criar vídeos (demos, anúncios, tutoriais) do SaaS usando React.
+1. **Avatares**: monte personagens simples (forma da cabeça, cores, olhos, cabelo) e salve.
+2. **Roteiro**: adicione falas, escolha o personagem e um gesto opcional (acenar/apontar), reordene com as setas.
+3. **Palco**: toque/clique em Reproduzir — a câmera foca em quem está falando, a boca anima e o texto é narrado com a Web Speech API (voz do navegador).
+
+Tudo é salvo automaticamente no `localStorage` do navegador (avatares e roteiro).
+
+## Limitações do MVP
+
+- Não exporta vídeo ainda (fase 2 — gravação de tela via `MediaRecorder`).
+- TTS depende das vozes instaladas no navegador/SO do usuário.
+- Animações são simples (SVG + CSS), não é geração de vídeo por IA.
+
+## Criação de vídeos (Remotion)
+
+O diretório [`remotion-videos/`](./remotion-videos) contém um projeto [Remotion](https://www.remotion.dev/) para criar vídeos (demos, anúncios, tutoriais) usando React.
 
 ```console
 cd remotion-videos
@@ -12,10 +26,6 @@ npm i
 npm run dev      # abre o Remotion Studio para editar/pré-visualizar
 npx remotion render   # renderiza o vídeo final
 ```
-
-## Roteiro Animado (avatares + TTS, sem custo)
-
-O diretório [`roteiro-animado/`](./roteiro-animado) é uma página independente (100% client-side, sem backend) onde dá pra criar personagens/avatares simples, escrever um roteiro de falas e reproduzir a cena com foco de câmera, boca animada e narração via Web Speech API. Publicada via GitHub Pages em `/roteiro-animado/`.
 
 ## Navegação assistida (Chrome DevTools MCP)
 
