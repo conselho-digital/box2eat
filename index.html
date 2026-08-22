@@ -133,6 +133,13 @@ input[type=color]{width:48px;height:38px;border:1px solid var(--border2);border-
         <label>Nome</label>
         <input type="text" id="f-nome" placeholder="Ex: Ana">
 
+        <label>Espécie</label>
+        <select id="f-species">
+          <option value="humano">Humano</option>
+          <option value="cachorro">Cachorro</option>
+          <option value="gato">Gato</option>
+        </select>
+
         <label>Forma da cabeça</label>
         <select id="f-head">
           <option value="circle">Redonda</option>
@@ -140,7 +147,7 @@ input[type=color]{width:48px;height:38px;border:1px solid var(--border2);border-
           <option value="rounded">Oval</option>
         </select>
 
-        <label>Cor da pele</label>
+        <label id="lbl-skin">Cor da pele</label>
         <div class="row-inline">
           <input type="color" id="f-skin" value="#f2c9a0">
         </div>
@@ -152,15 +159,10 @@ input[type=color]{width:48px;height:38px;border:1px solid var(--border2);border-
           <option value="happy">Sorridentes</option>
         </select>
 
-        <label>Cabelo</label>
-        <select id="f-hair">
-          <option value="none">Careca</option>
-          <option value="short">Curto</option>
-          <option value="long">Longo</option>
-          <option value="spiky">Espetado</option>
-        </select>
+        <label id="lbl-hair">Cabelo</label>
+        <select id="f-hair"></select>
 
-        <label>Cor do cabelo</label>
+        <label id="lbl-haircolor">Cor do cabelo</label>
         <input type="color" id="f-haircolor" value="#3b2a1a">
 
         <label>Cor da roupa</label>
@@ -292,6 +294,34 @@ function hairSvg(style, color){
   if(style==="spiky") return `<path d="M62 68 L70 40 L80 62 L92 32 L100 60 L108 32 L120 62 L130 40 L138 68 Q100 45 62 68 Z" fill="${color}"/>`;
   return "";
 }
+function dogExtras(style, color, skin){
+  const snout = `<ellipse cx="100" cy="103" rx="15" ry="10" fill="${skin}"/><circle cx="100" cy="98" r="3.5" fill="#1e293b"/>`;
+  const ears = style==="orelha-erguida"
+    ? `<path d="M64 68 L54 34 L80 58 Z" fill="${color}"/><path d="M136 68 L146 34 L120 58 Z" fill="${color}"/>`
+    : `<ellipse cx="64" cy="82" rx="12" ry="24" fill="${color}" transform="rotate(-18 64 82)"/><ellipse cx="136" cy="82" rx="12" ry="24" fill="${color}" transform="rotate(18 136 82)"/>`;
+  return ears + snout;
+}
+function catExtras(style, color, skin){
+  const face = `<circle cx="100" cy="99" r="2.6" fill="#1e293b"/>
+    <line x1="82" y1="101" x2="58" y2="97" stroke="#1e293b" stroke-width="1.4"/>
+    <line x1="82" y1="105" x2="58" y2="107" stroke="#1e293b" stroke-width="1.4"/>
+    <line x1="118" y1="101" x2="142" y2="97" stroke="#1e293b" stroke-width="1.4"/>
+    <line x1="118" y1="105" x2="142" y2="107" stroke="#1e293b" stroke-width="1.4"/>`;
+  const ears = style==="orelha-dobrada"
+    ? `<path d="M68 66 Q58 46 78 53 Z" fill="${color}"/><path d="M132 66 Q142 46 122 53 Z" fill="${color}"/>`
+    : `<path d="M64 70 L58 32 L86 58 Z" fill="${color}"/><path d="M136 70 L142 32 L114 58 Z" fill="${color}"/>`;
+  return ears + face;
+}
+function topDetailsSvg(cfg){
+  if(cfg.species==="cachorro") return dogExtras(cfg.hair, cfg.hairColor, cfg.skin);
+  if(cfg.species==="gato") return catExtras(cfg.hair, cfg.hairColor, cfg.skin);
+  return hairSvg(cfg.hair, cfg.hairColor);
+}
+const HAIR_OPTIONS = {
+  humano: [["none","Careca"],["short","Curto"],["long","Longo"],["spiky","Espetado"]],
+  cachorro: [["orelha-caida","Orelhas caídas"],["orelha-erguida","Orelhas erguidas"]],
+  gato: [["orelha-pontuda","Orelhas em pé"],["orelha-dobrada","Orelhas dobradas"]],
+};
 function avatarSvgMarkup(cfg){
   return `
     <g data-part="body-group">
@@ -311,7 +341,7 @@ function avatarSvgMarkup(cfg){
       <!-- boca: retangulo que escala verticalmente para simular fala -->
       <rect data-part="mouth" x="88" y="104" width="24" height="6" rx="3" fill="#7a3b3b"
             style="transform-origin:100px 107px"/>
-      ${hairSvg(cfg.hair, cfg.hairColor)}
+      ${topDetailsSvg(cfg)}
     </g>`;
 }
 function renderAvatarInto(svgEl, cfg){
@@ -324,6 +354,7 @@ function renderAvatarInto(svgEl, cfg){
 /* ---------------------------------------------------------------- */
 const previewSvg = document.getElementById("preview-svg");
 const fNome = document.getElementById("f-nome");
+const fSpecies = document.getElementById("f-species");
 const fHead = document.getElementById("f-head");
 const fSkin = document.getElementById("f-skin");
 const fEyes = document.getElementById("f-eyes");
@@ -331,10 +362,30 @@ const fHair = document.getElementById("f-hair");
 const fHairColor = document.getElementById("f-haircolor");
 const fOutfit = document.getElementById("f-outfit");
 const editHint = document.getElementById("edit-hint");
+const lblSkin = document.getElementById("lbl-skin");
+const lblHair = document.getElementById("lbl-hair");
+const lblHairColor = document.getElementById("lbl-haircolor");
+
+function populateHairOptions(species, selected){
+  const opts = HAIR_OPTIONS[species] || HAIR_OPTIONS.humano;
+  fHair.innerHTML = opts.map(([v,label])=>`<option value="${v}">${label}</option>`).join("");
+  fHair.value = selected && opts.some(([v])=>v===selected) ? selected : opts[0][0];
+}
+function applySpeciesLabels(species){
+  const isAnimal = species==="cachorro" || species==="gato";
+  lblSkin.textContent = isAnimal ? "Cor da pelagem" : "Cor da pele";
+  lblHair.textContent = isAnimal ? "Orelhas" : "Cabelo";
+  lblHairColor.textContent = isAnimal ? "Cor das orelhas" : "Cor do cabelo";
+}
+fSpecies.addEventListener("change", ()=>{
+  applySpeciesLabels(fSpecies.value);
+  populateHairOptions(fSpecies.value);
+  updatePreview();
+});
 
 function currentFormConfig(){
   return {
-    head: fHead.value, skin: fSkin.value, eyes: fEyes.value,
+    species: fSpecies.value, head: fHead.value, skin: fSkin.value, eyes: fEyes.value,
     hair: fHair.value, hairColor: fHairColor.value, outfit: fOutfit.value
   };
 }
@@ -343,8 +394,10 @@ function updatePreview(){ renderAvatarInto(previewSvg, currentFormConfig()); }
 
 function resetForm(){
   editingAvatarId = null;
-  fNome.value = ""; fHead.value="circle"; fSkin.value="#f2c9a0"; fEyes.value="dots";
-  fHair.value="short"; fHairColor.value="#3b2a1a"; fOutfit.value="#1D4ED8";
+  fNome.value = ""; fSpecies.value="humano"; fHead.value="circle"; fSkin.value="#f2c9a0"; fEyes.value="dots";
+  applySpeciesLabels("humano");
+  populateHairOptions("humano","short");
+  fHairColor.value="#3b2a1a"; fOutfit.value="#1D4ED8";
   editHint.style.display = "none";
   updatePreview();
 }
@@ -386,8 +439,11 @@ function renderAvatarList(){
     });
     card.addEventListener("click", ()=>{
       editingAvatarId = a.id;
-      fNome.value = a.name; fHead.value=a.head; fSkin.value=a.skin; fEyes.value=a.eyes;
-      fHair.value=a.hair; fHairColor.value=a.hairColor; fOutfit.value=a.outfit;
+      const species = a.species || "humano";
+      fNome.value = a.name; fSpecies.value=species; fHead.value=a.head; fSkin.value=a.skin; fEyes.value=a.eyes;
+      applySpeciesLabels(species);
+      populateHairOptions(species, a.hair);
+      fHairColor.value=a.hairColor; fOutfit.value=a.outfit;
       editHint.style.display = "block";
       updatePreview();
       window.scrollTo({top:0, behavior:"smooth"});
@@ -398,6 +454,29 @@ function renderAvatarList(){
 
 function escapeHtml(s){
   return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ---------------------------------------------------------------- */
+/* Personagens padrão (semeados na primeira visita)                   */
+/* ---------------------------------------------------------------- */
+const DEFAULT_AVATARS = [
+  {name:"Carla",       species:"humano",   head:"rounded", skin:"#f2c9a0", eyes:"round", hair:"long",  hairColor:"#6b3b1f", outfit:"#EF4444"},
+  {name:"Beatriz",     species:"humano",   head:"circle",  skin:"#8a5a3c", eyes:"happy", hair:"long",  hairColor:"#1c1c1c", outfit:"#7C3AED"},
+  {name:"João",        species:"humano",   head:"square",  skin:"#f2c9a0", eyes:"dots",  hair:"short", hairColor:"#2b2b2b", outfit:"#1D4ED8"},
+  {name:"Pedro",       species:"humano",   head:"circle",  skin:"#c98a5b", eyes:"round", hair:"spiky", hairColor:"#4a2e12", outfit:"#10B981"},
+  {name:"Théo",        species:"humano",   head:"circle",  skin:"#f6d3a8", eyes:"happy", hair:"short", hairColor:"#3b2a1a", outfit:"#F59E0B"},
+  {name:"Sofia",       species:"humano",   head:"rounded", skin:"#f6d3a8", eyes:"happy", hair:"long",  hairColor:"#8a4b1f", outfit:"#EC4899"},
+  {name:"Dona Alice",  species:"humano",   head:"rounded", skin:"#e8c9a0", eyes:"dots",  hair:"long",  hairColor:"#e5e5e5", outfit:"#64748B"},
+  {name:"Seu Antônio", species:"humano",   head:"square",  skin:"#e0b98f", eyes:"dots",  hair:"short", hairColor:"#d1d5db", outfit:"#334155"},
+  {name:"Rex",         species:"cachorro", head:"circle",  skin:"#c88a4a", eyes:"dots",  hair:"orelha-caida",   hairColor:"#7a4a1f", outfit:"#EF4444"},
+  {name:"Bolt",        species:"cachorro", head:"circle",  skin:"#f5f5f5", eyes:"round", hair:"orelha-erguida", hairColor:"#1c1c1c", outfit:"#3b82f6"},
+  {name:"Mimi",        species:"gato",     head:"circle",  skin:"#f2b34d", eyes:"happy", hair:"orelha-pontuda", hairColor:"#c9852e", outfit:"#7C3AED"},
+  {name:"Tom",         species:"gato",     head:"circle",  skin:"#6b7280", eyes:"round", hair:"orelha-dobrada", hairColor:"#4b5563", outfit:"#10B981"},
+];
+function seedDefaultAvatars(){
+  if(avatars.length > 0) return;
+  avatars = DEFAULT_AVATARS.map(cfg=>Object.assign({id:uid()}, cfg));
+  saveAvatars(avatars);
 }
 
 /* ---------------------------------------------------------------- */
@@ -702,6 +781,7 @@ document.getElementById("btn-prev").addEventListener("click", ()=>{
 /* Inicialização                                                      */
 /* ---------------------------------------------------------------- */
 resetForm();
+seedDefaultAvatars();
 renderAvatarList();
 renderFalas();
 showView(localStorage.getItem("roteiro_tab") || "avatares");
