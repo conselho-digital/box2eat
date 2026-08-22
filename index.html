@@ -631,7 +631,7 @@ function renderFalas(){
         </div>
         <label style="margin-top:8px">Gesto</label>
         <select data-field="gesto">
-          <option value="nenhum" ${f.gesto==="nenhum"?"selected":""}>Nenhum</option>
+          <option value="nenhum" ${f.gesto==="nenhum"?"selected":""}>Automático (gesticula ao falar)</option>
           <option value="acenar" ${f.gesto==="acenar"?"selected":""}>Acenar</option>
           <option value="apontar" ${f.gesto==="apontar"?"selected":""}>Apontar</option>
         </select>
@@ -791,6 +791,15 @@ function setMouth(avatarId, open){
   const mouth = slot.querySelector('[data-part="mouth"]');
   if(mouth) mouth.style.transform = open ? "scaleY(2.4)" : "scaleY(1)";
 }
+function setArmPose(avatarId, rAngle, lAngle){
+  const slot = slotFor(avatarId);
+  if(!slot) return;
+  const rPivot = slot.querySelector('[data-part="arm-r-pivot"]');
+  const lPivot = slot.querySelector('[data-part="arm-l-pivot"]');
+  if(!rPivot || !lPivot) return;
+  rPivot.setAttribute("transform", `translate(138,150) rotate(${rAngle})`);
+  lPivot.setAttribute("transform", `translate(62,150) rotate(${lAngle})`);
+}
 function setArm(avatarId, gesto, on){
   const slot = slotFor(avatarId);
   if(!slot) return;
@@ -799,36 +808,49 @@ function setArm(avatarId, gesto, on){
   if(!rPivot || !lPivot) return;
   rPivot.style.transition = "transform .35s ease";
   lPivot.style.transition = "transform .35s ease";
-  if(!on || gesto==="nenhum"){
-    rPivot.setAttribute("transform","translate(138,150) rotate(70)");
-    lPivot.setAttribute("transform","translate(62,150) rotate(-70)");
+  if(!on){
+    setArmPose(avatarId, 70, -70); // braço abaixado (descanso)
     return;
   }
   if(gesto==="apontar"){
-    rPivot.setAttribute("transform","translate(138,150) rotate(-10)");
-    lPivot.setAttribute("transform","translate(62,150) rotate(-70)");
+    setArmPose(avatarId, -10, -70);
     return;
   }
   if(gesto==="acenar"){
-    rPivot.setAttribute("transform","translate(138,150) rotate(-30)");
-    lPivot.setAttribute("transform","translate(62,150) rotate(-70)");
+    setArmPose(avatarId, -30, -70);
+    return;
   }
+  // automático: pose inicial de gesticulação, o loop assume a partir daqui
+  setArmPose(avatarId, 40, -40);
 }
 
+// Movimento automático dos braços enquanto o personagem fala.
+// "Automático" (sem gesto escolhido) gesticula os dois braços de leve;
+// "Acenar" faz um aceno amplo; "Apontar" mantém o braço estendido, parado.
 let waveTimer = null;
 function startGestureLoop(avatarId, gesto){
   stopGestureLoop();
+  setArm(avatarId, gesto, true);
   if(gesto==="acenar"){
     let flip = false;
     waveTimer = setInterval(()=>{
-      const slot = slotFor(avatarId);
-      if(!slot) return;
-      const rPivot = slot.querySelector('[data-part="arm-r-pivot"]');
-      if(rPivot) rPivot.setAttribute("transform", `translate(138,150) rotate(${flip?-45:-15})`);
+      setArmPoseIfPresent(avatarId, flip?-45:-15, -70);
       flip = !flip;
     }, 260);
+  } else if(gesto!=="apontar"){
+    // automático: gesticulação natural e sutil, sem precisar escolher nada
+    let phase = 0;
+    waveTimer = setInterval(()=>{
+      const rAngle = 40 + Math.sin(phase) * 20;
+      const lAngle = -40 - Math.sin(phase + 1.4) * 20;
+      setArmPoseIfPresent(avatarId, rAngle, lAngle);
+      phase += 0.5;
+    }, 180);
   }
-  setArm(avatarId, gesto, true);
+}
+function setArmPoseIfPresent(avatarId, rAngle, lAngle){
+  if(!slotFor(avatarId)) return;
+  setArmPose(avatarId, rAngle, lAngle);
 }
 function stopGestureLoop(){
   if(waveTimer){ clearInterval(waveTimer); waveTimer = null; }
