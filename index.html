@@ -73,6 +73,30 @@ input[type=color]{width:48px;height:38px;border:1px solid var(--border2);border-
 
 .empty{color:var(--text3);font-size:13px;text-align:center;padding:30px 10px}
 
+/* --- Paleta de cores --- */
+.swatch-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.swatch{width:28px;height:28px;border-radius:50%;padding:0;box-shadow:0 0 0 1px var(--border2);cursor:pointer;flex-shrink:0}
+.swatch.selected{box-shadow:0 0 0 2px var(--primary),0 0 0 4px #fff inset}
+.swatch-custom{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)}
+
+/* --- Seletor de personagem com foto --- */
+.avatar-picker{position:relative}
+.avatar-picker-btn{display:flex;align-items:center;gap:8px;width:100%;background:#fff;border:1px solid var(--border2);border-radius:var(--r);padding:5px 10px;min-height:46px;text-align:left}
+.avatar-picker-btn svg{width:30px;height:39px;flex-shrink:0}
+.avatar-picker-btn .apb-name{flex:1;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar-picker-panel{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:6px;margin-top:6px;padding:8px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);max-height:200px;overflow-y:auto}
+.avatar-picker-panel[hidden]{display:none}
+.avatar-picker-option{background:#fff;border:1px solid var(--border);border-radius:8px;padding:4px;cursor:pointer;text-align:center}
+.avatar-picker-option svg{width:100%}
+.avatar-picker-option span{display:block;font-size:10px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text2)}
+.avatar-picker-option.selected{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary) inset}
+
+/* --- Cenários --- */
+.cenario-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.cenario-swatch{width:66px;height:46px;border-radius:8px;border:2px solid var(--border);position:relative;overflow:hidden;padding:0}
+.cenario-swatch span{position:absolute;bottom:0;left:0;right:0;background:#00000070;color:#fff;font-size:9px;padding:2px 0;text-align:center}
+.cenario-swatch.selected{border-color:var(--primary)}
+
 /* --- Falas / roteiro --- */
 .fala-row{display:grid;grid-template-columns:150px 1fr 130px auto;gap:10px;align-items:start;padding:12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;background:#fff}
 .fala-row .actions{display:flex;flex-direction:column;gap:4px}
@@ -148,8 +172,9 @@ input[type=color]{width:48px;height:38px;border:1px solid var(--border2);border-
         </select>
 
         <label id="lbl-skin">Cor da pele</label>
-        <div class="row-inline">
-          <input type="color" id="f-skin" value="#f2c9a0">
+        <div class="swatch-row" id="swatches-skin"></div>
+        <div class="row-inline" style="margin-top:6px">
+          <span class="swatch-custom">Outra cor <input type="color" id="f-skin" value="#f2c9a0"></span>
         </div>
 
         <label>Olhos</label>
@@ -163,10 +188,25 @@ input[type=color]{width:48px;height:38px;border:1px solid var(--border2);border-
         <select id="f-hair"></select>
 
         <label id="lbl-haircolor">Cor do cabelo</label>
-        <input type="color" id="f-haircolor" value="#3b2a1a">
+        <div class="swatch-row" id="swatches-haircolor"></div>
+        <div class="row-inline" style="margin-top:6px">
+          <span class="swatch-custom">Outra cor <input type="color" id="f-haircolor" value="#3b2a1a"></span>
+        </div>
 
         <label>Cor da roupa</label>
-        <input type="color" id="f-outfit" value="#1D4ED8">
+        <div class="swatch-row" id="swatches-outfit"></div>
+        <div class="row-inline" style="margin-top:6px">
+          <span class="swatch-custom">Outra cor <input type="color" id="f-outfit" value="#1D4ED8"></span>
+        </div>
+
+        <label>Voz</label>
+        <select id="f-voice"></select>
+
+        <label>Velocidade da fala</label>
+        <input type="range" id="f-rate" min="0.7" max="1.3" step="0.05" value="1">
+
+        <label>Tom de voz</label>
+        <input type="range" id="f-pitch" min="0.6" max="1.6" step="0.05" value="1">
 
         <div style="margin-top:16px;display:flex;gap:8px">
           <button class="btn btn-primary" id="btn-save-avatar" style="flex:1">💾 Salvar avatar</button>
@@ -197,6 +237,8 @@ input[type=color]{width:48px;height:38px;border:1px solid var(--border2);border-
   <section id="view-palco" class="view">
     <div class="card">
       <h2 style="margin-bottom:14px">Palco</h2>
+      <label style="margin-top:0">Cenário</label>
+      <div class="cenario-row" id="cenario-row"></div>
       <div class="stage-wrap">
         <div class="stage" id="stage"></div>
       </div>
@@ -361,10 +403,67 @@ const fEyes = document.getElementById("f-eyes");
 const fHair = document.getElementById("f-hair");
 const fHairColor = document.getElementById("f-haircolor");
 const fOutfit = document.getElementById("f-outfit");
+const fVoice = document.getElementById("f-voice");
+const fRate = document.getElementById("f-rate");
+const fPitch = document.getElementById("f-pitch");
 const editHint = document.getElementById("edit-hint");
 const lblSkin = document.getElementById("lbl-skin");
 const lblHair = document.getElementById("lbl-hair");
 const lblHairColor = document.getElementById("lbl-haircolor");
+
+/* --- Paletas de cores prontas --- */
+const SKIN_TONES = ["#ffe0bd","#f2c9a0","#e0ac69","#c68642","#8d5524","#5c3a21","#f2b34d","#6b7280"];
+const HAIR_COLORS = ["#0a0a0a","#3b2a1a","#6b3b1f","#a0522d","#d2b48c","#e5e5e5","#ffffff","#c0392b"];
+const OUTFIT_COLORS = ["#1D4ED8","#EF4444","#10B981","#F59E0B","#7C3AED","#EC4899","#0EA5E9","#334155","#ffffff","#111827"];
+
+function renderSwatchRow(containerId, colors, inputEl){
+  const el = document.getElementById(containerId);
+  el.innerHTML = colors.map(c=>`<button type="button" class="swatch" data-color="${c}" style="background:${c}" title="${c}"></button>`).join("");
+  el.querySelectorAll(".swatch").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      inputEl.value = btn.dataset.color;
+      inputEl.dispatchEvent(new Event("input"));
+      highlightSwatches(containerId, inputEl.value);
+    });
+  });
+  highlightSwatches(containerId, inputEl.value);
+}
+function highlightSwatches(containerId, value){
+  document.getElementById(containerId).querySelectorAll(".swatch").forEach(btn=>{
+    btn.classList.toggle("selected", btn.dataset.color.toLowerCase()===String(value).toLowerCase());
+  });
+}
+function refreshAllSwatches(){
+  highlightSwatches("swatches-skin", fSkin.value);
+  highlightSwatches("swatches-haircolor", fHairColor.value);
+  highlightSwatches("swatches-outfit", fOutfit.value);
+}
+renderSwatchRow("swatches-skin", SKIN_TONES, fSkin);
+renderSwatchRow("swatches-haircolor", HAIR_COLORS, fHairColor);
+renderSwatchRow("swatches-outfit", OUTFIT_COLORS, fOutfit);
+fSkin.addEventListener("input", ()=>highlightSwatches("swatches-skin", fSkin.value));
+fHairColor.addEventListener("input", ()=>highlightSwatches("swatches-haircolor", fHairColor.value));
+fOutfit.addEventListener("input", ()=>highlightSwatches("swatches-outfit", fOutfit.value));
+
+/* --- Vozes disponíveis no navegador (gratuito, sem API paga) --- */
+let availableVoices = [];
+function populateVoiceSelect(){
+  const current = fVoice.value;
+  const sorted = [...availableVoices].sort((a,b)=>{
+    const aPt = a.lang.toLowerCase().startsWith("pt") ? 0 : 1;
+    const bPt = b.lang.toLowerCase().startsWith("pt") ? 0 : 1;
+    if(aPt!==bPt) return aPt-bPt;
+    return a.name.localeCompare(b.name);
+  });
+  fVoice.innerHTML = '<option value="">Padrão do navegador</option>' +
+    sorted.map(v=>`<option value="${escapeHtml(v.voiceURI)}">${escapeHtml(v.name)} (${escapeHtml(v.lang)})</option>`).join("");
+  if(current && sorted.some(v=>v.voiceURI===current)) fVoice.value = current;
+}
+if("speechSynthesis" in window){
+  const loadVoices = ()=>{ availableVoices = speechSynthesis.getVoices(); populateVoiceSelect(); };
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
 
 function populateHairOptions(species, selected){
   const opts = HAIR_OPTIONS[species] || HAIR_OPTIONS.humano;
@@ -386,7 +485,8 @@ fSpecies.addEventListener("change", ()=>{
 function currentFormConfig(){
   return {
     species: fSpecies.value, head: fHead.value, skin: fSkin.value, eyes: fEyes.value,
-    hair: fHair.value, hairColor: fHairColor.value, outfit: fOutfit.value
+    hair: fHair.value, hairColor: fHairColor.value, outfit: fOutfit.value,
+    voiceURI: fVoice.value, rate: parseFloat(fRate.value), pitch: parseFloat(fPitch.value)
   };
 }
 function updatePreview(){ renderAvatarInto(previewSvg, currentFormConfig()); }
@@ -398,6 +498,8 @@ function resetForm(){
   applySpeciesLabels("humano");
   populateHairOptions("humano","short");
   fHairColor.value="#3b2a1a"; fOutfit.value="#1D4ED8";
+  fVoice.value=""; fRate.value="1"; fPitch.value="1";
+  refreshAllSwatches();
   editHint.style.display = "none";
   updatePreview();
 }
@@ -414,6 +516,7 @@ document.getElementById("btn-save-avatar").addEventListener("click", ()=>{
   }
   saveAvatars(avatars);
   renderAvatarList();
+  renderFalas();
   toast("Avatar salvo!");
   resetForm();
 });
@@ -444,6 +547,8 @@ function renderAvatarList(){
       applySpeciesLabels(species);
       populateHairOptions(species, a.hair);
       fHairColor.value=a.hairColor; fOutfit.value=a.outfit;
+      fVoice.value = a.voiceURI || ""; fRate.value = a.rate || 1; fPitch.value = a.pitch || 1;
+      refreshAllSwatches();
       editHint.style.display = "block";
       updatePreview();
       window.scrollTo({top:0, behavior:"smooth"});
@@ -460,18 +565,18 @@ function escapeHtml(s){
 /* Personagens padrão (semeados na primeira visita)                   */
 /* ---------------------------------------------------------------- */
 const DEFAULT_AVATARS = [
-  {name:"Carla",       species:"humano",   head:"rounded", skin:"#f2c9a0", eyes:"round", hair:"long",  hairColor:"#6b3b1f", outfit:"#EF4444"},
-  {name:"Beatriz",     species:"humano",   head:"circle",  skin:"#8a5a3c", eyes:"happy", hair:"long",  hairColor:"#1c1c1c", outfit:"#7C3AED"},
-  {name:"João",        species:"humano",   head:"square",  skin:"#f2c9a0", eyes:"dots",  hair:"short", hairColor:"#2b2b2b", outfit:"#1D4ED8"},
-  {name:"Pedro",       species:"humano",   head:"circle",  skin:"#c98a5b", eyes:"round", hair:"spiky", hairColor:"#4a2e12", outfit:"#10B981"},
-  {name:"Théo",        species:"humano",   head:"circle",  skin:"#f6d3a8", eyes:"happy", hair:"short", hairColor:"#3b2a1a", outfit:"#F59E0B"},
-  {name:"Sofia",       species:"humano",   head:"rounded", skin:"#f6d3a8", eyes:"happy", hair:"long",  hairColor:"#8a4b1f", outfit:"#EC4899"},
-  {name:"Dona Alice",  species:"humano",   head:"rounded", skin:"#e8c9a0", eyes:"dots",  hair:"long",  hairColor:"#e5e5e5", outfit:"#64748B"},
-  {name:"Seu Antônio", species:"humano",   head:"square",  skin:"#e0b98f", eyes:"dots",  hair:"short", hairColor:"#d1d5db", outfit:"#334155"},
-  {name:"Rex",         species:"cachorro", head:"circle",  skin:"#c88a4a", eyes:"dots",  hair:"orelha-caida",   hairColor:"#7a4a1f", outfit:"#EF4444"},
-  {name:"Bolt",        species:"cachorro", head:"circle",  skin:"#f5f5f5", eyes:"round", hair:"orelha-erguida", hairColor:"#1c1c1c", outfit:"#3b82f6"},
-  {name:"Mimi",        species:"gato",     head:"circle",  skin:"#f2b34d", eyes:"happy", hair:"orelha-pontuda", hairColor:"#c9852e", outfit:"#7C3AED"},
-  {name:"Tom",         species:"gato",     head:"circle",  skin:"#6b7280", eyes:"round", hair:"orelha-dobrada", hairColor:"#4b5563", outfit:"#10B981"},
+  {name:"Carla",       species:"humano",   head:"rounded", skin:"#f2c9a0", eyes:"round", hair:"long",  hairColor:"#6b3b1f", outfit:"#EF4444", rate:1,    pitch:1},
+  {name:"Beatriz",     species:"humano",   head:"circle",  skin:"#8a5a3c", eyes:"happy", hair:"long",  hairColor:"#1c1c1c", outfit:"#7C3AED", rate:1,    pitch:1.05},
+  {name:"João",        species:"humano",   head:"square",  skin:"#f2c9a0", eyes:"dots",  hair:"short", hairColor:"#2b2b2b", outfit:"#1D4ED8", rate:1,    pitch:0.9},
+  {name:"Pedro",       species:"humano",   head:"circle",  skin:"#c98a5b", eyes:"round", hair:"spiky", hairColor:"#4a2e12", outfit:"#10B981", rate:1.05, pitch:0.95},
+  {name:"Théo",        species:"humano",   head:"circle",  skin:"#f6d3a8", eyes:"happy", hair:"short", hairColor:"#3b2a1a", outfit:"#F59E0B", rate:1.1,  pitch:1.35},
+  {name:"Sofia",       species:"humano",   head:"rounded", skin:"#f6d3a8", eyes:"happy", hair:"long",  hairColor:"#8a4b1f", outfit:"#EC4899", rate:1.05, pitch:1.4},
+  {name:"Dona Alice",  species:"humano",   head:"rounded", skin:"#e8c9a0", eyes:"dots",  hair:"long",  hairColor:"#e5e5e5", outfit:"#64748B", rate:0.85, pitch:0.9},
+  {name:"Seu Antônio", species:"humano",   head:"square",  skin:"#e0b98f", eyes:"dots",  hair:"short", hairColor:"#d1d5db", outfit:"#334155", rate:0.8,  pitch:0.75},
+  {name:"Rex",         species:"cachorro", head:"circle",  skin:"#c88a4a", eyes:"dots",  hair:"orelha-caida",   hairColor:"#7a4a1f", outfit:"#EF4444", rate:1.15, pitch:1.2},
+  {name:"Bolt",        species:"cachorro", head:"circle",  skin:"#f5f5f5", eyes:"round", hair:"orelha-erguida", hairColor:"#1c1c1c", outfit:"#3b82f6", rate:1.2,  pitch:1.25},
+  {name:"Mimi",        species:"gato",     head:"circle",  skin:"#f2b34d", eyes:"happy", hair:"orelha-pontuda", hairColor:"#c9852e", outfit:"#7C3AED", rate:1,    pitch:1.3},
+  {name:"Tom",         species:"gato",     head:"circle",  skin:"#6b7280", eyes:"round", hair:"orelha-dobrada", hairColor:"#4b5563", outfit:"#10B981", rate:0.95, pitch:1.15},
 ];
 function seedDefaultAvatars(){
   if(avatars.length > 0) return;
@@ -482,6 +587,11 @@ function seedDefaultAvatars(){
 /* ---------------------------------------------------------------- */
 /* Editor de roteiro                                                  */
 /* ---------------------------------------------------------------- */
+document.addEventListener("click", (e)=>{
+  if(e.target.closest(".avatar-picker")) return;
+  document.querySelectorAll(".avatar-picker-panel").forEach(p=>p.setAttribute("hidden",""));
+});
+
 document.getElementById("btn-add-fala").addEventListener("click", ()=>{
   if(avatars.length===0){ toast("Crie um avatar primeiro"); showView("avatares"); return; }
   falas.push({id:uid(), avatarId:avatars[0].id, texto:"", gesto:"nenhum"});
@@ -495,16 +605,30 @@ function renderFalas(){
   wrap.innerHTML = "";
   empty.style.display = falas.length===0 ? "block" : "none";
 
+  // fecha qualquer painel de seleção de personagem aberto antes de re-renderizar
+  document.querySelectorAll(".avatar-picker-panel").forEach(p=>p.setAttribute("hidden",""));
+
   falas.forEach((f, idx)=>{
     const row = document.createElement("div");
     row.className = "fala-row";
 
-    const avatarOptions = avatars.map(a=>`<option value="${a.id}" ${a.id===f.avatarId?"selected":""}>${escapeHtml(a.name)}</option>`).join("");
+    const current = avatars.find(a=>a.id===f.avatarId);
+    const optionsHtml = avatars.map(a=>`
+        <button type="button" class="avatar-picker-option ${a.id===f.avatarId?"selected":""}" data-avatar-id="${a.id}">
+          <svg viewBox="0 0 200 260"></svg><span>${escapeHtml(a.name)}</span>
+        </button>`).join("") || `<div class="empty" style="grid-column:1/-1">Nenhum avatar criado ainda.</div>`;
 
     row.innerHTML = `
       <div>
         <div class="fala-head"><span class="fala-num">${idx+1}</span><span style="font-size:11px;color:var(--text2);font-weight:600">Personagem</span></div>
-        <select data-field="avatarId">${avatarOptions || '<option value="">(sem avatares)</option>'}</select>
+        <div class="avatar-picker">
+          <button type="button" class="avatar-picker-btn" data-act="toggle-picker">
+            <svg viewBox="0 0 200 260"></svg>
+            <span class="apb-name">${current ? escapeHtml(current.name) : "(escolher)"}</span>
+            <span>▾</span>
+          </button>
+          <div class="avatar-picker-panel" hidden>${optionsHtml}</div>
+        </div>
         <label style="margin-top:8px">Gesto</label>
         <select data-field="gesto">
           <option value="nenhum" ${f.gesto==="nenhum"?"selected":""}>Nenhum</option>
@@ -524,7 +648,23 @@ function renderFalas(){
       </div>
     `;
 
-    row.querySelector('[data-field="avatarId"]').addEventListener("change", e=>{ f.avatarId = e.target.value; saveFalas(falas); });
+    if(current) renderAvatarInto(row.querySelector(".avatar-picker-btn svg"), current);
+    row.querySelectorAll(".avatar-picker-option").forEach(opt=>{
+      renderAvatarInto(opt.querySelector("svg"), avatars.find(a=>a.id===opt.dataset.avatarId));
+      opt.addEventListener("click", ()=>{
+        f.avatarId = opt.dataset.avatarId;
+        saveFalas(falas);
+        renderFalas();
+      });
+    });
+    const pickerPanel = row.querySelector(".avatar-picker-panel");
+    row.querySelector('[data-act="toggle-picker"]').addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const willOpen = pickerPanel.hasAttribute("hidden");
+      document.querySelectorAll(".avatar-picker-panel").forEach(p=>p.setAttribute("hidden",""));
+      if(willOpen) pickerPanel.removeAttribute("hidden");
+    });
+
     row.querySelector('[data-field="gesto"]').addEventListener("change", e=>{ f.gesto = e.target.value; saveFalas(falas); });
     row.querySelector('[data-field="texto"]').addEventListener("input", e=>{ f.texto = e.target.value; saveFalas(falas); });
 
@@ -551,8 +691,36 @@ function renderFalas(){
 /* Palco / Reprodução                                                 */
 /* ---------------------------------------------------------------- */
 const stageEl = document.getElementById("stage");
+const stageWrapEl = document.querySelector(".stage-wrap");
 const progressBar = document.getElementById("progress-bar");
 const falaAtualLabel = document.getElementById("fala-atual-label");
+
+/* --- Cenários (fundos prontos, sem imagens externas) --- */
+const LS_CENARIO = "roteiro_cenario";
+const CENARIOS = [
+  {id:"dia",        label:"Dia",        css:"linear-gradient(180deg,#87ceeb 0%,#87ceeb 62%,#7ec850 62%,#7ec850 100%)"},
+  {id:"entardecer", label:"Entardecer", css:"linear-gradient(180deg,#ff9a76 0%,#ffcf7d 45%,#d9a066 62%,#d9a066 100%)"},
+  {id:"noite",      label:"Noite",      css:"radial-gradient(circle at 80% 15%,#f5f0dc 0 6px,transparent 7px),linear-gradient(180deg,#0b1026 0%,#1b2350 62%,#232946 62%,#232946 100%)"},
+  {id:"sala",       label:"Sala",       css:"linear-gradient(180deg,#e8dcc8 0%,#e8dcc8 65%,#c9a876 65%,#c9a876 100%)"},
+  {id:"praia",      label:"Praia",      css:"linear-gradient(180deg,#bfe9f5 0%,#bfe9f5 55%,#3aa7c9 55%,#3aa7c9 63%,#f2d59b 63%,#f2d59b 100%)"},
+  {id:"parque",     label:"Parque",     css:"linear-gradient(180deg,#a9e0f0 0%,#a9e0f0 50%,#5fae4a 50%,#5fae4a 100%)"},
+];
+function renderCenarioPicker(){
+  const wrap = document.getElementById("cenario-row");
+  wrap.innerHTML = CENARIOS.map(c=>`<button type="button" class="cenario-swatch" data-id="${c.id}" style="background:${c.css}"><span>${c.label}</span></button>`).join("");
+  wrap.querySelectorAll(".cenario-swatch").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      localStorage.setItem(LS_CENARIO, btn.dataset.id);
+      applyCenario();
+    });
+  });
+}
+function applyCenario(){
+  const id = localStorage.getItem(LS_CENARIO) || CENARIOS[0].id;
+  const c = CENARIOS.find(x=>x.id===id) || CENARIOS[0];
+  stageWrapEl.style.background = c.css;
+  document.querySelectorAll(".cenario-swatch").forEach(b=>b.classList.toggle("selected", b.dataset.id===c.id));
+}
 
 let playIndex = 0;
 let isPlaying = false;
@@ -687,11 +855,17 @@ function resetPlaybackUI(){
   hideBubbles();
 }
 
-function speak(text){
+function speak(text, cfg){
   return new Promise(resolve=>{
     if(!("speechSynthesis" in window) || !text){ resolve(); return; }
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "pt-BR";
+    if(cfg){
+      const voice = cfg.voiceURI && availableVoices.find(v=>v.voiceURI===cfg.voiceURI);
+      if(voice){ utter.voice = voice; utter.lang = voice.lang; }
+      utter.rate = cfg.rate || 1;
+      utter.pitch = cfg.pitch || 1;
+    }
     currentUtterance = utter;
     utter.onend = resolve;
     utter.onerror = resolve;
@@ -716,7 +890,7 @@ async function playFala(idx){
     setMouth(avatar.id, Math.random() > 0.5);
   }, 140);
 
-  await speak(f.texto);
+  await speak(f.texto, avatar);
 
   clearInterval(mouthTimer); mouthTimer = null;
   setMouth(avatar.id, false);
@@ -784,6 +958,8 @@ resetForm();
 seedDefaultAvatars();
 renderAvatarList();
 renderFalas();
+renderCenarioPicker();
+applyCenario();
 showView(localStorage.getItem("roteiro_tab") || "avatares");
 
 })();
