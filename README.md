@@ -13,6 +13,10 @@ npm run dev      # abre o Remotion Studio para editar/pré-visualizar
 npx remotion render   # renderiza o vídeo final
 ```
 
+## Roteiro Animado (avatares + TTS, sem custo)
+
+O diretório [`roteiro-animado/`](./roteiro-animado) é uma página independente (100% client-side, sem backend) onde dá pra criar personagens/avatares simples, escrever um roteiro de falas e reproduzir a cena com foco de câmera, boca animada e narração via Web Speech API. Publicada via GitHub Pages em `/roteiro-animado/`.
+
 ## Navegação assistida (Chrome DevTools MCP)
 
 O arquivo [`.mcp.json`](./.mcp.json) configura o servidor [chrome-devtools-mcp](https://github.com/ChromeDevTools/chrome-devtools-mcp), que permite ao Claude Code abrir sites e vídeos diretamente (navegar, inspecionar, tirar screenshot) sem depender de prints enviados manualmente.
