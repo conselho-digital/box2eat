@@ -155,6 +155,12 @@ export function OrderTracking({
           <span className="text-muted-foreground">Entrega</span>
           <span>{currency.format(order.delivery_fee)}</span>
         </div>
+        {order.discount_total > 0 && (
+          <div className="flex justify-between text-primary">
+            <span>Desconto</span>
+            <span>-{currency.format(order.discount_total)}</span>
+          </div>
+        )}
         <div className="flex justify-between font-medium">
           <span>Total</span>
           <span>{currency.format(order.total)}</span>

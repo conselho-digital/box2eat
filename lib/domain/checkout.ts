@@ -19,6 +19,7 @@ export async function submitOrder(
   cart: Cart,
   deliveryAddress: DeliveryAddressInput,
   notes?: string,
+  couponCode?: string,
 ) {
   const items = cart.items.map((item) => ({
     menu_item_id: item.menuItemId,
@@ -31,6 +32,7 @@ export async function submitOrder(
     p_items: items,
     p_delivery_address: deliveryAddress,
     p_notes: notes || undefined,
+    p_coupon_code: couponCode || undefined,
   };
 
   // create_order is declared RETURNS public.orders (a single row, not

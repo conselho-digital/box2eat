@@ -12,6 +12,7 @@ import { useCart } from "@/components/cart/cart-provider";
 import { createClient } from "@/lib/supabase/client";
 import { submitOrder } from "@/lib/domain/checkout";
 import { cartSubtotal } from "@/lib/domain/cart";
+import { validateCoupon } from "@/lib/domain/coupons";
 import {
   deliveryAddressSchema,
   type DeliveryAddressFormInput,
@@ -19,10 +20,26 @@ import {
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
+function describeCouponMessage(message: string): string {
+  const known: Record<string, string> = {
+    invalid_coupon: "Cupom não encontrado.",
+    coupon_expired: "Esse cupom expirou.",
+    coupon_minimum_not_met: "O pedido ainda não atinge o valor mínimo desse cupom.",
+    coupon_exhausted: "Esse cupom já atingiu o limite de usos.",
+    coupon_already_used: "Você já usou esse cupom.",
+    not_authenticated: "Entre na sua conta para aplicar um cupom.",
+  };
+  return known[message] ?? "Não foi possível aplicar o cupom.";
+}
+
 export function CheckoutForm() {
   const router = useRouter();
   const { cart, clearCart } = useCart();
   const [formError, setFormError] = useState<string | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
   const {
     register,
     handleSubmit,
@@ -33,11 +50,28 @@ export function CheckoutForm() {
     return <p className="text-sm text-muted-foreground">Seu carrinho está vazio.</p>;
   }
 
+  const subtotal = cartSubtotal(cart);
+
+  async function applyCoupon() {
+    if (!couponInput.trim()) return;
+    setCouponError(null);
+    setApplyingCoupon(true);
+    const supabase = createClient();
+    const { data, error } = await validateCoupon(supabase, cart!.companyId, couponInput.trim(), subtotal);
+    setApplyingCoupon(false);
+    if (error || !data || !data.valid) {
+      setAppliedCoupon(null);
+      setCouponError(describeCouponMessage(data?.message ?? error?.message ?? ""));
+      return;
+    }
+    setAppliedCoupon({ code: couponInput.trim().toUpperCase(), discount: data.discount_amount });
+  }
+
   async function onSubmit(values: DeliveryAddressFormInput) {
     setFormError(null);
     const { notes, ...address } = values;
     const supabase = createClient();
-    const { data, error } = await submitOrder(supabase, cart!, address, notes);
+    const { data, error } = await submitOrder(supabase, cart!, address, notes, appliedCoupon?.code);
     if (error || !data) {
       setFormError(describeCheckoutError(error?.message ?? "Erro desconhecido"));
       return;
@@ -51,8 +85,33 @@ export function CheckoutForm() {
       <div className="rounded-lg border p-3 text-sm">
         <p className="font-medium">{cart.companyName}</p>
         <p className="text-muted-foreground">
-          {cart.items.length} item(ns) · Subtotal {currency.format(cartSubtotal(cart))}
+          {cart.items.length} item(ns) · Subtotal {currency.format(subtotal)}
         </p>
+        {appliedCoupon && (
+          <p className="mt-1 text-primary">
+            Cupom {appliedCoupon.code}: -{currency.format(appliedCoupon.discount)}
+          </p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="coupon">Cupom de desconto</Label>
+        <div className="flex gap-2">
+          <Input
+            id="coupon"
+            placeholder="Código do cupom"
+            value={couponInput}
+            onChange={(e) => {
+              setCouponInput(e.target.value);
+              setAppliedCoupon(null);
+              setCouponError(null);
+            }}
+          />
+          <Button type="button" variant="outline" onClick={applyCoupon} disabled={applyingCoupon}>
+            {applyingCoupon ? "Aplicando…" : "Aplicar"}
+          </Button>
+        </div>
+        {couponError && <p className="text-sm text-destructive">{couponError}</p>}
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -116,6 +175,11 @@ function describeCheckoutError(message: string): string {
     missing_required_option: "Falta escolher uma opção obrigatória em um dos itens.",
     invalid_option: "Uma das opções escolhidas não é mais válida.",
     empty_order: "O carrinho está vazio.",
+    invalid_coupon: "O cupom aplicado não é mais válido.",
+    coupon_expired: "O cupom aplicado expirou.",
+    coupon_minimum_not_met: "O pedido não atinge mais o valor mínimo do cupom.",
+    coupon_exhausted: "O cupom aplicado acabou de esgotar.",
+    coupon_already_used: "Você já usou esse cupom.",
   };
   for (const [key, label] of Object.entries(known)) {
     if (message.includes(key)) return label;
