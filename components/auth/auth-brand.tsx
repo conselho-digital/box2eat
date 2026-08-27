@@ -4,11 +4,10 @@ export function AuthBrand() {
   return (
     <div className="mb-2 flex justify-center">
       <Image
-        src="/brand/box2eat-logo.jpg"
+        src="/brand/box2eat-logo.png"
         alt="Box2eat"
         width={56}
-        height={56}
-        className="rounded-xl"
+        height={62}
       />
     </div>
   );

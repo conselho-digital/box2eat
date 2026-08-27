@@ -6,11 +6,10 @@ export default function Home() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
       <Image
-        src="/brand/box2eat-logo.jpg"
+        src="/brand/box2eat-logo.png"
         alt="Box2eat"
         width={96}
-        height={96}
-        className="rounded-2xl"
+        height={106}
         priority
       />
       <h1 className="text-4xl font-bold tracking-tight">Box2eat</h1>

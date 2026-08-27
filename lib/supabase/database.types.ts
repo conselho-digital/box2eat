@@ -170,6 +170,42 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorites_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_categories: {
         Row: {
           company_id: string
@@ -350,6 +386,123 @@ export type Database = {
           },
         ]
       }
+      order_items: {
+        Row: {
+          id: string
+          item_name: string
+          menu_item_id: string | null
+          order_id: string
+          quantity: number
+          selected_options: Json | null
+          subtotal: number
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          item_name: string
+          menu_item_id?: string | null
+          order_id: string
+          quantity: number
+          selected_options?: Json | null
+          subtotal: number
+          unit_price: number
+        }
+        Update: {
+          id?: string
+          item_name?: string
+          menu_item_id?: string | null
+          order_id?: string
+          quantity?: number
+          selected_options?: Json | null
+          subtotal?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          company_id: string
+          created_at: string
+          customer_id: string
+          delivered_at: string | null
+          delivery_address: Json | null
+          delivery_fee: number
+          discount_total: number
+          id: string
+          notes: string | null
+          payment_method: string | null
+          payment_status: string | null
+          status: string
+          subtotal: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          customer_id: string
+          delivered_at?: string | null
+          delivery_address?: Json | null
+          delivery_fee?: number
+          discount_total?: number
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          status?: string
+          subtotal: number
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          customer_id?: string
+          delivered_at?: string | null
+          delivery_address?: Json | null
+          delivery_fee?: number
+          discount_total?: number
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          status?: string
+          subtotal?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_admins: {
         Row: {
           created_at: string
@@ -526,6 +679,7 @@ export type Database = {
         Args: { p_option_group_id: string }
         Returns: string
       }
+      order_visible: { Args: { p_order_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

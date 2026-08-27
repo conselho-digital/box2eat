@@ -10,10 +10,12 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { signInWithPassword } from "@/lib/domain/auth";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
+import { MfaChallengeForm } from "./mfa-challenge-form";
 
 export function LoginForm() {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
+  const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const {
     register,
     handleSubmit,
@@ -28,8 +30,23 @@ export function LoginForm() {
       setFormError("E-mail ou senha inválidos.");
       return;
     }
+
+    const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== aal.nextLevel) {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const factor = factors?.totp.find((f) => f.status === "verified");
+      if (factor) {
+        setMfaFactorId(factor.id);
+        return;
+      }
+    }
+
     router.push("/conta");
     router.refresh();
+  }
+
+  if (mfaFactorId) {
+    return <MfaChallengeForm factorId={mfaFactorId} />;
   }
 
   return (
