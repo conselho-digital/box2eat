@@ -16,6 +16,7 @@ type OrderRow = {
   delivered_at: string | null
   delivery_address: Json | null
   delivery_fee: number
+  delivery_partner_id: string | null
   discount_total: number
   id: string
   notes: string | null
@@ -25,6 +26,24 @@ type OrderRow = {
   subtotal: number
   total: number
   updated_at: string
+}
+
+type DeliveryPartnerRow = {
+  approved_at: string | null
+  approved_by: string | null
+  created_at: string
+  current_lat: number | null
+  current_lng: number | null
+  is_online: boolean
+  last_location_at: string | null
+  rating_avg: number | null
+  rating_count: number
+  rejection_reason: string | null
+  status: string
+  updated_at: string
+  user_id: string
+  vehicle_plate: string | null
+  vehicle_type: string | null
 }
 
 export type Database = {
@@ -186,6 +205,110 @@ export type Database = {
             foreignKeyName: "company_members_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_partner_documents: {
+        Row: {
+          created_at: string
+          delivery_partner_id: string
+          doc_type: string
+          id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          delivery_partner_id: string
+          doc_type: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          delivery_partner_id?: string
+          doc_type?: string
+          id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_partner_documents_delivery_partner_id_fkey"
+            columns: ["delivery_partner_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_partners"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "delivery_partner_documents_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_partners: {
+        Row: DeliveryPartnerRow
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          is_online?: boolean
+          last_location_at?: string | null
+          rating_avg?: number | null
+          rating_count?: number
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          vehicle_plate?: string | null
+          vehicle_type?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          current_lat?: number | null
+          current_lng?: number | null
+          is_online?: boolean
+          last_location_at?: string | null
+          rating_avg?: number | null
+          rating_count?: number
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          vehicle_plate?: string | null
+          vehicle_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_partners_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "delivery_partners_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -498,23 +621,7 @@ export type Database = {
         ]
       }
       orders: {
-        Row: {
-          company_id: string
-          created_at: string
-          customer_id: string
-          delivered_at: string | null
-          delivery_address: Json | null
-          delivery_fee: number
-          discount_total: number
-          id: string
-          notes: string | null
-          payment_method: string | null
-          payment_status: string | null
-          status: string
-          subtotal: number
-          total: number
-          updated_at: string
-        }
+        Row: OrderRow
         Insert: {
           company_id: string
           created_at?: string
@@ -522,6 +629,7 @@ export type Database = {
           delivered_at?: string | null
           delivery_address?: Json | null
           delivery_fee?: number
+          delivery_partner_id?: string | null
           discount_total?: number
           id?: string
           notes?: string | null
@@ -539,6 +647,7 @@ export type Database = {
           delivered_at?: string | null
           delivery_address?: Json | null
           delivery_fee?: number
+          delivery_partner_id?: string | null
           discount_total?: number
           id?: string
           notes?: string | null
@@ -563,6 +672,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_delivery_partner_id_fkey"
+            columns: ["delivery_partner_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_partners"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -699,6 +815,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      approve_delivery_partner: {
+        Args: { p_user_id: string }
+        Returns: DeliveryPartnerRow
+        SetofOptions: {
+          from: "*"
+          to: "delivery_partners"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      assign_delivery_partner: {
+        Args: { p_order_id: string }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       cancel_order: {
         Args: { p_order_id: string; p_reason?: string }
         Returns: OrderRow
@@ -766,10 +902,21 @@ export type Database = {
           updated_at: string
         }
       }
+      is_approved_delivery_partner: { Args: never; Returns: boolean }
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
       is_company_owner: { Args: { p_company_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
       mark_delivered: {
+        Args: { p_order_id: string }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mark_picked_up: {
         Args: { p_order_id: string }
         Returns: OrderRow
         SetofOptions: {
@@ -808,6 +955,16 @@ export type Database = {
         Returns: string
       }
       order_visible: { Args: { p_order_id: string }; Returns: boolean }
+      reject_delivery_partner: {
+        Args: { p_reason?: string; p_user_id: string }
+        Returns: DeliveryPartnerRow
+        SetofOptions: {
+          from: "*"
+          to: "delivery_partners"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       reject_order: {
         Args: { p_order_id: string; p_reason?: string }
         Returns: OrderRow

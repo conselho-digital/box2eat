@@ -133,6 +133,12 @@ function OrderCard({
         ))}
       </ul>
       {order.notes && <p className="mt-1 text-xs text-muted-foreground">Obs: {order.notes}</p>}
+      {order.delivery_partners && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          Entregador: {order.delivery_partners.vehicle_type}
+          {order.delivery_partners.vehicle_plate && ` · ${order.delivery_partners.vehicle_plate}`}
+        </p>
+      )}
 
       {!readOnly && (
         <div className="mt-3 flex flex-wrap gap-2">

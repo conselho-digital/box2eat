@@ -37,6 +37,9 @@ export default async function AccountLayout({
         <Link href="/empresas" className="hover:underline">
           Minhas empresas
         </Link>
+        <Link href="/entregador/cadastro" className="hover:underline">
+          Seja um entregador
+        </Link>
       </nav>
       {children}
     </div>

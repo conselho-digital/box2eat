@@ -11,6 +11,10 @@ export type OrderWithItems = Database["public"]["Tables"]["orders"]["Row"] & {
 export type CompanyOrder = Database["public"]["Tables"]["orders"]["Row"] & {
   order_items: Database["public"]["Tables"]["order_items"]["Row"][];
   profiles: Pick<Database["public"]["Tables"]["profiles"]["Row"], "full_name" | "phone">;
+  delivery_partners: Pick<
+    Database["public"]["Tables"]["delivery_partners"]["Row"],
+    "vehicle_type" | "vehicle_plate"
+  > | null;
 };
 
 const ACTIVE_STATUSES = ["placed", "accepted", "preparing", "ready_for_pickup"];
@@ -34,7 +38,7 @@ export async function getOrder(supabase: Client, orderId: string) {
 export async function listCompanyOrders(supabase: Client, companyId: string) {
   return supabase
     .from("orders")
-    .select("*, order_items(*), profiles(full_name, phone)")
+    .select("*, order_items(*), profiles(full_name, phone), delivery_partners(vehicle_type, vehicle_plate)")
     .eq("company_id", companyId)
     .order("created_at", { ascending: false })
     .returns<CompanyOrder[]>();
@@ -116,6 +120,23 @@ export function subscribeToCompanyOrders(
       { event: "*", schema: "public", table: "orders", filter: `company_id=eq.${companyId}` },
       onChange,
     )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+/**
+ * Realtime: fires on any order change visible to the current delivery
+ * partner — unclaimed ready-for-pickup orders becoming available, and
+ * updates to orders assigned to them. Unfiltered at the channel level;
+ * RLS still governs which rows actually reach this client.
+ */
+export function subscribeToDeliveryUpdates(supabase: Client, userId: string, onChange: () => void) {
+  const channel = supabase
+    .channel(`delivery-updates-${userId}`)
+    .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, onChange)
     .subscribe();
 
   return () => {
