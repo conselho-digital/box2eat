@@ -1,0 +1,42 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { isPlatformAdmin } from "@/lib/domain/admin";
+import { LogoutButton } from "@/components/auth/logout-button";
+
+export default async function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
+
+  const isAdmin = await isPlatformAdmin(supabase, user.id);
+  if (!isAdmin) notFound();
+
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Painel admin</h1>
+        <LogoutButton />
+      </div>
+      <nav className="flex gap-4 border-b pb-2 text-sm">
+        <Link href="/admin/entregadores" className="hover:underline">
+          Entregadores
+        </Link>
+        <Link href="/admin/empresas" className="hover:underline">
+          Empresas
+        </Link>
+        <Link href="/admin/pedidos" className="hover:underline">
+          Pedidos
+        </Link>
+      </nav>
+      {children}
+    </div>
+  );
+}
