@@ -5,12 +5,19 @@ import { useState } from "react";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { CartBar } from "@/components/cart/cart-bar";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  header,
+  children,
+}: {
+  header: React.ReactNode;
+  children: React.ReactNode;
+}) {
   const [queryClient] = useState(() => new QueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>
       <CartProvider>
+        {header}
         {children}
         <CartBar />
       </CartProvider>

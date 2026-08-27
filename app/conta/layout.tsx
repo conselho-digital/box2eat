@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { LogoutButton } from "@/components/auth/logout-button";
 
 export default async function AccountLayout({
   children,
@@ -17,10 +16,7 @@ export default async function AccountLayout({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Minha conta</h1>
-        <LogoutButton />
-      </div>
+      <h1 className="text-xl font-semibold">Minha conta</h1>
       <nav className="flex gap-4 border-b pb-2 text-sm">
         <Link href="/conta" className="hover:underline">
           Perfil

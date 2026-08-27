@@ -1,41 +1,25 @@
-import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 export default async function Home() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
 
   const { data: companies } = await supabase
     .from("companies")
-    .select("id, name, slug, description, min_order_value, is_open")
+    .select("id, name, slug, description, min_order_value, is_open, rating_avg, rating_count")
     .eq("status", "active")
     .order("created_at", { ascending: false });
 
   return (
     <div className="flex flex-1 flex-col items-center gap-8 p-6 text-center">
-      <div className="flex flex-col items-center gap-6 pt-6">
-        <Image src="/brand/box2eat-logo.png" alt="Box2eat" width={96} height={106} priority />
+      <div className="flex flex-col items-center gap-3 pt-6">
         <h1 className="text-4xl font-bold tracking-tight">Box2eat</h1>
         <p className="max-w-md text-muted-foreground">
           Peça comida das melhores empresas perto de você, ou cadastre a sua e
           comece a vender.
         </p>
-        {!user && (
-          <div className="flex gap-3">
-            <Button render={<Link href="/cadastro" />} nativeButton={false}>
-              Criar conta
-            </Button>
-            <Button render={<Link href="/login" />} nativeButton={false} variant="outline">
-              Entrar
-            </Button>
-          </div>
-        )}
       </div>
 
       <div className="grid w-full max-w-2xl gap-3 text-left sm:grid-cols-2">
@@ -55,6 +39,8 @@ export default async function Home() {
               {company.is_open ? "Aberto agora" : "Fechado"}
               {company.min_order_value > 0 &&
                 ` · Pedido mínimo ${currency.format(company.min_order_value)}`}
+              {company.rating_count > 0 &&
+                ` · ★ ${company.rating_avg?.toFixed(1)} (${company.rating_count})`}
             </p>
           </Link>
         ))}

@@ -42,6 +42,12 @@ export default async function StorePage({
           {company.description && (
             <p className="text-muted-foreground">{company.description}</p>
           )}
+          {company.rating_count > 0 && (
+            <p className="mt-1 text-sm text-muted-foreground">
+              ★ {company.rating_avg?.toFixed(1)}{" "}
+              <span className="text-xs">({company.rating_count} avaliações)</span>
+            </p>
+          )}
           {!company.is_open && (
             <p className="mt-1 text-sm text-destructive">
               Empresa fechada no momento.

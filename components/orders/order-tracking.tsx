@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { ReviewForm } from "@/components/reviews/review-form";
 import { createClient } from "@/lib/supabase/client";
 import {
   cancelOrder,
@@ -10,6 +11,7 @@ import {
   subscribeToOrder,
   type OrderWithItems,
 } from "@/lib/domain/orders";
+import { listReviewsForOrder } from "@/lib/domain/reviews";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -51,6 +53,17 @@ export function OrderTracking({
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- queryKey is stable per orderId
   }, [orderId]);
+
+  const { data: reviews, refetch: refetchReviews } = useQuery({
+    queryKey: ["order-reviews", orderId],
+    queryFn: async () => {
+      const supabase = createClient();
+      const { data, error } = await listReviewsForOrder(supabase, orderId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: isCustomer && order?.status === "delivered",
+  });
 
   const [cancelError, setCancelError] = useState<string | null>(null);
   const cancelMutation = useMutation({
@@ -138,6 +151,28 @@ export function OrderTracking({
             {cancelMutation.isPending ? "Cancelando…" : "Cancelar pedido"}
           </Button>
           {cancelError && <p className="text-sm text-destructive">{cancelError}</p>}
+        </div>
+      )}
+
+      {isCustomer && order.status === "delivered" && (
+        <div className="flex flex-col gap-3">
+          <h2 className="text-sm font-semibold">Avalie seu pedido</h2>
+          <ReviewForm
+            orderId={orderId}
+            targetType="company"
+            label={order.companies.name}
+            existingReview={reviews?.find((r) => r.target_type === "company") ?? null}
+            onSubmitted={() => refetchReviews()}
+          />
+          {order.delivery_partner_id && (
+            <ReviewForm
+              orderId={orderId}
+              targetType="delivery_partner"
+              label="Entregador"
+              existingReview={reviews?.find((r) => r.target_type === "delivery_partner") ?? null}
+              onSubmitted={() => refetchReviews()}
+            />
+          )}
         </div>
       )}
     </div>
