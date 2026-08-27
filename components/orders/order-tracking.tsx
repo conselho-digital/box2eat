@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ReviewForm } from "@/components/reviews/review-form";
@@ -79,7 +80,8 @@ export function OrderTracking({
   if (!order) return null;
 
   const isRejectedOrCancelled = order.status === "rejected" || order.status === "cancelled";
-  const canCancel = isCustomer && ["placed", "accepted"].includes(order.status);
+  const isPendingPayment = order.status === "pending_payment";
+  const canCancel = isCustomer && ["pending_payment", "placed", "accepted"].includes(order.status);
   const currentStepIndex = STATUS_STEPS.findIndex((s) => s.key === order.status);
 
   return (
@@ -91,7 +93,25 @@ export function OrderTracking({
         </p>
       </div>
 
-      {isRejectedOrCancelled ? (
+      {isPendingPayment ? (
+        <div className="flex flex-col gap-2 rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+          <p>
+            {order.payment_status === "failed"
+              ? "O pagamento não foi concluído."
+              : "Aguardando confirmação do pagamento."}
+          </p>
+          {isCustomer && (
+            <Button
+              size="sm"
+              className="w-fit"
+              render={<Link href={`/checkout/pagamento/${orderId}`} />}
+              nativeButton={false}
+            >
+              {order.payment_status === "failed" ? "Tentar pagar novamente" : "Ir para o pagamento"}
+            </Button>
+          )}
+        </div>
+      ) : isRejectedOrCancelled ? (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
           Pedido {order.status === "rejected" ? "recusado pela empresa" : "cancelado"}.
         </p>

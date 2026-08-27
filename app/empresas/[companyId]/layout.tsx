@@ -46,6 +46,9 @@ export default async function CompanyDashboardLayout({
         <Link href={`/empresas/${companyId}/pedidos`} className="hover:underline">
           Pedidos
         </Link>
+        <Link href={`/empresas/${companyId}/pagamentos`} className="hover:underline">
+          Pagamentos
+        </Link>
         <Link href={`/loja/${company.slug}`} className="hover:underline" target="_blank">
           Ver loja pública
         </Link>

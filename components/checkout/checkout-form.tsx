@@ -43,7 +43,7 @@ export function CheckoutForm() {
       return;
     }
     clearCart();
-    router.push(`/pedidos/${data.id}`);
+    router.push(`/checkout/pagamento/${data.id}`);
   }
 
   return (

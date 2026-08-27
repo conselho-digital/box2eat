@@ -40,6 +40,9 @@ export async function listCompanyOrders(supabase: Client, companyId: string) {
     .from("orders")
     .select("*, order_items(*), profiles(full_name, phone), delivery_partners(vehicle_type, vehicle_plate)")
     .eq("company_id", companyId)
+    // Orders awaiting payment aren't real yet — nothing for the company to
+    // act on until mark_order_paid() flips them to 'placed'.
+    .neq("status", "pending_payment")
     .order("created_at", { ascending: false })
     .returns<CompanyOrder[]>();
 }

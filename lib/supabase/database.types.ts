@@ -40,6 +40,8 @@ type DeliveryPartnerRow = {
   rating_count: number
   rejection_reason: string | null
   status: string
+  stripe_account_id: string | null
+  stripe_charges_enabled: boolean
   updated_at: string
   user_id: string
   vehicle_plate: string | null
@@ -82,6 +84,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           logo_url: string | null
+          mercadopago_user_id: string | null
           min_order_value: number
           name: string
           neighborhood: string | null
@@ -95,6 +98,8 @@ export type Database = {
           state: string | null
           status: string
           street: string | null
+          stripe_account_id: string | null
+          stripe_charges_enabled: boolean
           updated_at: string
         }
         Insert: {
@@ -112,6 +117,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
+          mercadopago_user_id?: string | null
           min_order_value?: number
           name: string
           neighborhood?: string | null
@@ -125,6 +131,8 @@ export type Database = {
           state?: string | null
           status?: string
           street?: string | null
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
           updated_at?: string
         }
         Update: {
@@ -142,6 +150,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
+          mercadopago_user_id?: string | null
           min_order_value?: number
           name?: string
           neighborhood?: string | null
@@ -155,6 +164,8 @@ export type Database = {
           state?: string | null
           status?: string
           street?: string | null
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -287,6 +298,8 @@ export type Database = {
           rating_count?: number
           rejection_reason?: string | null
           status?: string
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
           updated_at?: string
           user_id: string
           vehicle_plate?: string | null
@@ -304,6 +317,8 @@ export type Database = {
           rating_count?: number
           rejection_reason?: string | null
           status?: string
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
           updated_at?: string
           user_id?: string
           vehicle_plate?: string | null
@@ -773,6 +788,94 @@ export type Database = {
           },
         ]
       }
+      payment_splits: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          payment_id: string
+          provider_transfer_id: string | null
+          recipient_id: string | null
+          recipient_type: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          payment_id: string
+          provider_transfer_id?: string | null
+          recipient_id?: string | null
+          recipient_type: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          payment_id?: string
+          provider_transfer_id?: string | null
+          recipient_id?: string | null
+          recipient_type?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_splits_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          method: string | null
+          order_id: string
+          provider: string
+          provider_payment_id: string | null
+          raw_payload: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          method?: string | null
+          order_id: string
+          provider: string
+          provider_payment_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string | null
+          order_id?: string
+          provider?: string
+          provider_payment_id?: string | null
+          raw_payload?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_admins: {
         Row: {
           created_at: string
@@ -1090,6 +1193,24 @@ export type Database = {
       is_platform_admin: { Args: never; Returns: boolean }
       mark_delivered: {
         Args: { p_order_id: string }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mark_order_paid: {
+        Args: {
+          p_amount: number
+          p_method: string
+          p_order_id: string
+          p_provider: string
+          p_provider_payment_id: string
+          p_raw_payload: Json
+          p_status: string
+        }
         Returns: OrderRow
         SetofOptions: {
           from: "*"
