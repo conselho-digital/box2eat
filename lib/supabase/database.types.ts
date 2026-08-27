@@ -170,6 +170,186 @@ export type Database = {
           },
         ]
       }
+      menu_categories: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_categories_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_item_option_groups: {
+        Row: {
+          created_at: string
+          id: string
+          is_required: boolean
+          max_select: number
+          menu_item_id: string
+          min_select: number
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          max_select?: number
+          menu_item_id: string
+          min_select?: number
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_required?: boolean
+          max_select?: number
+          menu_item_id?: string
+          min_select?: number
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_option_groups_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_item_options: {
+        Row: {
+          created_at: string
+          id: string
+          is_available: boolean
+          name: string
+          option_group_id: string
+          price_delta: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          name: string
+          option_group_id: string
+          price_delta?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_available?: boolean
+          name?: string
+          option_group_id?: string
+          price_delta?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_options_option_group_id_fkey"
+            columns: ["option_group_id"]
+            isOneToOne: false
+            referencedRelation: "menu_item_option_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_items: {
+        Row: {
+          category_id: string | null
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean
+          name: string
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          name: string
+          price: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          name?: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_admins: {
         Row: {
           created_at: string
@@ -293,6 +473,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      company_is_visible: { Args: { p_company_id: string }; Returns: boolean }
       company_role: { Args: { p_company_id: string }; Returns: string }
       create_company: {
         Args: {
@@ -337,6 +518,14 @@ export type Database = {
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
       is_company_owner: { Args: { p_company_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
+      menu_item_company_id: {
+        Args: { p_menu_item_id: string }
+        Returns: string
+      }
+      option_group_company_id: {
+        Args: { p_option_group_id: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

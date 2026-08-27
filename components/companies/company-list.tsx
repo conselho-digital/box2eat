@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   Card,
@@ -75,15 +76,17 @@ export function CompanyList() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         {data?.map((membership) => (
-          <Card key={membership.id}>
-            <CardHeader>
-              <CardTitle>{membership.companies.name}</CardTitle>
-              <CardDescription>
-                {membership.role === "owner" ? "Dono" : "Funcionário"} ·{" "}
-                {membership.companies.slug}
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          <Link key={membership.id} href={`/empresas/${membership.company_id}`}>
+            <Card className="transition-colors hover:bg-muted/50">
+              <CardHeader>
+                <CardTitle>{membership.companies.name}</CardTitle>
+                <CardDescription>
+                  {membership.role === "owner" ? "Dono" : "Funcionário"} ·{" "}
+                  {membership.companies.slug}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
         ))}
       </div>
     </div>
