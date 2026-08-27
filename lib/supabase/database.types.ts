@@ -362,6 +362,44 @@ export type Database = {
           },
         ]
       }
+      login_qr_requests: {
+        Row: {
+          created_at: string
+          expires_at: string
+          redeemed: boolean
+          status: string
+          token: string
+          token_hash: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          redeemed?: boolean
+          status?: string
+          token?: string
+          token_hash?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          redeemed?: boolean
+          status?: string
+          token?: string
+          token_hash?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "login_qr_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_categories: {
         Row: {
           company_id: string
@@ -1040,6 +1078,11 @@ export type Database = {
           street: string | null
           updated_at: string
         }
+      }
+      create_qr_login_request: { Args: never; Returns: string }
+      get_qr_login_status: {
+        Args: { p_token: string }
+        Returns: { status: string; token_hash: string | null }[]
       }
       is_approved_delivery_partner: { Args: never; Returns: boolean }
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
