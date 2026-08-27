@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LocateFixed } from "lucide-react";
+import { LocateFixed, Map } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -10,10 +11,14 @@ export function HeroSearch({
   q,
   open,
   sort,
+  lat,
+  lng,
 }: {
   q?: string;
   open?: string;
   sort?: string;
+  lat?: string;
+  lng?: string;
 }) {
   const router = useRouter();
   const [value, setValue] = useState(q ?? "");
@@ -55,6 +60,14 @@ export function HeroSearch({
     );
   }
 
+  const mapParams = new URLSearchParams();
+  if (value) mapParams.set("q", value);
+  if (open) mapParams.set("open", open);
+  if (sort) mapParams.set("sort", sort);
+  if (lat) mapParams.set("lat", lat);
+  if (lng) mapParams.set("lng", lng);
+  const mapHref = mapParams.toString() ? `/mapa?${mapParams.toString()}` : "/mapa";
+
   return (
     <div className="flex flex-col gap-2">
       <form
@@ -80,6 +93,16 @@ export function HeroSearch({
         >
           <LocateFixed className="size-4" />
           {locating ? "Localizando…" : "Próximas de mim"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-11 gap-1.5 rounded-xl px-4 text-foreground"
+          render={<Link href={mapHref} />}
+          nativeButton={false}
+        >
+          <Map className="size-4" />
+          Mapa
         </Button>
         <Button type="submit" className="h-11 rounded-xl px-6">
           Buscar

@@ -2,11 +2,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HeroSearch } from "@/components/home/hero-search";
 import { createClient } from "@/lib/supabase/server";
-import { haversineDistanceKm } from "@/lib/geo";
+import { listPublicCompanies, type CompanySearchParams } from "@/lib/domain/companies";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
-type SearchParams = { q?: string; open?: string; sort?: string; lat?: string; lng?: string };
+type SearchParams = CompanySearchParams;
 
 function buildHref(current: SearchParams, changes: SearchParams) {
   const params = new URLSearchParams();
@@ -27,38 +27,7 @@ export default async function Home({
 }) {
   const { q, open, sort, lat, lng } = await searchParams;
   const supabase = await createClient();
-
-  let query = supabase
-    .from("companies")
-    .select("id, name, slug, description, min_order_value, is_open, rating_avg, rating_count, lat, lng")
-    .eq("status", "active");
-
-  if (q?.trim()) {
-    query = query.ilike("name", `%${q.trim()}%`);
-  }
-  if (open === "1") {
-    query = query.eq("is_open", true);
-  }
-  if (!lat && sort === "rating") {
-    query = query.order("rating_avg", { ascending: false, nullsFirst: false });
-  } else if (!lat) {
-    query = query.order("created_at", { ascending: false });
-  }
-
-  const { data: rawCompanies } = await query;
-  let companies = rawCompanies ?? [];
-
-  const userLat = lat ? Number(lat) : null;
-  const userLng = lng ? Number(lng) : null;
-  if (userLat !== null && userLng !== null && !Number.isNaN(userLat) && !Number.isNaN(userLng)) {
-    companies = [...companies].sort((a, b) => {
-      if (a.lat === null || a.lng === null) return 1;
-      if (b.lat === null || b.lng === null) return -1;
-      const distA = haversineDistanceKm(userLat, userLng, a.lat, a.lng);
-      const distB = haversineDistanceKm(userLat, userLng, b.lat, b.lng);
-      return distA - distB;
-    });
-  }
+  const companies = await listPublicCompanies(supabase, { q, open, sort, lat, lng });
 
   const hasFilters = Boolean(q || open || sort || lat);
 
@@ -73,7 +42,7 @@ export default async function Home({
             Peça comida das melhores empresas perto de você, ou cadastre a sua e
             comece a vender.
           </p>
-          <HeroSearch q={q} open={open} sort={sort} />
+          <HeroSearch q={q} open={open} sort={sort} lat={lat} lng={lng} />
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <Button
               render={
