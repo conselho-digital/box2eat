@@ -1,4 +1,4 @@
-# Pratoja
+# Box2eat
 
 Marketplace de delivery (estilo Uber Eats/iFood) para o Brasil. Next.js (App
 Router) + Supabase (Postgres, Auth, Storage, Realtime).

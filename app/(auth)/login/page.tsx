@@ -9,14 +9,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { LoginForm } from "@/components/auth/login-form";
 import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { AuthBrand } from "@/components/auth/auth-brand";
 
 export default function LoginPage() {
   return (
     <div className="flex flex-1 items-center justify-center p-6">
       <Card className="w-full max-w-sm">
         <CardHeader>
+          <AuthBrand />
           <CardTitle>Entrar</CardTitle>
-          <CardDescription>Acesse sua conta Pratoja.</CardDescription>
+          <CardDescription>Acesse sua conta Box2eat.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <OAuthButtons />

@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pratoja",
+  metadataBase: new URL("https://box2eat.com"),
+  title: "Box2eat",
   description: "Peça comida das melhores empresas perto de você",
 };
 
