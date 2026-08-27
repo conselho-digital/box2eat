@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { groupOrdersByCompany, listMyOrders } from "@/lib/domain/orders";
@@ -57,7 +58,11 @@ export function OrderHistory() {
           </summary>
           <div className="flex flex-col divide-y border-t">
             {orders.map((order) => (
-              <div key={order.id} className="flex flex-col gap-1 p-3 text-sm">
+              <Link
+                key={order.id}
+                href={`/pedidos/${order.id}`}
+                className="flex flex-col gap-1 p-3 text-sm hover:bg-muted/50"
+              >
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">
                     {dateFormat.format(new Date(order.created_at))}
@@ -79,7 +84,7 @@ export function OrderHistory() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </Link>
             ))}
           </div>
         </details>

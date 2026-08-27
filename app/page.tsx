@@ -1,33 +1,68 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: companies } = await supabase
+    .from("companies")
+    .select("id, name, slug, description, min_order_value, is_open")
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
-      <Image
-        src="/brand/box2eat-logo.png"
-        alt="Box2eat"
-        width={96}
-        height={106}
-        priority
-      />
-      <h1 className="text-4xl font-bold tracking-tight">Box2eat</h1>
-      <p className="max-w-md text-muted-foreground">
-        Peça comida das melhores empresas perto de você, ou cadastre a sua e
-        comece a vender.
-      </p>
-      <div className="flex gap-3">
-        <Button render={<Link href="/cadastro" />} nativeButton={false}>
-          Criar conta
-        </Button>
-        <Button
-          render={<Link href="/login" />}
-          nativeButton={false}
-          variant="outline"
-        >
-          Entrar
-        </Button>
+    <div className="flex flex-1 flex-col items-center gap-8 p-6 text-center">
+      <div className="flex flex-col items-center gap-6 pt-6">
+        <Image src="/brand/box2eat-logo.png" alt="Box2eat" width={96} height={106} priority />
+        <h1 className="text-4xl font-bold tracking-tight">Box2eat</h1>
+        <p className="max-w-md text-muted-foreground">
+          Peça comida das melhores empresas perto de você, ou cadastre a sua e
+          comece a vender.
+        </p>
+        {!user && (
+          <div className="flex gap-3">
+            <Button render={<Link href="/cadastro" />} nativeButton={false}>
+              Criar conta
+            </Button>
+            <Button render={<Link href="/login" />} nativeButton={false} variant="outline">
+              Entrar
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="grid w-full max-w-2xl gap-3 text-left sm:grid-cols-2">
+        {companies?.map((company) => (
+          <Link
+            key={company.id}
+            href={`/loja/${company.slug}`}
+            className="rounded-lg border p-4 transition-colors hover:bg-muted/50"
+          >
+            <p className="font-medium">{company.name}</p>
+            {company.description && (
+              <p className="line-clamp-2 text-sm text-muted-foreground">
+                {company.description}
+              </p>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {company.is_open ? "Aberto agora" : "Fechado"}
+              {company.min_order_value > 0 &&
+                ` · Pedido mínimo ${currency.format(company.min_order_value)}`}
+            </p>
+          </Link>
+        ))}
+        {companies?.length === 0 && (
+          <p className="text-sm text-muted-foreground sm:col-span-2">
+            Nenhuma empresa cadastrada ainda.
+          </p>
+        )}
       </div>
     </div>
   );

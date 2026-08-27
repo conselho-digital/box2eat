@@ -1,16 +1,11 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCompanyBySlug } from "@/lib/domain/companies-detail";
 import { listPublicMenu, type MenuItem } from "@/lib/domain/menu";
 import { isFavorite } from "@/lib/domain/favorites";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
-
-const currency = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
+import { MenuItemCard } from "@/components/menu/menu-item-card";
 
 export default async function StorePage({
   params,
@@ -73,42 +68,13 @@ export default async function StorePage({
           <h2 className="text-lg font-semibold">{category}</h2>
           <div className="flex flex-col divide-y rounded-lg border">
             {categoryItems.map((item) => (
-              <div key={item.id} className="flex gap-3 p-3">
-                {item.image_url && (
-                  <Image
-                    src={item.image_url}
-                    alt={item.name}
-                    width={64}
-                    height={64}
-                    className="size-16 shrink-0 rounded-lg object-cover"
-                  />
-                )}
-                <div className="flex flex-1 flex-col">
-                  <div className="flex items-baseline justify-between gap-2">
-                    <span className="font-medium">{item.name}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {currency.format(item.price)}
-                    </span>
-                  </div>
-                  {item.description && (
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
-                  )}
-                  {item.menu_item_option_groups.length > 0 && (
-                    <ul className="mt-1 flex flex-col gap-0.5 text-xs text-muted-foreground">
-                      {item.menu_item_option_groups.map((group) => (
-                        <li key={group.id}>
-                          {group.name}
-                          {group.is_required && " (obrigatório)"}:{" "}
-                          {group.menu_item_options
-                            .filter((o) => o.is_available)
-                            .map((o) => o.name)
-                            .join(", ")}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
+              <MenuItemCard
+                key={item.id}
+                item={item}
+                companyId={company.id}
+                companyName={company.name}
+                companySlug={company.slug}
+              />
             ))}
           </div>
         </div>

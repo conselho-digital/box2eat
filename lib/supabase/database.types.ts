@@ -6,6 +6,27 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
+// Standalone alias for the `orders` row shape, used by RPC Returns types
+// below since the Functions block can't self-reference the Database type
+// it's nested inside.
+type OrderRow = {
+  company_id: string
+  created_at: string
+  customer_id: string
+  delivered_at: string | null
+  delivery_address: Json | null
+  delivery_fee: number
+  discount_total: number
+  id: string
+  notes: string | null
+  payment_method: string | null
+  payment_status: string | null
+  status: string
+  subtotal: number
+  total: number
+  updated_at: string
+}
+
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
@@ -434,6 +455,48 @@ export type Database = {
           },
         ]
       }
+      order_status_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: string
+          note: string | null
+          order_id: string
+          status: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          note?: string | null
+          order_id: string
+          status: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           company_id: string
@@ -626,8 +689,43 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_order: {
+        Args: { p_order_id: string }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      cancel_order: {
+        Args: { p_order_id: string; p_reason?: string }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       company_is_visible: { Args: { p_company_id: string }; Returns: boolean }
       company_role: { Args: { p_company_id: string }; Returns: string }
+      create_order: {
+        Args: {
+          p_company_id: string
+          p_delivery_address: Json
+          p_items: Json
+          p_notes?: string
+        }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_company: {
         Args: {
           p_cnpj?: string
@@ -671,6 +769,36 @@ export type Database = {
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
       is_company_owner: { Args: { p_company_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
+      mark_delivered: {
+        Args: { p_order_id: string }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mark_preparing: {
+        Args: { p_order_id: string }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      mark_ready: {
+        Args: { p_order_id: string }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       menu_item_company_id: {
         Args: { p_menu_item_id: string }
         Returns: string
@@ -680,6 +808,16 @@ export type Database = {
         Returns: string
       }
       order_visible: { Args: { p_order_id: string }; Returns: boolean }
+      reject_order: {
+        Args: { p_order_id: string; p_reason?: string }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never

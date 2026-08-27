@@ -22,14 +22,15 @@ export async function listMyCompanyMemberships(supabase: Client) {
 }
 
 export async function createCompany(supabase: Client, input: CreateCompanyInput) {
-  return supabase
-    .rpc("create_company", {
-      p_name: input.name,
-      p_slug: input.slug,
-      p_description: input.description || undefined,
-      p_phone: input.phone || undefined,
-    })
-    .single();
+  // create_company is declared RETURNS public.companies (a single row, not
+  // SETOF), so the RPC result is already a single object — .single() would
+  // incorrectly try to unwrap it as if it were an array.
+  return supabase.rpc("create_company", {
+    p_name: input.name,
+    p_slug: input.slug,
+    p_description: input.description || undefined,
+    p_phone: input.phone || undefined,
+  });
 }
 
 /** Maps the Postgres exception raised by the membership-limit trigger to a friendly message. */

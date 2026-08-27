@@ -10,7 +10,13 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { mfaCodeSchema, type MfaCodeInput } from "@/lib/validations/account";
 
-export function MfaChallengeForm({ factorId }: { factorId: string }) {
+export function MfaChallengeForm({
+  factorId,
+  next = "/conta",
+}: {
+  factorId: string;
+  next?: string;
+}) {
   const router = useRouter();
   const [formError, setFormError] = useState<string | null>(null);
   const {
@@ -37,7 +43,7 @@ export function MfaChallengeForm({ factorId }: { factorId: string }) {
       setFormError("Código inválido. Tente novamente.");
       return;
     }
-    router.push("/conta");
+    router.push(next);
     router.refresh();
   }
 

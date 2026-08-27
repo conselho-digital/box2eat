@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +14,8 @@ import { MfaChallengeForm } from "./mfa-challenge-form";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next") || "/conta";
   const [formError, setFormError] = useState<string | null>(null);
   const [mfaFactorId, setMfaFactorId] = useState<string | null>(null);
   const {
@@ -41,12 +43,12 @@ export function LoginForm() {
       }
     }
 
-    router.push("/conta");
+    router.push(next);
     router.refresh();
   }
 
   if (mfaFactorId) {
-    return <MfaChallengeForm factorId={mfaFactorId} />;
+    return <MfaChallengeForm factorId={mfaFactorId} next={next} />;
   }
 
   return (

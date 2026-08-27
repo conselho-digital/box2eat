@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   Card,
   CardContent,
@@ -27,7 +28,9 @@ export default function LoginPage() {
             <span className="text-xs text-muted-foreground">ou</span>
             <Separator className="flex-1" />
           </div>
-          <LoginForm />
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
           <p className="text-center text-sm text-muted-foreground">
             Não tem conta?{" "}
             <Link href="/cadastro" className="underline underline-offset-4">
