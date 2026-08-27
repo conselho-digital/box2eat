@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/account/profile-form";
 import { EmailForm } from "@/components/account/email-form";
+import { PushToggle } from "@/components/notifications/push-toggle";
 
 export default async function AccountPage() {
   const supabase = await createClient();
@@ -43,6 +44,18 @@ export default async function AccountPage() {
       <Separator />
 
       <EmailForm currentEmail={user.email ?? ""} />
+
+      <Separator />
+
+      <div>
+        <h2 className="font-medium">Notificações</h2>
+        <p className="text-sm text-muted-foreground">
+          Receba avisos de pedidos direto no navegador, mesmo com o site fechado.
+        </p>
+        <div className="mt-2">
+          <PushToggle userId={user.id} />
+        </div>
+      </div>
     </div>
   );
 }
