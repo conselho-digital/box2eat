@@ -14,3 +14,25 @@ export const signUpSchema = z.object({
 });
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
+
+const phonePattern = /^\+?\d[\d\s()-]{7,}$/;
+
+export const signUpIdentifierSchema = z.object({
+  fullName: z.string().trim().min(2, "Informe seu nome completo"),
+  identifier: z
+    .string()
+    .trim()
+    .min(5, "Informe um e-mail ou telefone válido")
+    .refine(
+      (value) => z.string().email().safeParse(value).success || phonePattern.test(value),
+      "Informe um e-mail ou telefone válido",
+    ),
+});
+
+export type SignUpIdentifierInput = z.infer<typeof signUpIdentifierSchema>;
+
+export const otpCodeSchema = z.object({
+  code: z.string().trim().length(6, "O código tem 6 dígitos"),
+});
+
+export type OtpCodeInput = z.infer<typeof otpCodeSchema>;

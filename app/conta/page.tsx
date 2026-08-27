@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -21,6 +22,9 @@ export default async function AccountPage() {
     .single();
 
   const initials = (profile?.full_name || user.email || "?").trim().charAt(0).toUpperCase();
+  const missing: string[] = [];
+  if (!profile?.phone) missing.push("telefone");
+  if (!profile?.recovery_email) missing.push("e-mail de recuperação");
 
   return (
     <div className="flex flex-col gap-8">
@@ -35,10 +39,24 @@ export default async function AccountPage() {
         </div>
       </div>
 
+      {missing.length > 0 && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
+          <p className="font-medium">Complete seu cadastro</p>
+          <p className="text-muted-foreground">
+            Falta: {missing.join(", ")}. Também recomendamos{" "}
+            <Link href="/conta/seguranca" className="underline underline-offset-4">
+              definir uma senha
+            </Link>{" "}
+            para entrar sem depender só do código por e-mail.
+          </p>
+        </div>
+      )}
+
       <ProfileForm
         userId={user.id}
         fullName={profile?.full_name ?? ""}
         phone={profile?.phone ?? null}
+        recoveryEmail={profile?.recovery_email ?? null}
       />
 
       <Separator />

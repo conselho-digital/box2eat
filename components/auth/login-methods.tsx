@@ -28,6 +28,10 @@ export function LoginMethods() {
   return (
     <div className="flex flex-col gap-4">
       <OAuthButtons />
+      <Button type="button" variant="outline" onClick={() => setMode("qr")}>
+        <QrCode className="size-4" />
+        Entrar com QR code
+      </Button>
       <div className="flex items-center gap-2">
         <Separator className="flex-1" />
         <span className="text-xs text-muted-foreground">ou</span>
@@ -36,10 +40,6 @@ export function LoginMethods() {
       <Suspense fallback={null}>
         <LoginForm />
       </Suspense>
-      <Button type="button" variant="outline" onClick={() => setMode("qr")}>
-        <QrCode className="size-4" />
-        Entrar com QR code
-      </Button>
       <p className="text-center text-sm text-muted-foreground">
         Não tem conta?{" "}
         <Link href="/cadastro" className="underline underline-offset-4">

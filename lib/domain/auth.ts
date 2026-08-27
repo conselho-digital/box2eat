@@ -26,6 +26,28 @@ export async function signUpWithPassword(
   });
 }
 
+export async function signUpWithEmailOtp(
+  supabase: SupabaseClient,
+  fullName: string,
+  email: string,
+) {
+  return supabase.auth.signInWithOtp({
+    email,
+    options: {
+      shouldCreateUser: true,
+      data: { full_name: fullName },
+    },
+  });
+}
+
+export async function verifyEmailOtp(
+  supabase: SupabaseClient,
+  email: string,
+  token: string,
+) {
+  return supabase.auth.verifyOtp({ email, token, type: "email" });
+}
+
 export async function signInWithOAuth(
   supabase: SupabaseClient,
   provider: OAuthProvider,

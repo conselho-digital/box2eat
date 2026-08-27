@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { AuthToggleButton } from "@/components/auth/auth-toggle-button";
 import { createClient } from "@/lib/supabase/server";
 
 export async function SiteHeader() {
@@ -27,14 +28,7 @@ export async function SiteHeader() {
             <LogoutButton />
           </>
         ) : (
-          <>
-            <Button render={<Link href="/login" />} nativeButton={false} variant="ghost" size="sm">
-              Entrar
-            </Button>
-            <Button render={<Link href="/cadastro" />} nativeButton={false} size="sm">
-              Criar conta
-            </Button>
-          </>
+          <AuthToggleButton />
         )}
       </div>
     </header>

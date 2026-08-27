@@ -3,6 +3,7 @@ import { z } from "zod";
 export const profileSchema = z.object({
   fullName: z.string().trim().min(2, "Informe seu nome completo"),
   phone: z.string().trim().optional(),
+  recoveryEmail: z.union([z.string().trim().email("Informe um e-mail válido"), z.literal("")]).optional(),
 });
 
 export type ProfileInput = z.infer<typeof profileSchema>;

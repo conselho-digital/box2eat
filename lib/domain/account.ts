@@ -11,7 +11,11 @@ export async function updateProfile(
 ) {
   return supabase
     .from("profiles")
-    .update({ full_name: input.fullName, phone: input.phone || null })
+    .update({
+      full_name: input.fullName,
+      phone: input.phone || null,
+      recovery_email: input.recoveryEmail || null,
+    })
     .eq("id", userId);
 }
 
