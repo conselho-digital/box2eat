@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HeroSearch } from "@/components/home/hero-search";
@@ -33,12 +34,23 @@ export default async function Home({
 
   return (
     <div className="flex flex-1 flex-col gap-8 p-4 sm:p-6">
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary via-[oklch(0.6_0.2_35)] to-[oklch(0.5_0.18_30)] p-6 text-primary-foreground sm:p-10">
-        <div className="flex max-w-xl flex-col gap-4">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-5xl">
+      <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">
+        <Image
+          src="/brand/hero-food.webp"
+          alt=""
+          fill
+          priority
+          className="object-cover"
+        />
+        {/* White wash over the photo so it stays in the background instead
+            of competing with the search bar — only ~40% of the original
+            color shows through. */}
+        <div className="absolute inset-0 bg-white/60" />
+        <div className="relative flex max-w-xl flex-col gap-4">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
             Peça uma entrega perto de você
           </h1>
-          <p className="text-primary-foreground/90">
+          <p className="text-foreground/80">
             Peça comida das melhores empresas perto de você, ou cadastre a sua e
             comece a vender.
           </p>
@@ -70,7 +82,7 @@ export default async function Home({
               Mais bem avaliadas
             </Button>
             {hasFilters && (
-              <Link href="/" className="text-primary-foreground/80 hover:underline">
+              <Link href="/" className="text-foreground/70 hover:underline">
                 Limpar filtros
               </Link>
             )}
