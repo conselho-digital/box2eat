@@ -11,16 +11,19 @@ export async function updateProfile(
 ) {
   return supabase
     .from("profiles")
-    .update({
-      full_name: input.fullName,
-      phone: input.phone || null,
-      recovery_email: input.recoveryEmail || null,
-    })
+    .update({ full_name: input.fullName, phone: input.phone || null })
     .eq("id", userId);
 }
 
 export async function updateEmail(supabase: Client, email: string) {
   return supabase.auth.updateUser({ email });
+}
+
+export async function updateRecoveryEmail(supabase: Client, userId: string, recoveryEmail: string) {
+  return supabase
+    .from("profiles")
+    .update({ recovery_email: recoveryEmail || null })
+    .eq("id", userId);
 }
 
 export async function updatePassword(supabase: Client, password: string) {
