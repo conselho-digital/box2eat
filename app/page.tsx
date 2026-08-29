@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HeroSearch } from "@/components/home/hero-search";
+import { NearMeButton } from "@/components/home/near-me-button";
 import { createClient } from "@/lib/supabase/server";
 import { listPublicCompanies, type CompanySearchParams } from "@/lib/domain/companies";
 
@@ -17,6 +18,7 @@ function buildHref(current: SearchParams, changes: SearchParams) {
   if (merged.sort) params.set("sort", merged.sort);
   if (merged.lat) params.set("lat", merged.lat);
   if (merged.lng) params.set("lng", merged.lng);
+  if (merged.near) params.set("near", merged.near);
   const query = params.toString();
   return query ? `/?${query}` : "/";
 }
@@ -26,7 +28,7 @@ export default async function Home({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { q, open, sort, lat, lng } = await searchParams;
+  const { q, open, sort, lat, lng, near } = await searchParams;
   const supabase = await createClient();
   const companies = await listPublicCompanies(supabase, { q, open, sort, lat, lng });
 
@@ -56,9 +58,15 @@ export default async function Home({
           </p>
           <HeroSearch q={q} open={open} sort={sort} lat={lat} lng={lng} />
           <div className="flex flex-wrap items-center gap-2 text-sm">
+            <NearMeButton q={q} open={open} sort={sort} lat={lat} lng={lng} near={near} />
             <Button
               render={
-                <Link href={buildHref({ q, open, sort, lat, lng }, { open: open === "1" ? undefined : "1" })} />
+                <Link
+                  href={buildHref(
+                    { q, open, sort, lat, lng, near },
+                    { open: open === "1" ? undefined : "1" },
+                  )}
+                />
               }
               nativeButton={false}
               variant={open === "1" ? "default" : "secondary"}
@@ -70,8 +78,13 @@ export default async function Home({
               render={
                 <Link
                   href={buildHref(
-                    { q, open, sort, lat, lng },
-                    { sort: sort === "rating" ? undefined : "rating", lat: undefined, lng: undefined },
+                    { q, open, sort, lat, lng, near },
+                    {
+                      sort: sort === "rating" ? undefined : "rating",
+                      lat: undefined,
+                      lng: undefined,
+                      near: "off",
+                    },
                   )}
                 />
               }

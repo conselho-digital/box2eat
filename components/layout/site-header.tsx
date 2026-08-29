@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { AuthToggleButton } from "@/components/auth/auth-toggle-button";
+import { SideMenu } from "@/components/layout/side-menu";
 import { createClient } from "@/lib/supabase/server";
 
 export async function SiteHeader() {
@@ -14,10 +15,13 @@ export async function SiteHeader() {
 
   return (
     <header className="flex items-center justify-between border-b p-3 px-6">
-      <Link href="/" className="flex items-center gap-2">
-        <Image src="/brand/box2eat-logo.png" alt="Box2eat" width={28} height={31} />
-        <span className="font-semibold">Box2eat</span>
-      </Link>
+      <div className="flex items-center gap-1">
+        <SideMenu />
+        <Link href="/" className="flex items-center gap-2">
+          <Image src="/brand/box2eat-logo.png" alt="Box2eat" width={28} height={31} />
+          <span className="font-semibold">Box2eat</span>
+        </Link>
+      </div>
       <div className="flex items-center gap-2">
         {user ? (
           <>

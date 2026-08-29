@@ -34,6 +34,12 @@ export default function SignUpPage() {
               Entrar
             </Link>
           </p>
+          <p className="text-center text-sm text-muted-foreground">
+            Quer vender no Box2eat?{" "}
+            <Link href="/empresas" className="underline underline-offset-4">
+              Criar conta empresa
+            </Link>
+          </p>
         </CardContent>
       </Card>
     </div>

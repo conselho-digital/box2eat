@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LocateFixed, Map } from "lucide-react";
+import { Map } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -22,8 +22,6 @@ export function HeroSearch({
 }) {
   const router = useRouter();
   const [value, setValue] = useState(q ?? "");
-  const [locating, setLocating] = useState(false);
-  const [locateError, setLocateError] = useState<string | null>(null);
 
   function navigate(extra: Record<string, string | undefined>) {
     const params = new URLSearchParams();
@@ -35,29 +33,6 @@ export function HeroSearch({
     if (merged.lng) params.set("lng", merged.lng);
     const query = params.toString();
     router.push(query ? `/?${query}` : "/");
-  }
-
-  function handleLocate() {
-    if (!navigator.geolocation) {
-      setLocateError("Geolocalização não suportada neste navegador");
-      return;
-    }
-    setLocating(true);
-    setLocateError(null);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocating(false);
-        navigate({
-          lat: String(position.coords.latitude),
-          lng: String(position.coords.longitude),
-        });
-      },
-      () => {
-        setLocating(false);
-        setLocateError("Não foi possível acessar sua localização");
-      },
-      { enableHighAccuracy: false, timeout: 8000 },
-    );
   }
 
   const mapParams = new URLSearchParams();
@@ -87,17 +62,7 @@ export function HeroSearch({
         <Button
           type="button"
           variant="outline"
-          className="h-11 gap-1.5 rounded-xl px-4 text-foreground"
-          onClick={handleLocate}
-          disabled={locating}
-        >
-          <LocateFixed className="size-4" />
-          {locating ? "Localizando…" : "Próximas de mim"}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-11 gap-1.5 rounded-xl px-4 text-foreground"
+          className="hidden h-11 gap-1.5 rounded-xl px-4 text-foreground sm:inline-flex"
           render={<Link href={mapHref} />}
           nativeButton={false}
         >
@@ -108,7 +73,16 @@ export function HeroSearch({
           Buscar
         </Button>
       </form>
-      {locateError && <p className="text-sm text-primary-foreground/90">{locateError}</p>}
+
+      <Button
+        className="fixed bottom-6 right-4 z-40 size-12 rounded-full shadow-lg sm:hidden"
+        render={<Link href={mapHref} />}
+        nativeButton={false}
+        size="icon"
+        aria-label="Abrir mapa"
+      >
+        <Map className="size-5" />
+      </Button>
     </div>
   );
 }

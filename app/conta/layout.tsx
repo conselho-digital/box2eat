@@ -14,6 +14,13 @@ export default async function AccountLayout({
 
   if (!user) redirect("/login");
 
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("id")
+    .eq("status", "active")
+    .limit(1)
+    .maybeSingle();
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
       <h1 className="text-xl font-semibold">Minha conta</h1>
@@ -30,9 +37,11 @@ export default async function AccountLayout({
         <Link href="/conta/pedidos" className="hover:underline">
           Pedidos
         </Link>
-        <Link href="/empresas" className="hover:underline">
-          Minhas empresas
-        </Link>
+        {membership && (
+          <Link href="/empresas" className="hover:underline">
+            Minhas empresas
+          </Link>
+        )}
         <Link href="/entregador/cadastro" className="hover:underline">
           Seja um entregador
         </Link>

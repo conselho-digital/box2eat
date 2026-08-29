@@ -1,6 +1,6 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CompanyList } from "@/components/companies/company-list";
+import { CompanyLanding } from "@/components/companies/company-landing";
 
 export default async function CompaniesPage() {
   const supabase = await createClient();
@@ -9,7 +9,7 @@ export default async function CompaniesPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    return <CompanyLanding />;
   }
 
   return (
