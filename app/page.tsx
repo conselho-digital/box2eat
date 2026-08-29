@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroSearch } from "@/components/home/hero-search";
 import { NearMeButton } from "@/components/home/near-me-button";
@@ -34,8 +35,26 @@ export default async function Home({
 
   const hasFilters = Boolean(q || open || sort || lat);
 
+  const mapParams = new URLSearchParams();
+  if (q) mapParams.set("q", q);
+  if (open) mapParams.set("open", open);
+  if (sort) mapParams.set("sort", sort);
+  if (lat) mapParams.set("lat", lat);
+  if (lng) mapParams.set("lng", lng);
+  const mapHref = mapParams.toString() ? `/mapa?${mapParams.toString()}` : "/mapa";
+
   return (
     <div className="flex flex-1 flex-col gap-8 p-4 sm:p-6">
+      <Button
+        className="fixed bottom-6 right-4 z-40 size-12 rounded-full shadow-lg sm:hidden"
+        render={<Link href={mapHref} />}
+        nativeButton={false}
+        size="icon"
+        aria-label="Abrir mapa"
+      >
+        <Map className="size-5" />
+      </Button>
+
       <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">
         <Image
           src="/brand/hero-food.webp"

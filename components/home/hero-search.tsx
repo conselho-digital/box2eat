@@ -73,16 +73,6 @@ export function HeroSearch({
           Buscar
         </Button>
       </form>
-
-      <Button
-        className="fixed bottom-6 right-4 z-40 size-12 rounded-full shadow-lg sm:hidden"
-        render={<Link href={mapHref} />}
-        nativeButton={false}
-        size="icon"
-        aria-label="Abrir mapa"
-      >
-        <Map className="size-5" />
-      </Button>
     </div>
   );
 }
