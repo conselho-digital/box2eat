@@ -66,3 +66,18 @@ export async function signInWithOAuth(
 export async function signOut(supabase: SupabaseClient) {
   return supabase.auth.signOut();
 }
+
+/**
+ * Sends a login link to the account's recovery e-mail (a different address
+ * than the account's own login e-mail). Always resolves the same way
+ * whether or not that address is registered, so the caller can't use it to
+ * enumerate accounts.
+ */
+export async function requestRecoveryLogin(supabase: SupabaseClient, recoveryEmail: string) {
+  return supabase.functions.invoke("request-recovery-login", {
+    body: {
+      recovery_email: recoveryEmail,
+      redirect_to: `${window.location.origin}/nova-senha`,
+    },
+  });
+}

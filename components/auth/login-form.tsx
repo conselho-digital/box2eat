@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,6 +79,12 @@ export function LoginForm() {
           <p className="text-sm text-destructive">{errors.password.message}</p>
         )}
       </div>
+      <Link
+        href="/recuperar-acesso"
+        className="text-sm text-muted-foreground underline underline-offset-4"
+      >
+        Esqueceu a senha ou perdeu acesso à conta?
+      </Link>
       {formError && <p className="text-sm text-destructive">{formError}</p>}
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Entrando…" : "Entrar"}
