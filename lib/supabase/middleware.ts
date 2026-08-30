@@ -27,22 +27,7 @@ export async function updateSession(request: NextRequest) {
 
   // Refreshes the auth session cookie; required before any Server Component
   // reads the session, per Supabase's Next.js App Router integration.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const pathname = request.nextUrl.pathname;
-  const mustSetPassword = Boolean(user?.user_metadata?.must_set_password);
-
-  if (mustSetPassword && pathname !== "/nova-senha") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/nova-senha";
-    const redirectResponse = NextResponse.redirect(url);
-    supabaseResponse.cookies.getAll().forEach((cookie) => {
-      redirectResponse.cookies.set(cookie.name, cookie.value);
-    });
-    return redirectResponse;
-  }
+  await supabase.auth.getUser();
 
   return supabaseResponse;
 }

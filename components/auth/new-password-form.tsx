@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { passwordSchema, type PasswordInput } from "@/lib/validations/account";
 
-export function NewPasswordForm() {
+export function NewPasswordForm({ onSuccess }: { onSuccess?: () => void } = {}) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const {
@@ -31,8 +31,12 @@ export function NewPasswordForm() {
       setError(error.message);
       return;
     }
-    router.push("/conta");
-    router.refresh();
+    if (onSuccess) {
+      onSuccess();
+    } else {
+      router.push("/conta");
+      router.refresh();
+    }
   }
 
   return (
