@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Public_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
@@ -18,6 +18,15 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://box2eat.com"),
   title: "Box2eat",
   description: "Peça comida dos melhores restaurantes perto de você",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Box2eat",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#e55e1e",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
