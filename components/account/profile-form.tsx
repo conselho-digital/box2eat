@@ -14,12 +14,10 @@ export function ProfileForm({
   userId,
   fullName,
   phone,
-  recoveryEmail,
 }: {
   userId: string;
   fullName: string;
   phone: string | null;
-  recoveryEmail: string | null;
 }) {
   const [success, setSuccess] = useState(false);
   const {
@@ -28,7 +26,7 @@ export function ProfileForm({
     formState: { errors, isSubmitting },
   } = useForm<ProfileInput>({
     resolver: zodResolver(profileSchema),
-    defaultValues: { fullName, phone: phone ?? "", recoveryEmail: recoveryEmail ?? "" },
+    defaultValues: { fullName, phone: phone ?? "" },
   });
 
   async function onSubmit(values: ProfileInput) {
@@ -50,18 +48,6 @@ export function ProfileForm({
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="phone">Telefone</Label>
         <Input id="phone" placeholder="(11) 91234-5678" {...register("phone")} />
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="recoveryEmail">E-mail de recuperação</Label>
-        <Input
-          id="recoveryEmail"
-          type="email"
-          placeholder="Usado se você perder acesso à conta"
-          {...register("recoveryEmail")}
-        />
-        {errors.recoveryEmail && (
-          <p className="text-sm text-destructive">{errors.recoveryEmail.message}</p>
-        )}
       </div>
       {success && <p className="text-sm text-primary">Perfil atualizado.</p>}
       <Button type="submit" disabled={isSubmitting} className="w-fit">

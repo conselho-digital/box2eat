@@ -1,13 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isEmailIdentifier } from "@/lib/validations/auth";
 
 export type OAuthProvider = "google" | "apple";
 
+/** `identifier` is whatever the user typed in the "e-mail ou telefone" field. */
 export async function signInWithPassword(
   supabase: SupabaseClient,
-  email: string,
+  identifier: string,
   password: string,
 ) {
-  return supabase.auth.signInWithPassword({ email, password });
+  if (isEmailIdentifier(identifier)) {
+    return supabase.auth.signInWithPassword({ email: identifier, password });
+  }
+  return supabase.auth.signInWithPassword({ phone: identifier, password });
 }
 
 export async function signUpWithPassword(
@@ -60,4 +65,19 @@ export async function signInWithOAuth(
 
 export async function signOut(supabase: SupabaseClient) {
   return supabase.auth.signOut();
+}
+
+/**
+ * Sends a login link to the account's recovery e-mail (a different address
+ * than the account's own login e-mail). Always resolves the same way
+ * whether or not that address is registered, so the caller can't use it to
+ * enumerate accounts.
+ */
+export async function requestRecoveryLogin(supabase: SupabaseClient, recoveryEmail: string) {
+  return supabase.functions.invoke("request-recovery-login", {
+    body: {
+      recovery_email: recoveryEmail,
+      redirect_to: `${window.location.origin}/nova-senha`,
+    },
+  });
 }

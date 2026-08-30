@@ -12,13 +12,10 @@ import { signUpWithEmailOtp, verifyEmailOtp } from "@/lib/domain/auth";
 import {
   signUpIdentifierSchema,
   otpCodeSchema,
+  isEmailIdentifier,
   type SignUpIdentifierInput,
   type OtpCodeInput,
 } from "@/lib/validations/auth";
-
-function isEmail(value: string) {
-  return value.includes("@");
-}
 
 export function SignUpForm() {
   const router = useRouter();
@@ -35,7 +32,7 @@ export function SignUpForm() {
     setFormError(null);
     const identifier = values.identifier.trim();
 
-    if (!isEmail(identifier)) {
+    if (!isEmailIdentifier(identifier)) {
       setFormError(
         "Cadastro por telefone chega em breve — por enquanto, use seu e-mail.",
       );

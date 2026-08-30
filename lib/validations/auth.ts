@@ -1,7 +1,26 @@
 import { z } from "zod";
 
+const phonePattern = /^\+?\d[\d\s()-]{7,}$/;
+
+export function isEmailIdentifier(value: string) {
+  return z.string().email().safeParse(value).success;
+}
+
+export function isPhoneIdentifier(value: string) {
+  return phonePattern.test(value);
+}
+
+const identifierSchema = z
+  .string()
+  .trim()
+  .min(5, "Informe um e-mail ou telefone válido")
+  .refine(
+    (value) => isEmailIdentifier(value) || isPhoneIdentifier(value),
+    "Informe um e-mail ou telefone válido",
+  );
+
 export const loginSchema = z.object({
-  email: z.string().email("Informe um e-mail válido"),
+  identifier: identifierSchema,
   password: z.string().min(1, "Informe sua senha"),
 });
 
@@ -15,18 +34,9 @@ export const signUpSchema = z.object({
 
 export type SignUpInput = z.infer<typeof signUpSchema>;
 
-const phonePattern = /^\+?\d[\d\s()-]{7,}$/;
-
 export const signUpIdentifierSchema = z.object({
   fullName: z.string().trim().min(2, "Informe seu nome completo"),
-  identifier: z
-    .string()
-    .trim()
-    .min(5, "Informe um e-mail ou telefone válido")
-    .refine(
-      (value) => z.string().email().safeParse(value).success || phonePattern.test(value),
-      "Informe um e-mail ou telefone válido",
-    ),
+  identifier: identifierSchema,
 });
 
 export type SignUpIdentifierInput = z.infer<typeof signUpIdentifierSchema>;

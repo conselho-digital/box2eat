@@ -4,8 +4,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/server";
 import { ProfileForm } from "@/components/account/profile-form";
+import { AddressForm } from "@/components/account/address-form";
 import { EmailForm } from "@/components/account/email-form";
 import { PushToggle } from "@/components/notifications/push-toggle";
+import { getMyAddress } from "@/lib/domain/address";
 
 export default async function AccountPage() {
   const supabase = await createClient();
@@ -21,9 +23,15 @@ export default async function AccountPage() {
     .eq("id", user.id)
     .single();
 
+  const { data: address } = await getMyAddress(supabase, user.id);
+
+  const hasPassword = (user.identities ?? []).some((identity) => identity.provider === "email");
+
   const initials = (profile?.full_name || user.email || "?").trim().charAt(0).toUpperCase();
   const missing: string[] = [];
   if (!profile?.phone) missing.push("telefone");
+  if (!address) missing.push("endereço");
+  if (!hasPassword) missing.push("senha");
   if (!profile?.recovery_email) missing.push("e-mail de recuperação");
 
   return (
@@ -43,11 +51,12 @@ export default async function AccountPage() {
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
           <p className="font-medium">Complete seu cadastro</p>
           <p className="text-muted-foreground">
-            Falta: {missing.join(", ")}. Também recomendamos{" "}
+            Falta: {missing.join(", ")}. A senha permite entrar com e-mail e senha caso você perca o
+            acesso à sua conta Google, e o e-mail de recuperação fica em{" "}
             <Link href="/conta/seguranca" className="underline underline-offset-4">
-              definir uma senha
-            </Link>{" "}
-            para entrar sem depender só do código por e-mail.
+              Segurança
+            </Link>
+            .
           </p>
         </div>
       )}
@@ -56,8 +65,11 @@ export default async function AccountPage() {
         userId={user.id}
         fullName={profile?.full_name ?? ""}
         phone={profile?.phone ?? null}
-        recoveryEmail={profile?.recovery_email ?? null}
       />
+
+      <Separator />
+
+      <AddressForm userId={user.id} initialAddress={address} />
 
       <Separator />
 

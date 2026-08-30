@@ -25,6 +25,7 @@ export type CompanySearchParams = {
   sort?: string;
   lat?: string;
   lng?: string;
+  near?: string;
 };
 
 /** Shared by the home listing and the map view: same filters, same "closest first" logic. */

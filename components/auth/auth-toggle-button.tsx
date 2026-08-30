@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -25,6 +26,26 @@ export function AuthToggleButton() {
       <Button render={<Link href="/login" />} nativeButton={false} size="sm">
         Entrar
       </Button>
+    );
+  }
+
+  if (pathname === "/") {
+    return (
+      <>
+        <Button
+          render={<Link href="/login" />}
+          nativeButton={false}
+          variant="ghost"
+          size="icon"
+          className="rounded-full"
+          aria-label="Entrar"
+        >
+          <User className="size-4" />
+        </Button>
+        <Button render={<Link href="/cadastro" />} nativeButton={false} size="sm">
+          Criar conta
+        </Button>
+      </>
     );
   }
 

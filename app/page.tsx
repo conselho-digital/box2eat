@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroSearch } from "@/components/home/hero-search";
+import { NearMeButton } from "@/components/home/near-me-button";
 import { createClient } from "@/lib/supabase/server";
 import { listPublicCompanies, type CompanySearchParams } from "@/lib/domain/companies";
 
@@ -17,6 +19,7 @@ function buildHref(current: SearchParams, changes: SearchParams) {
   if (merged.sort) params.set("sort", merged.sort);
   if (merged.lat) params.set("lat", merged.lat);
   if (merged.lng) params.set("lng", merged.lng);
+  if (merged.near) params.set("near", merged.near);
   const query = params.toString();
   return query ? `/?${query}` : "/";
 }
@@ -26,14 +29,32 @@ export default async function Home({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { q, open, sort, lat, lng } = await searchParams;
+  const { q, open, sort, lat, lng, near } = await searchParams;
   const supabase = await createClient();
   const companies = await listPublicCompanies(supabase, { q, open, sort, lat, lng });
 
   const hasFilters = Boolean(q || open || sort || lat);
 
+  const mapParams = new URLSearchParams();
+  if (q) mapParams.set("q", q);
+  if (open) mapParams.set("open", open);
+  if (sort) mapParams.set("sort", sort);
+  if (lat) mapParams.set("lat", lat);
+  if (lng) mapParams.set("lng", lng);
+  const mapHref = mapParams.toString() ? `/mapa?${mapParams.toString()}` : "/mapa";
+
   return (
     <div className="flex flex-1 flex-col gap-8 p-4 sm:p-6">
+      <Button
+        className="fixed bottom-6 right-4 z-40 size-12 rounded-full shadow-lg sm:hidden"
+        render={<Link href={mapHref} />}
+        nativeButton={false}
+        size="icon"
+        aria-label="Abrir mapa"
+      >
+        <Map className="size-5" />
+      </Button>
+
       <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">
         <Image
           src="/brand/hero-food.webp"
@@ -56,9 +77,15 @@ export default async function Home({
           </p>
           <HeroSearch q={q} open={open} sort={sort} lat={lat} lng={lng} />
           <div className="flex flex-wrap items-center gap-2 text-sm">
+            <NearMeButton q={q} open={open} sort={sort} lat={lat} lng={lng} near={near} />
             <Button
               render={
-                <Link href={buildHref({ q, open, sort, lat, lng }, { open: open === "1" ? undefined : "1" })} />
+                <Link
+                  href={buildHref(
+                    { q, open, sort, lat, lng, near },
+                    { open: open === "1" ? undefined : "1" },
+                  )}
+                />
               }
               nativeButton={false}
               variant={open === "1" ? "default" : "secondary"}
@@ -70,8 +97,13 @@ export default async function Home({
               render={
                 <Link
                   href={buildHref(
-                    { q, open, sort, lat, lng },
-                    { sort: sort === "rating" ? undefined : "rating", lat: undefined, lng: undefined },
+                    { q, open, sort, lat, lng, near },
+                    {
+                      sort: sort === "rating" ? undefined : "rating",
+                      lat: undefined,
+                      lng: undefined,
+                      near: "off",
+                    },
                   )}
                 />
               }
