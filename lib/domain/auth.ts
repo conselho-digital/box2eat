@@ -1,13 +1,18 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isEmailIdentifier } from "@/lib/validations/auth";
 
 export type OAuthProvider = "google" | "apple";
 
+/** `identifier` is whatever the user typed in the "e-mail ou telefone" field. */
 export async function signInWithPassword(
   supabase: SupabaseClient,
-  email: string,
+  identifier: string,
   password: string,
 ) {
-  return supabase.auth.signInWithPassword({ email, password });
+  if (isEmailIdentifier(identifier)) {
+    return supabase.auth.signInWithPassword({ email: identifier, password });
+  }
+  return supabase.auth.signInWithPassword({ phone: identifier, password });
 }
 
 export async function signUpWithPassword(

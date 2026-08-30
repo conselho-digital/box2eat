@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { signInWithPassword } from "@/lib/domain/auth";
-import { loginSchema, type LoginInput } from "@/lib/validations/auth";
+import { loginSchema, isEmailIdentifier, type LoginInput } from "@/lib/validations/auth";
 import { MfaChallengeForm } from "./mfa-challenge-form";
 
 export function LoginForm() {
@@ -26,8 +26,14 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginInput) {
     setFormError(null);
+
+    if (!isEmailIdentifier(values.identifier)) {
+      setFormError("Login por telefone chega em breve — por enquanto, use seu e-mail.");
+      return;
+    }
+
     const supabase = createClient();
-    const { error } = await signInWithPassword(supabase, values.email, values.password);
+    const { error } = await signInWithPassword(supabase, values.identifier, values.password);
     if (error) {
       setFormError("E-mail ou senha inválidos.");
       return;
@@ -54,10 +60,10 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="email">E-mail</Label>
-        <Input id="email" type="email" autoComplete="email" {...register("email")} />
-        {errors.email && (
-          <p className="text-sm text-destructive">{errors.email.message}</p>
+        <Label htmlFor="identifier">E-mail ou telefone</Label>
+        <Input id="identifier" autoComplete="username" {...register("identifier")} />
+        {errors.identifier && (
+          <p className="text-sm text-destructive">{errors.identifier.message}</p>
         )}
       </div>
       <div className="flex flex-col gap-1.5">
