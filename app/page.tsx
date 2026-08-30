@@ -1,15 +1,19 @@
+import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
 import { Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { HeroSearch } from "@/components/home/hero-search";
 import { NearMeButton } from "@/components/home/near-me-button";
+import { RatingSortButton } from "@/components/home/rating-sort-button";
+import { ClearFiltersLink } from "@/components/home/clear-filters-link";
 import { createClient } from "@/lib/supabase/server";
 import { listPublicCompanies, type CompanySearchParams } from "@/lib/domain/companies";
+import { LAT_COOKIE, LNG_COOKIE, NEAR_OFF_COOKIE } from "@/lib/domain/location-cookie";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
-type SearchParams = CompanySearchParams;
+type SearchParams = Pick<CompanySearchParams, "q" | "open" | "sort">;
 
 function buildHref(current: SearchParams, changes: SearchParams) {
   const params = new URLSearchParams();
@@ -17,9 +21,6 @@ function buildHref(current: SearchParams, changes: SearchParams) {
   if (merged.q) params.set("q", merged.q);
   if (merged.open) params.set("open", merged.open);
   if (merged.sort) params.set("sort", merged.sort);
-  if (merged.lat) params.set("lat", merged.lat);
-  if (merged.lng) params.set("lng", merged.lng);
-  if (merged.near) params.set("near", merged.near);
   const query = params.toString();
   return query ? `/?${query}` : "/";
 }
@@ -29,7 +30,12 @@ export default async function Home({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { q, open, sort, lat, lng, near } = await searchParams;
+  const { q, open, sort } = await searchParams;
+  const cookieStore = await cookies();
+  const lat = cookieStore.get(LAT_COOKIE)?.value;
+  const lng = cookieStore.get(LNG_COOKIE)?.value;
+  const nearOff = cookieStore.get(NEAR_OFF_COOKIE)?.value === "1";
+
   const supabase = await createClient();
   const companies = await listPublicCompanies(supabase, { q, open, sort, lat, lng });
 
@@ -39,8 +45,6 @@ export default async function Home({
   if (q) mapParams.set("q", q);
   if (open) mapParams.set("open", open);
   if (sort) mapParams.set("sort", sort);
-  if (lat) mapParams.set("lat", lat);
-  if (lng) mapParams.set("lng", lng);
   const mapHref = mapParams.toString() ? `/mapa?${mapParams.toString()}` : "/mapa";
 
   return (
@@ -75,16 +79,13 @@ export default async function Home({
             Peça comida das melhores empresas perto de você, ou cadastre a sua e
             comece a vender.
           </p>
-          <HeroSearch q={q} open={open} sort={sort} lat={lat} lng={lng} />
+          <HeroSearch q={q} open={open} sort={sort} />
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <NearMeButton q={q} open={open} sort={sort} lat={lat} lng={lng} near={near} />
+            <NearMeButton lat={lat} lng={lng} nearOff={nearOff} />
             <Button
               render={
                 <Link
-                  href={buildHref(
-                    { q, open, sort, lat, lng, near },
-                    { open: open === "1" ? undefined : "1" },
-                  )}
+                  href={buildHref({ q, open, sort }, { open: open === "1" ? undefined : "1" })}
                 />
               }
               nativeButton={false}
@@ -93,31 +94,11 @@ export default async function Home({
             >
               Aberto agora
             </Button>
-            <Button
-              render={
-                <Link
-                  href={buildHref(
-                    { q, open, sort, lat, lng, near },
-                    {
-                      sort: sort === "rating" ? undefined : "rating",
-                      lat: undefined,
-                      lng: undefined,
-                      near: "off",
-                    },
-                  )}
-                />
-              }
-              nativeButton={false}
-              variant={sort === "rating" && !lat ? "default" : "secondary"}
-              size="sm"
-            >
-              Mais bem avaliadas
-            </Button>
-            {hasFilters && (
-              <Link href="/" className="text-foreground/70 hover:underline">
-                Limpar filtros
-              </Link>
-            )}
+            <RatingSortButton
+              active={sort === "rating" && !lat}
+              href={buildHref({ q, open, sort }, { sort: sort === "rating" ? undefined : "rating" })}
+            />
+            {hasFilters && <ClearFiltersLink />}
           </div>
         </div>
       </section>

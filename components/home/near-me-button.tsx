@@ -4,41 +4,30 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  setLocationCookies,
+  clearLocationCookies,
+  setNearOffCookie,
+  clearNearOffCookie,
+} from "@/lib/domain/location-cookie";
 
 /** "Próximas de mim" is on by default — geolocation is requested automatically
- * on load unless the user has explicitly turned it off (near=off). */
+ * on load unless the user has explicitly turned it off. Location is kept in
+ * cookies (not the URL) so it never shows up in the address bar or in
+ * shared links. */
 export function NearMeButton({
-  q,
-  open,
-  sort,
   lat,
   lng,
-  near,
+  nearOff,
 }: {
-  q?: string;
-  open?: string;
-  sort?: string;
   lat?: string;
   lng?: string;
-  near?: string;
+  nearOff?: boolean;
 }) {
   const router = useRouter();
   const [locating, setLocating] = useState(false);
   const active = Boolean(lat && lng);
   const requestedRef = useRef(false);
-
-  function navigate(extra: Record<string, string | undefined>) {
-    const params = new URLSearchParams();
-    const merged: Record<string, string | undefined> = { q, open, sort, lat, lng, near, ...extra };
-    if (merged.q) params.set("q", merged.q);
-    if (merged.open) params.set("open", merged.open);
-    if (merged.sort) params.set("sort", merged.sort);
-    if (merged.lat) params.set("lat", merged.lat);
-    if (merged.lng) params.set("lng", merged.lng);
-    if (merged.near) params.set("near", merged.near);
-    const query = params.toString();
-    router.replace(query ? `/?${query}` : "/");
-  }
 
   function locate() {
     if (!navigator.geolocation) return;
@@ -46,11 +35,9 @@ export function NearMeButton({
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setLocating(false);
-        navigate({
-          lat: String(position.coords.latitude),
-          lng: String(position.coords.longitude),
-          near: undefined,
-        });
+        setLocationCookies(position.coords.latitude, position.coords.longitude);
+        clearNearOffCookie();
+        router.refresh();
       },
       () => {
         setLocating(false);
@@ -60,7 +47,7 @@ export function NearMeButton({
   }
 
   useEffect(() => {
-    if (!active && near !== "off" && !requestedRef.current) {
+    if (!active && !nearOff && !requestedRef.current) {
       requestedRef.current = true;
       locate();
     }
@@ -69,7 +56,9 @@ export function NearMeButton({
 
   function toggle() {
     if (active) {
-      navigate({ lat: undefined, lng: undefined, near: "off" });
+      clearLocationCookies();
+      setNearOffCookie();
+      router.refresh();
     } else {
       locate();
     }
