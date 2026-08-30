@@ -34,7 +34,7 @@ export function SignUpForm() {
 
     if (!isEmailIdentifier(identifier)) {
       setFormError(
-        "Cadastro por telefone chega em breve — por enquanto, use seu e-mail.",
+        "Cadastre-se com seu e-mail — depois você pode verificar um telefone para também entrar com ele em Conta > Segurança.",
       );
       return;
     }

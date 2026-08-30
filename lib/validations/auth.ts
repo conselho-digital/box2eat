@@ -46,3 +46,9 @@ export const otpCodeSchema = z.object({
 });
 
 export type OtpCodeInput = z.infer<typeof otpCodeSchema>;
+
+export const phoneVerificationSchema = z.object({
+  phone: z.string().trim().min(8, "Informe um telefone válido"),
+});
+
+export type PhoneVerificationInput = z.infer<typeof phoneVerificationSchema>;

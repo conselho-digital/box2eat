@@ -68,6 +68,20 @@ export async function signOut(supabase: SupabaseClient) {
 }
 
 /**
+ * Starts verifying a phone number for the current (already logged in) user.
+ * Sends a WhatsApp OTP via the `send-sms` Auth Hook. Confirming it with
+ * `verifyPhoneChange` links the phone to the account and enables phone+password
+ * login — it does not require re-confirming an e-mail.
+ */
+export async function requestPhoneVerification(supabase: SupabaseClient, phone: string) {
+  return supabase.auth.updateUser({ phone });
+}
+
+export async function verifyPhoneChange(supabase: SupabaseClient, phone: string, token: string) {
+  return supabase.auth.verifyOtp({ phone, token, type: "phone_change" });
+}
+
+/**
  * Sends a login link to the account's recovery e-mail (a different address
  * than the account's own login e-mail). Always resolves the same way
  * whether or not that address is registered, so the caller can't use it to

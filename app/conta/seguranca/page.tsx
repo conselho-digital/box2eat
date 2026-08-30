@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 import { PasswordForm } from "@/components/account/password-form";
 import { RecoveryEmailForm } from "@/components/account/recovery-email-form";
+import { PhoneLoginForm } from "@/components/account/phone-login-form";
 import { MfaManager } from "@/components/account/mfa-manager";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,6 +35,18 @@ export default async function SecurityPage() {
         <h2 className="font-medium">E-mail de recuperação</h2>
         <div className="mt-2">
           <RecoveryEmailForm userId={user.id} recoveryEmail={profile?.recovery_email ?? null} />
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h2 className="font-medium">Telefone para login</h2>
+        <div className="mt-2">
+          <PhoneLoginForm
+            initialPhone={user.phone ?? null}
+            initialConfirmed={Boolean(user.phone_confirmed_at)}
+          />
         </div>
       </div>
 
