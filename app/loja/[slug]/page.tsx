@@ -50,7 +50,7 @@ export default async function StorePage({
           )}
           {!company.is_open && (
             <p className="mt-1 text-sm text-destructive">
-              Empresa fechada no momento.
+              Restaurante fechado no momento.
             </p>
           )}
         </div>

@@ -44,7 +44,7 @@ export function StripeConnectCard({
             <p className="text-sm text-muted-foreground">
               {hasAccount
                 ? "Sua conexão com o Stripe ainda não foi concluída."
-                : "Ainda não conectado. Sem isso, o pagamento por cartão via Stripe fica indisponível para essa empresa (Pix/cartão via Mercado Pago continuam funcionando normalmente)."}
+                : "Ainda não conectado. Sem isso, o pagamento por cartão via Stripe fica indisponível para esse restaurante (Pix/cartão via Mercado Pago continuam funcionando normalmente)."}
             </p>
             <Button type="button" onClick={connect} disabled={loading} className="w-fit">
               {loading ? "Redirecionando…" : hasAccount ? "Concluir conexão" : "Conectar Stripe"}

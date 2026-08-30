@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://box2eat.com"),
   title: "Box2eat",
-  description: "Peça comida das melhores empresas perto de você",
+  description: "Peça comida dos melhores restaurantes perto de você",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

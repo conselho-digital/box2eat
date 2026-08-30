@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 const links = [
   { href: "/login", label: "Entrar" },
   { href: "/cadastro", label: "Criar conta" },
-  { href: "/empresas", label: "Conta empresa" },
+  { href: "/empresas", label: "Conta restaurante" },
   { href: "/validacao", label: "Fazer entregas" },
 ];
 

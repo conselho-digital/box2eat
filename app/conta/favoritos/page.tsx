@@ -35,7 +35,7 @@ export default function FavoritesPage() {
   if (!data || data.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Você ainda não favoritou nenhuma empresa.
+        Você ainda não favoritou nenhum restaurante.
       </p>
     );
   }

@@ -3,7 +3,7 @@ import { z } from "zod";
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export const createCompanySchema = z.object({
-  name: z.string().trim().min(2, "Informe o nome da empresa"),
+  name: z.string().trim().min(2, "Informe o nome do restaurante"),
   slug: z
     .string()
     .trim()

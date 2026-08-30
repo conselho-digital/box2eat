@@ -30,7 +30,7 @@ export default async function AdminLayout({
           Entregadores
         </Link>
         <Link href="/admin/empresas" className="hover:underline">
-          Empresas
+          Restaurantes
         </Link>
         <Link href="/admin/pedidos" className="hover:underline">
           Pedidos

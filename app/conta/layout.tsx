@@ -39,7 +39,7 @@ export default async function AccountLayout({
         </Link>
         {membership && (
           <Link href="/empresas" className="hover:underline">
-            Minhas empresas
+            Meus restaurantes
           </Link>
         )}
         <Link href="/entregador/cadastro" className="hover:underline">

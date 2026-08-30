@@ -16,7 +16,7 @@ export default function CartPage() {
         <h1 className="text-xl font-semibold">Carrinho</h1>
         <p className="text-sm text-muted-foreground">Seu carrinho está vazio.</p>
         <Button render={<Link href="/" />} nativeButton={false} className="w-fit">
-          Explorar empresas
+          Explorar restaurantes
         </Button>
       </div>
     );

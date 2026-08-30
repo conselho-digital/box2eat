@@ -18,7 +18,7 @@ const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "
 
 const STATUS_STEPS = [
   { key: "placed", label: "Pedido feito" },
-  { key: "accepted", label: "Aceito pela empresa" },
+  { key: "accepted", label: "Aceito pelo restaurante" },
   { key: "preparing", label: "Em preparo" },
   { key: "ready_for_pickup", label: "Pronto" },
   { key: "delivered", label: "Entregue" },
@@ -113,7 +113,7 @@ export function OrderTracking({
         </div>
       ) : isRejectedOrCancelled ? (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-          Pedido {order.status === "rejected" ? "recusado pela empresa" : "cancelado"}.
+          Pedido {order.status === "rejected" ? "recusado pelo restaurante" : "cancelado"}.
         </p>
       ) : (
         <ol className="flex flex-col gap-2">
