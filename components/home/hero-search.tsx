@@ -11,14 +11,10 @@ export function HeroSearch({
   q,
   open,
   sort,
-  lat,
-  lng,
 }: {
   q?: string;
   open?: string;
   sort?: string;
-  lat?: string;
-  lng?: string;
 }) {
   const router = useRouter();
   const [value, setValue] = useState(q ?? "");
@@ -29,8 +25,6 @@ export function HeroSearch({
     if (merged.q) params.set("q", merged.q);
     if (merged.open) params.set("open", merged.open);
     if (merged.sort) params.set("sort", merged.sort);
-    if (merged.lat) params.set("lat", merged.lat);
-    if (merged.lng) params.set("lng", merged.lng);
     const query = params.toString();
     router.push(query ? `/?${query}` : "/");
   }
@@ -39,8 +33,6 @@ export function HeroSearch({
   if (value) mapParams.set("q", value);
   if (open) mapParams.set("open", open);
   if (sort) mapParams.set("sort", sort);
-  if (lat) mapParams.set("lat", lat);
-  if (lng) mapParams.set("lng", lng);
   const mapHref = mapParams.toString() ? `/mapa?${mapParams.toString()}` : "/mapa";
 
   return (
