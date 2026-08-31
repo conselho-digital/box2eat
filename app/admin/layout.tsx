@@ -35,6 +35,12 @@ export default async function AdminLayout({
         <Link href="/admin/pedidos" className="hover:underline">
           Pedidos
         </Link>
+        <Link href="/admin/tickets" className="hover:underline">
+          Tickets
+        </Link>
+        <Link href="/admin/validacoes" className="hover:underline">
+          Validações de usuário
+        </Link>
       </nav>
       {children}
     </div>

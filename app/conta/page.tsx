@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { User, ShieldCheck, Package, Phone, ShieldPlus } from "lucide-react";
+import { User, ShieldCheck, Package, Phone, ShieldPlus, BadgeCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { listMfaFactors } from "@/lib/domain/account";
+import { isIdentityVerified } from "@/lib/domain/identity";
 
 export default async function AccountPage() {
   const supabase = await createClient();
@@ -23,6 +24,7 @@ export default async function AccountPage() {
   const { data: factorsData } = await listMfaFactors(supabase);
   const hasMfa = (factorsData?.totp ?? []).some((f) => f.status === "verified");
   const hasVerifiedPhone = Boolean(user.phone_confirmed_at);
+  const identityVerified = await isIdentityVerified(supabase, user.id);
 
   const initials = (profile?.full_name || user.email || "?").trim().charAt(0).toUpperCase();
 
@@ -48,6 +50,13 @@ export default async function AccountPage() {
         "Proteja sua conta exigindo um código do seu app autenticador toda vez que entrar.",
       cta: "Ativar 2FA",
       href: "/conta/seguranca",
+    },
+    !identityVerified && {
+      icon: BadgeCheck,
+      title: "Verifique sua identidade",
+      description: "Envie um documento com foto para liberar a categoria Bebidas.",
+      cta: "Verificar identidade",
+      href: "/conta/identidade",
     },
   ].filter(Boolean) as { icon: typeof Phone; title: string; description: string; cta: string; href: string }[];
 

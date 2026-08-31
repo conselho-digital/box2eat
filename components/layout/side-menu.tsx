@@ -3,9 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import {
   Menu,
-  X,
   ChevronRight,
   ClipboardList,
   Heart,
@@ -131,13 +131,6 @@ function AccountMenu({
       <MenuLink href="/conta/favoritos" icon={Heart} label="Favoritos" onClick={onNavigate} />
       <MenuLink href="/conta/carteira" icon={Wallet} label="Carteira" onClick={onNavigate} />
       <MenuLink href="/ajuda" icon={HelpCircle} label="Ajuda" onClick={onNavigate} />
-      <MenuLink
-        href="/ajuda/pedidos"
-        icon={HelpCircle}
-        label="Ajuda com um pedido"
-        onClick={onNavigate}
-        small
-      />
       <MenuLink href="/promocoes" icon={Tag} label="Promoções" onClick={onNavigate} />
 
       <Separator />
@@ -181,49 +174,31 @@ export function SideMenu({
   const [open, setOpen] = useState(false);
 
   return (
-    <>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={() => setOpen(true)}
-        aria-label="Abrir menu"
-      >
-        <Menu className="size-5" />
-      </Button>
-      {open && (
-        <div className="fixed inset-0 z-50">
-          <button
-            type="button"
-            aria-label="Fechar menu"
-            className="absolute inset-0 bg-black/30"
-            onClick={() => setOpen(false)}
-          />
-          <div className="absolute inset-y-0 left-0 flex w-80 max-w-[85%] flex-col gap-1 overflow-y-auto bg-popover p-4 text-popover-foreground shadow-xl">
-            <div className="mb-2 flex items-center justify-between">
-              <span className="font-semibold">Menu</span>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setOpen(false)}
-                aria-label="Fechar menu"
-              >
-                <X className="size-5" />
-              </Button>
-            </div>
-            {loggedIn ? (
-              <AccountMenu
-                isAdmin={isAdmin}
-                fullName={fullName}
-                avatarUrl={avatarUrl}
-                email={email}
-                onNavigate={() => setOpen(false)}
-              />
-            ) : (
-              <GuestMenu isAdmin={isAdmin} onNavigate={() => setOpen(false)} />
-            )}
-          </div>
-        </div>
-      )}
-    </>
+    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+      <DialogPrimitive.Trigger
+        render={
+          <Button variant="ghost" size="icon-sm" aria-label="Abrir menu">
+            <Menu className="size-5" />
+          </Button>
+        }
+      />
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/30 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
+        <DialogPrimitive.Popup className="fixed inset-y-0 left-0 z-50 flex w-80 max-w-[85%] flex-col gap-1 overflow-y-auto bg-popover p-4 text-popover-foreground shadow-xl outline-none duration-300 data-open:animate-in data-open:slide-in-from-left data-closed:animate-out data-closed:slide-out-to-left">
+          <span className="mb-2 font-semibold">Menu</span>
+          {loggedIn ? (
+            <AccountMenu
+              isAdmin={isAdmin}
+              fullName={fullName}
+              avatarUrl={avatarUrl}
+              email={email}
+              onNavigate={() => setOpen(false)}
+            />
+          ) : (
+            <GuestMenu isAdmin={isAdmin} onNavigate={() => setOpen(false)} />
+          )}
+        </DialogPrimitive.Popup>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }

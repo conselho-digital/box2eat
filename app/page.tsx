@@ -21,6 +21,8 @@ import { listRecommendedCompanies } from "@/lib/domain/recommendations";
 import { listCompanyQueueInfo, type QueueInfo } from "@/lib/domain/queue";
 import { listFavoriteCompanyIds } from "@/lib/domain/favorites";
 import { getMyAddress } from "@/lib/domain/address";
+import { isIdentityVerified } from "@/lib/domain/identity";
+import { AGE_RESTRICTED_CATEGORIES, type FoodCategory } from "@/lib/domain/categories";
 import { LAT_COOKIE, LNG_COOKIE, NEAR_OFF_COOKIE } from "@/lib/domain/location-cookie";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -53,7 +55,18 @@ export default async function Home({
   const lng = cookieStore.get(LNG_COOKIE)?.value;
   const nearOff = cookieStore.get(NEAR_OFF_COOKIE)?.value === "1";
 
-  const companies = await listPublicCompanies(supabase, { q, open, sort, lat, lng, category });
+  const identityVerified = user ? await isIdentityVerified(supabase, user.id) : false;
+  const categoryIsRestricted = AGE_RESTRICTED_CATEGORIES.includes(category as FoodCategory);
+  const effectiveCategory = categoryIsRestricted && !identityVerified ? undefined : category;
+
+  const companies = await listPublicCompanies(supabase, {
+    q,
+    open,
+    sort,
+    lat,
+    lng,
+    category: effectiveCategory,
+  });
 
   let initialAddress = null;
   let promotedCompanies: PromotedCompany[] = [];
@@ -129,7 +142,14 @@ export default async function Home({
             <div className="sticky top-0 z-30 -mx-4 bg-background px-4 sm:-mx-6 sm:px-6">
               <SimpleSearch q={q} open={open} sort={sort} category={category} />
             </div>
-            <CategoryChips q={q} open={open} sort={sort} category={category} />
+            <CategoryChips
+              q={q}
+              open={open}
+              sort={sort}
+              category={category}
+              loggedIn={Boolean(user)}
+              identityVerified={identityVerified}
+            />
           </div>
           {(promotedCompanies.length > 0 || (recommendedCompanies?.length ?? 0) > 0) && <Separator />}
           <FeaturedCarousel

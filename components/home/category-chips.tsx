@@ -11,9 +11,11 @@ import {
   Utensils,
   Cookie,
   PawPrint,
+  Beer,
+  Lock,
   type LucideIcon,
 } from "lucide-react";
-import { FOOD_CATEGORIES, type FoodCategory } from "@/lib/domain/categories";
+import { AGE_RESTRICTED_CATEGORIES, FOOD_CATEGORIES, type FoodCategory } from "@/lib/domain/categories";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_ICONS: Record<FoodCategory, LucideIcon> = {
@@ -28,6 +30,7 @@ const CATEGORY_ICONS: Record<FoodCategory, LucideIcon> = {
   Italiana: Utensils,
   Doces: Cookie,
   Petshop: PawPrint,
+  Bebidas: Beer,
 };
 
 export function CategoryChips({
@@ -35,11 +38,15 @@ export function CategoryChips({
   open,
   sort,
   category,
+  loggedIn,
+  identityVerified,
 }: {
   q?: string;
   open?: string;
   sort?: string;
   category?: string;
+  loggedIn: boolean;
+  identityVerified: boolean;
 }) {
   function buildHref(nextCategory?: string) {
     const params = new URLSearchParams();
@@ -56,19 +63,31 @@ export function CategoryChips({
       {FOOD_CATEGORIES.map((item) => {
         const active = category === item;
         const Icon = CATEGORY_ICONS[item];
+        const restricted = AGE_RESTRICTED_CATEGORIES.includes(item) && !identityVerified;
+        const href = restricted
+          ? loggedIn
+            ? "/conta/identidade"
+            : "/login?next=/conta/identidade"
+          : buildHref(active ? undefined : item);
+
         return (
           <Link
             key={item}
-            href={buildHref(active ? undefined : item)}
+            href={href}
             className="flex w-16 shrink-0 flex-col items-center gap-1.5 text-center"
           >
             <span
               className={cn(
-                "flex size-14 items-center justify-center rounded-2xl border",
+                "relative flex size-14 items-center justify-center rounded-2xl border",
                 active ? "border-primary bg-primary text-primary-foreground" : "bg-muted/60 hover:bg-muted",
               )}
             >
               <Icon className="size-6" />
+              {restricted && (
+                <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-foreground text-background">
+                  <Lock className="size-3" />
+                </span>
+              )}
             </span>
             <span className={cn("text-xs leading-tight whitespace-nowrap", active && "font-medium text-primary")}>
               {item}

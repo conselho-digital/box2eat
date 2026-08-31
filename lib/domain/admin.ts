@@ -93,3 +93,22 @@ export async function listAllOrders(supabase: Client) {
     .limit(100)
     .returns<AdminOrder[]>();
 }
+
+export type AdminTicket = Database["public"]["Tables"]["order_reports"]["Row"] & {
+  profiles: Pick<Database["public"]["Tables"]["profiles"]["Row"], "full_name" | "phone">;
+  orders: Pick<Database["public"]["Tables"]["orders"]["Row"], "id" | "total" | "company_id"> & {
+    companies: Pick<Database["public"]["Tables"]["companies"]["Row"], "name">;
+  };
+};
+
+export async function listTicketsForReview(supabase: Client) {
+  return supabase
+    .from("order_reports")
+    .select("*, profiles(full_name, phone), orders(id, total, company_id, companies(name))")
+    .order("created_at", { ascending: false })
+    .returns<AdminTicket[]>();
+}
+
+export async function resolveTicket(supabase: Client, ticketId: string) {
+  return supabase.from("order_reports").update({ status: "resolved" }).eq("id", ticketId);
+}
