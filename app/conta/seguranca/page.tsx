@@ -4,6 +4,7 @@ import { PasswordForm } from "@/components/account/password-form";
 import { RecoveryEmailForm } from "@/components/account/recovery-email-form";
 import { PhoneLoginForm } from "@/components/account/phone-login-form";
 import { MfaManager } from "@/components/account/mfa-manager";
+import { PushToggle } from "@/components/notifications/push-toggle";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SecurityPage() {
@@ -53,6 +54,18 @@ export default async function SecurityPage() {
       <Separator />
 
       <MfaManager />
+
+      <Separator />
+
+      <div>
+        <h2 className="font-medium">Notificações</h2>
+        <p className="text-sm text-muted-foreground">
+          Receba avisos de pedidos direto no navegador, mesmo com o site fechado.
+        </p>
+        <div className="mt-2">
+          <PushToggle userId={user.id} />
+        </div>
+      </div>
     </div>
   );
 }

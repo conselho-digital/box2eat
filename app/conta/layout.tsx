@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { AccountTabs } from "@/components/account/account-tabs";
 
 export default async function AccountLayout({
   children,
@@ -21,31 +21,20 @@ export default async function AccountLayout({
     .limit(1)
     .maybeSingle();
 
+  const tabs = [
+    { href: "/conta", label: "Página inicial" },
+    { href: "/conta/dados-pessoais", label: "Dados pessoais" },
+    { href: "/conta/seguranca", label: "Segurança" },
+    { href: "/conta/favoritos", label: "Favoritos" },
+    { href: "/conta/pedidos", label: "Pedidos" },
+    ...(membership ? [{ href: "/empresas", label: "Meus restaurantes" }] : []),
+    { href: "/entregador/cadastro", label: "Seja um entregador" },
+  ];
+
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold">Minha conta</h1>
-      <nav className="flex gap-4 border-b pb-2 text-sm">
-        <Link href="/conta" className="hover:underline">
-          Perfil
-        </Link>
-        <Link href="/conta/seguranca" className="hover:underline">
-          Segurança
-        </Link>
-        <Link href="/conta/favoritos" className="hover:underline">
-          Favoritos
-        </Link>
-        <Link href="/conta/pedidos" className="hover:underline">
-          Pedidos
-        </Link>
-        {membership && (
-          <Link href="/empresas" className="hover:underline">
-            Meus restaurantes
-          </Link>
-        )}
-        <Link href="/entregador/cadastro" className="hover:underline">
-          Seja um entregador
-        </Link>
-      </nav>
+      <h1 className="text-xl font-semibold">Conta Box2eat</h1>
+      <AccountTabs tabs={tabs} />
       {children}
     </div>
   );

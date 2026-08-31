@@ -1,13 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { User, ShieldCheck, Package, Phone, ShieldPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
-import { ProfileForm } from "@/components/account/profile-form";
-import { AddressForm } from "@/components/account/address-form";
-import { EmailForm } from "@/components/account/email-form";
-import { PushToggle } from "@/components/notifications/push-toggle";
-import { getMyAddress } from "@/lib/domain/address";
+import { listMfaFactors } from "@/lib/domain/account";
 
 export default async function AccountPage() {
   const supabase = await createClient();
@@ -23,69 +20,82 @@ export default async function AccountPage() {
     .eq("id", user.id)
     .single();
 
-  const { data: address } = await getMyAddress(supabase, user.id);
-
-  const hasPassword = (user.identities ?? []).some((identity) => identity.provider === "email");
+  const { data: factorsData } = await listMfaFactors(supabase);
+  const hasMfa = (factorsData?.totp ?? []).some((f) => f.status === "verified");
+  const hasVerifiedPhone = Boolean(user.phone_confirmed_at);
 
   const initials = (profile?.full_name || user.email || "?").trim().charAt(0).toUpperCase();
-  const missing: string[] = [];
-  if (!profile?.phone) missing.push("telefone");
-  if (!address) missing.push("endereço");
-  if (!hasPassword) missing.push("senha");
-  if (!profile?.recovery_email) missing.push("e-mail de recuperação");
+
+  const cards = [
+    { href: "/conta/dados-pessoais", label: "Dados pessoais", icon: User },
+    { href: "/conta/seguranca", label: "Segurança", icon: ShieldCheck },
+    { href: "/conta/pedidos", label: "Pedidos", icon: Package },
+  ];
+
+  const suggestions = [
+    !hasVerifiedPhone && {
+      icon: Phone,
+      title: "Adicione seu telefone",
+      description:
+        "Verifique um número por WhatsApp para usar como login e para recuperar sua conta caso perca o acesso ao e-mail.",
+      cta: "Adicionar telefone",
+      href: "/conta/seguranca",
+    },
+    !hasMfa && {
+      icon: ShieldPlus,
+      title: "Ative a autenticação de dois fatores",
+      description:
+        "Proteja sua conta exigindo um código do seu app autenticador toda vez que entrar.",
+      cta: "Ativar 2FA",
+      href: "/conta/seguranca",
+    },
+  ].filter(Boolean) as { icon: typeof Phone; title: string; description: string; cta: string; href: string }[];
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center gap-4">
-        <Avatar className="size-14">
+      <div className="flex flex-col items-center gap-2 py-4 text-center">
+        <Avatar className="size-16">
           <AvatarImage src={profile?.avatar_url ?? undefined} />
-          <AvatarFallback>{initials}</AvatarFallback>
+          <AvatarFallback className="text-lg">{initials}</AvatarFallback>
         </Avatar>
         <div>
-          <p className="font-medium">{profile?.full_name || "Sem nome"}</p>
+          <p className="text-lg font-semibold">{profile?.full_name || "Sem nome"}</p>
           <p className="text-sm text-muted-foreground">{user.email}</p>
         </div>
       </div>
 
-      {missing.length > 0 && (
-        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm">
-          <p className="font-medium">Complete seu cadastro</p>
-          <p className="text-muted-foreground">
-            Falta: {missing.join(", ")}. A senha permite entrar com e-mail e senha caso você perca o
-            acesso à sua conta Google, e o e-mail de recuperação fica em{" "}
-            <Link href="/conta/seguranca" className="underline underline-offset-4">
-              Segurança
-            </Link>
-            .
-          </p>
+      <div className="grid grid-cols-3 gap-3">
+        {cards.map((card) => (
+          <Link
+            key={card.href}
+            href={card.href}
+            className="flex flex-col items-center gap-2 rounded-xl bg-muted/50 p-4 text-center ring-1 ring-foreground/10 hover:bg-muted"
+          >
+            <card.icon className="size-5" />
+            <span className="text-sm font-medium">{card.label}</span>
+          </Link>
+        ))}
+      </div>
+
+      {suggestions.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <h2 className="font-medium">Sugestões</h2>
+          {suggestions.map((suggestion) => (
+            <div key={suggestion.title} className="flex flex-col gap-3 rounded-xl border p-4">
+              <div className="flex items-start gap-3">
+                <suggestion.icon className="mt-0.5 size-5 shrink-0 text-primary" />
+                <div>
+                  <p className="font-medium">{suggestion.title}</p>
+                  <p className="text-sm text-muted-foreground">{suggestion.description}</p>
+                </div>
+              </div>
+              <Button render={<Link href={suggestion.href} />} nativeButton={false} variant="outline" size="sm" className="w-fit">
+                {suggestion.cta}
+              </Button>
+            </div>
+          ))}
         </div>
       )}
-
-      <ProfileForm
-        userId={user.id}
-        fullName={profile?.full_name ?? ""}
-        phone={profile?.phone ?? null}
-      />
-
-      <Separator />
-
-      <AddressForm userId={user.id} initialAddress={address} />
-
-      <Separator />
-
-      <EmailForm currentEmail={user.email ?? ""} />
-
-      <Separator />
-
-      <div>
-        <h2 className="font-medium">Notificações</h2>
-        <p className="text-sm text-muted-foreground">
-          Receba avisos de pedidos direto no navegador, mesmo com o site fechado.
-        </p>
-        <div className="mt-2">
-          <PushToggle userId={user.id} />
-        </div>
-      </div>
     </div>
   );
 }
