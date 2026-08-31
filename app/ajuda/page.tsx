@@ -12,6 +12,19 @@ export default function HelpIndexPage() {
         </p>
       </div>
 
+      <Link
+        href="/ajuda/pedidos"
+        className="flex items-center justify-between gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 hover:bg-primary/10"
+      >
+        <div>
+          <p className="font-medium">Ajuda com um pedido</p>
+          <p className="text-sm text-muted-foreground">
+            Reporte um restaurante ou peça reembolso de um pedido.
+          </p>
+        </div>
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+      </Link>
+
       <div className="flex flex-col divide-y rounded-lg border">
         {HELP_ARTICLES.map((article) => (
           <Link

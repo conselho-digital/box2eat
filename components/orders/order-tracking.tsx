@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ReviewForm } from "@/components/reviews/review-form";
-import { OrderIssueActions } from "@/components/orders/order-issue-actions";
 import { createClient } from "@/lib/supabase/client";
 import {
   cancelOrder,
@@ -168,7 +167,11 @@ export function OrderTracking({
         </div>
       </div>
 
-      {isCustomer && !isPendingPayment && <OrderIssueActions orderId={orderId} />}
+      {isCustomer && !isPendingPayment && (
+        <Link href={`/ajuda/pedidos/${orderId}`} className="text-sm text-primary underline underline-offset-4">
+          Precisa de ajuda com esse pedido?
+        </Link>
+      )}
 
       {canCancel && (
         <div className="flex flex-col gap-2">

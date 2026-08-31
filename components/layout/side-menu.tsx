@@ -132,7 +132,7 @@ function AccountMenu({
       <MenuLink href="/conta/carteira" icon={Wallet} label="Carteira" onClick={onNavigate} />
       <MenuLink href="/ajuda" icon={HelpCircle} label="Ajuda" onClick={onNavigate} />
       <MenuLink
-        href="/conta/pedidos"
+        href="/ajuda/pedidos"
         icon={HelpCircle}
         label="Ajuda com um pedido"
         onClick={onNavigate}
