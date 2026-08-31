@@ -10,6 +10,7 @@ import { CategoryChips } from "@/components/home/category-chips";
 import { AddressBar } from "@/components/home/address-bar";
 import { FeaturedCarousel } from "@/components/home/featured-carousel";
 import { RecommendedCarousel } from "@/components/home/recommended-carousel";
+import { PromoBannerCarousel } from "@/components/home/promo-banner-carousel";
 import { NearMeButton } from "@/components/home/near-me-button";
 import { RatingSortButton } from "@/components/home/rating-sort-button";
 import { ClearFiltersLink } from "@/components/home/clear-filters-link";
@@ -17,6 +18,8 @@ import { createClient } from "@/lib/supabase/server";
 import { listPublicCompanies, type CompanySearchParams } from "@/lib/domain/companies";
 import { listPromotedCompanies, type PromotedCompany } from "@/lib/domain/coupons";
 import { listRecommendedCompanies } from "@/lib/domain/recommendations";
+import { listCompanyQueueInfo, type QueueInfo } from "@/lib/domain/queue";
+import { listFavoriteCompanyIds } from "@/lib/domain/favorites";
 import { getMyAddress } from "@/lib/domain/address";
 import { LAT_COOKIE, LNG_COOKIE, NEAR_OFF_COOKIE } from "@/lib/domain/location-cookie";
 
@@ -55,18 +58,25 @@ export default async function Home({
   let initialAddress = null;
   let promotedCompanies: PromotedCompany[] = [];
   let recommendedCompanies: Awaited<ReturnType<typeof listRecommendedCompanies>>["data"] = [];
+  let favoriteCompanyIds = new Set<string>();
+  let queueInfoByCompany = new Map<string, QueueInfo>();
   if (user) {
     const addressResult = await getMyAddress(supabase, user.id);
     initialAddress = addressResult.data;
     const userLat = initialAddress?.lat ?? (lat ? Number(lat) : null);
     const userLng = initialAddress?.lng ?? (lng ? Number(lng) : null);
 
-    const [{ data: promotions }, { data: recommended }] = await Promise.all([
+    const [{ data: promotions }, { data: recommended }, favorites] = await Promise.all([
       listPromotedCompanies(supabase),
       listRecommendedCompanies(supabase, user.id, userLat, userLng),
+      listFavoriteCompanyIds(supabase),
     ]);
     promotedCompanies = promotions ?? [];
     recommendedCompanies = recommended ?? [];
+    favoriteCompanyIds = favorites;
+
+    const queueCompanyIds = [...new Set([...promotedCompanies.map((c) => c.id), ...(recommendedCompanies ?? []).map((c) => c.id)])];
+    queueInfoByCompany = await listCompanyQueueInfo(supabase, queueCompanyIds);
   }
 
   const promotionsByCompany = new Map(promotedCompanies.map((p) => [p.id, p]));
@@ -122,9 +132,22 @@ export default async function Home({
             <CategoryChips q={q} open={open} sort={sort} category={category} />
           </div>
           {(promotedCompanies.length > 0 || (recommendedCompanies?.length ?? 0) > 0) && <Separator />}
-          <FeaturedCarousel companies={promotedCompanies} />
+          <FeaturedCarousel
+            companies={promotedCompanies}
+            userId={user.id}
+            favoriteCompanyIds={favoriteCompanyIds}
+            queueInfoByCompany={queueInfoByCompany}
+          />
           {promotedCompanies.length > 0 && (recommendedCompanies?.length ?? 0) > 0 && <Separator />}
-          <RecommendedCarousel companies={recommendedCompanies ?? []} promotionsByCompany={promotionsByCompany} />
+          <RecommendedCarousel
+            companies={recommendedCompanies ?? []}
+            promotionsByCompany={promotionsByCompany}
+            userId={user.id}
+            favoriteCompanyIds={favoriteCompanyIds}
+            queueInfoByCompany={queueInfoByCompany}
+          />
+          {(recommendedCompanies?.length ?? 0) > 0 && promotedCompanies.length > 0 && <Separator />}
+          <PromoBannerCarousel companies={promotedCompanies} />
         </>
       ) : (
         <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">

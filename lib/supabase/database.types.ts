@@ -103,6 +103,7 @@ export type Database = {
           stripe_account_id: string | null
           stripe_charges_enabled: boolean
           updated_at: string
+          view_count: number
         }
         Insert: {
           avg_prep_time_minutes?: number | null
@@ -138,6 +139,7 @@ export type Database = {
           stripe_account_id?: string | null
           stripe_charges_enabled?: boolean
           updated_at?: string
+          view_count?: number
         }
         Update: {
           avg_prep_time_minutes?: number | null
@@ -173,6 +175,7 @@ export type Database = {
           stripe_account_id?: string | null
           stripe_charges_enabled?: boolean
           updated_at?: string
+          view_count?: number
         }
         Relationships: [
           {
@@ -1359,6 +1362,10 @@ export type Database = {
         }
       }
       create_qr_login_request: { Args: never; Returns: string }
+      get_company_queue_info: {
+        Args: { p_company_ids: string[] }
+        Returns: { avg_minutes: number | null; company_id: string; has_queue: boolean }[]
+      }
       get_qr_login_status: {
         Args: { p_token: string }
         Returns: { status: string; token_hash: string | null }[]
@@ -1367,6 +1374,10 @@ export type Database = {
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
       is_company_owner: { Args: { p_company_id: string }; Returns: boolean }
       is_platform_admin: { Args: never; Returns: boolean }
+      increment_company_view: {
+        Args: { p_company_id: string }
+        Returns: undefined
+      }
       mark_delivered: {
         Args: { p_order_id: string }
         Returns: OrderRow

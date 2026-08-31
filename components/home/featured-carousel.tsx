@@ -1,8 +1,19 @@
 import type { PromotedCompany } from "@/lib/domain/coupons";
 import { describePromotionBadge } from "@/lib/domain/restaurant-display";
+import type { QueueInfo } from "@/lib/domain/queue";
 import { RestaurantCard } from "@/components/home/restaurant-card";
 
-export function FeaturedCarousel({ companies }: { companies: PromotedCompany[] }) {
+export function FeaturedCarousel({
+  companies,
+  userId,
+  favoriteCompanyIds,
+  queueInfoByCompany,
+}: {
+  companies: PromotedCompany[];
+  userId: string;
+  favoriteCompanyIds: Set<string>;
+  queueInfoByCompany: Map<string, QueueInfo>;
+}) {
   if (companies.length === 0) return null;
 
   return (
@@ -14,6 +25,9 @@ export function FeaturedCarousel({ companies }: { companies: PromotedCompany[] }
             key={`${company.id}:${company.code}`}
             company={company}
             promotionBadge={describePromotionBadge(company)}
+            userId={userId}
+            isFavorited={favoriteCompanyIds.has(company.id)}
+            queueInfo={queueInfoByCompany.get(company.id)}
           />
         ))}
       </div>

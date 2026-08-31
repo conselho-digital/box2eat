@@ -109,6 +109,10 @@ export async function updateCompanyCategory(supabase: Client, companyId: string,
   return supabase.from("companies").update({ category }).eq("id", companyId);
 }
 
+export async function incrementCompanyView(supabase: Client, companyId: string) {
+  return supabase.rpc("increment_company_view", { p_company_id: companyId });
+}
+
 /** Maps the Postgres exception raised by the membership-limit trigger to a friendly message. */
 export function describeCompanyError(message: string): string {
   if (message.includes("company_owner_limit_exceeded")) {

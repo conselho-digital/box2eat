@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCompanyBySlug } from "@/lib/domain/companies-detail";
+import { incrementCompanyView } from "@/lib/domain/companies";
 import { listPublicMenu, type MenuItem } from "@/lib/domain/menu";
 import { isFavorite } from "@/lib/domain/favorites";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
@@ -17,6 +18,8 @@ export default async function StorePage({
 
   const { data: company } = await getCompanyBySlug(supabase, slug);
   if (!company || company.status === "closed") notFound();
+
+  await incrementCompanyView(supabase, company.id);
 
   const {
     data: { user },

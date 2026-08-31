@@ -1,3 +1,5 @@
+import type { QueueInfo } from "@/lib/domain/queue";
+
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 /** Shared shape the restaurant card component renders, regardless of which
@@ -16,21 +18,40 @@ export type RestaurantCardData = {
 
 const ORDER_COUNT_BUCKETS = [50, 100, 200, 300, 500, 1000, 2000, 3000, 4000, 5000];
 
-/** Buckets a raw delivered-order count into the marketing-friendly steps the
- *  restaurant card shows, instead of an exact (and constantly changing) number. */
-export function formatOrderCount(count: number): string {
-  if (count < ORDER_COUNT_BUCKETS[0]) return "Novo no Box2eat";
-  if (count >= 5000) return "5000+ pedidos";
+/** Buckets a raw delivered-order count into the marketing-friendly steps
+ *  shown in the card's parenthetical, instead of an exact number. */
+function bucketOrderCount(count: number): string {
+  if (count >= 5000) return "5000+";
+  if (count < ORDER_COUNT_BUCKETS[0]) return `${count}`;
   let bucket = ORDER_COUNT_BUCKETS[0];
   for (const b of ORDER_COUNT_BUCKETS) {
     if (count >= b) bucket = b;
   }
-  return `${bucket}+ pedidos`;
+  return `${bucket}+`;
 }
 
-/** Rough estimate until the queue/per-item prep time system exists: the
- *  company's average prep time plus a fixed delivery buffer. */
-export function formatWaitTime(avgPrepTimeMinutes: number | null): string {
+function pluralize(count: number, singular: string, plural: string) {
+  return count === 1 ? `${count} ${singular}` : `${count} ${plural}`;
+}
+
+/** "4.8⭐ (3.000+)" normally; without a rating yet, "X⭐" with the review
+ *  count instead of the order count in parenthesis. */
+export function formatRatingLine(ratingAvg: number | null, ratingCount: number, deliveredOrdersCount: number) {
+  if (ratingAvg === null) {
+    return {
+      stars: "X",
+      paren: ratingCount === 0 ? "sem avaliações" : pluralize(ratingCount, "avaliação", "avaliações"),
+    };
+  }
+  return { stars: ratingAvg.toFixed(1), paren: bucketOrderCount(deliveredOrdersCount) };
+}
+
+/** "Sem fila" when nothing is currently in the queue; otherwise the average
+ *  time today's delivered orders have taken, falling back to a rough
+ *  estimate from prep time if there's no completed order today yet. */
+export function formatWaitTime(queueInfo: QueueInfo | undefined, avgPrepTimeMinutes: number | null): string {
+  if (!queueInfo?.hasQueue) return "Sem fila";
+  if (queueInfo.avgMinutes !== null) return `${queueInfo.avgMinutes} min`;
   const prep = avgPrepTimeMinutes ?? 20;
   return `${prep}–${prep + 20} min`;
 }

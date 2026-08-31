@@ -24,6 +24,11 @@ export async function isFavorite(supabase: Client, companyId: string) {
   return Boolean(data);
 }
 
+export async function listFavoriteCompanyIds(supabase: Client): Promise<Set<string>> {
+  const { data } = await supabase.from("favorites").select("company_id");
+  return new Set((data ?? []).map((row) => row.company_id));
+}
+
 export async function addFavorite(
   supabase: Client,
   userId: string,

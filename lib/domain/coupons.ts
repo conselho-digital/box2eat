@@ -47,11 +47,11 @@ export type PromotedCompany = {
   ratingCount: number;
   avgPrepTimeMinutes: number | null;
   deliveredOrdersCount: number;
+  viewCount: number;
 };
 
 const PROMOTED_COMPANY_COLUMNS =
-  "id, name, slug, status, cover_image_url, delivery_fee_base, rating_avg, rating_count, " +
-  "avg_prep_time_minutes, delivered_orders_count";
+  "id, name, slug, status, cover_image_url, delivery_fee_base, rating_avg, rating_count, avg_prep_time_minutes, delivered_orders_count, view_count" as const;
 
 export async function listPromotedCompanies(supabase: Client) {
   const nowIso = new Date().toISOString();
@@ -78,6 +78,7 @@ export async function listPromotedCompanies(supabase: Client) {
     ratingCount: row.companies.rating_count,
     avgPrepTimeMinutes: row.companies.avg_prep_time_minutes,
     deliveredOrdersCount: row.companies.delivered_orders_count,
+    viewCount: row.companies.view_count,
   }));
 
   return { data: promotions, error: null };

@@ -1,14 +1,21 @@
 import type { RestaurantCardData } from "@/lib/domain/restaurant-display";
 import { describePromotionBadge } from "@/lib/domain/restaurant-display";
 import type { PromotedCompany } from "@/lib/domain/coupons";
+import type { QueueInfo } from "@/lib/domain/queue";
 import { RestaurantCard } from "@/components/home/restaurant-card";
 
 export function RecommendedCarousel({
   companies,
   promotionsByCompany,
+  userId,
+  favoriteCompanyIds,
+  queueInfoByCompany,
 }: {
   companies: RestaurantCardData[];
   promotionsByCompany: Map<string, PromotedCompany>;
+  userId: string;
+  favoriteCompanyIds: Set<string>;
+  queueInfoByCompany: Map<string, QueueInfo>;
 }) {
   if (companies.length === 0) return null;
 
@@ -23,6 +30,9 @@ export function RecommendedCarousel({
               key={company.id}
               company={company}
               promotionBadge={promotion ? describePromotionBadge(promotion) : undefined}
+              userId={userId}
+              isFavorited={favoriteCompanyIds.has(company.id)}
+              queueInfo={queueInfoByCompany.get(company.id)}
             />
           );
         })}

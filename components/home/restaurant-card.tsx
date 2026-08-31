@@ -1,33 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Star, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import type { RestaurantCardData } from "@/lib/domain/restaurant-display";
-import { formatDeliveryFee, formatOrderCount, formatWaitTime } from "@/lib/domain/restaurant-display";
-
-function StarRating({ rating }: { rating: number | null }) {
-  const value = rating ?? 0;
-  return (
-    <div className="flex items-center gap-0.5">
-      {Array.from({ length: 5 }, (_, i) => (
-        <Star
-          key={i}
-          className={
-            i < Math.round(value) ? "size-3.5 fill-primary text-primary" : "size-3.5 text-muted-foreground/30"
-          }
-        />
-      ))}
-      {rating !== null && <span className="ml-1 text-xs text-muted-foreground">{rating.toFixed(1)}</span>}
-    </div>
-  );
-}
+import { formatDeliveryFee, formatRatingLine, formatWaitTime } from "@/lib/domain/restaurant-display";
+import type { QueueInfo } from "@/lib/domain/queue";
+import { CardFavoriteButton } from "@/components/favorites/card-favorite-button";
 
 export function RestaurantCard({
   company,
   promotionBadge,
+  queueInfo,
+  userId,
+  isFavorited,
 }: {
   company: RestaurantCardData;
   promotionBadge?: string;
+  queueInfo?: QueueInfo;
+  userId?: string;
+  isFavorited?: boolean;
 }) {
+  const rating = formatRatingLine(company.ratingAvg, company.ratingCount, company.deliveredOrdersCount);
+
   return (
     <Link
       href={`/${company.slug}`}
@@ -44,16 +37,20 @@ export function RestaurantCard({
         )}
       </div>
       <div className="flex flex-col gap-1 px-3">
-        <p className="truncate font-medium">{company.name}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="truncate font-medium">{company.name}</p>
+          {userId && <CardFavoriteButton companyId={company.id} userId={userId} initialFavorited={Boolean(isFavorited)} />}
+        </div>
         <p className="text-xs text-muted-foreground">
           Entrega {formatDeliveryFee(company.deliveryFeeBase)}
         </p>
-        <StarRating rating={company.ratingAvg} />
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{formatOrderCount(company.deliveredOrdersCount)}</span>
+          <span>
+            {rating.stars}⭐ ({rating.paren})
+          </span>
           <span className="flex items-center gap-1">
             <Clock className="size-3.5" />
-            {formatWaitTime(company.avgPrepTimeMinutes)}
+            {formatWaitTime(queueInfo, company.avgPrepTimeMinutes)}
           </span>
         </div>
       </div>
