@@ -42,7 +42,7 @@ export function CompanyModeration() {
       {companies?.map((company) => (
         <div key={company.id} className="flex items-center justify-between gap-2 p-3 text-sm">
           <div>
-            <Link href={`/loja/${company.slug}`} className="font-medium hover:underline" target="_blank">
+            <Link href={`/${company.slug}`} className="font-medium hover:underline" target="_blank">
               {company.name}
             </Link>
             <p className="text-xs text-muted-foreground">{STATUS_LABEL[company.status] ?? company.status}</p>

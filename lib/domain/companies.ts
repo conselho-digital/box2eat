@@ -106,5 +106,8 @@ export function describeCompanyError(message: string): string {
   if (message.includes("duplicate key") && message.includes("companies_slug_key")) {
     return "Essa URL já está em uso por outro restaurante. Escolha outra.";
   }
+  if (message.includes("companies_slug_not_reserved")) {
+    return "Essa URL é reservada. Escolha outra.";
+  }
   return message;
 }

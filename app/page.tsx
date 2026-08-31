@@ -107,7 +107,7 @@ export default async function Home({
         {companies.map((company) => (
           <Link
             key={company.id}
-            href={`/loja/${company.slug}`}
+            href={`/${company.slug}`}
             className="rounded-lg border p-4 transition-colors hover:bg-muted/50"
           >
             <p className="font-medium">{company.name}</p>

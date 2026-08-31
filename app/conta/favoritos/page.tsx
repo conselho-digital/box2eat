@@ -47,7 +47,7 @@ export default function FavoritesPage() {
           <CardHeader className="flex flex-row items-start justify-between gap-2">
             <div>
               <CardTitle>
-                <Link href={`/loja/${favorite.companies.slug}`} className="hover:underline">
+                <Link href={`/${favorite.companies.slug}`} className="hover:underline">
                   {favorite.companies.name}
                 </Link>
               </CardTitle>
