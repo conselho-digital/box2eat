@@ -22,19 +22,10 @@ export async function SiteHeader() {
 
   return (
     <header className="flex items-center justify-between border-b p-3 px-6">
-      <div className="flex items-center gap-1">
-        <SideMenu
-          loggedIn={Boolean(user)}
-          isAdmin={isAdmin}
-          fullName={profile?.full_name ?? null}
-          avatarUrl={profile?.avatar_url ?? null}
-          email={user?.email ?? null}
-        />
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/brand/box2eat-logo.png" alt="Box2eat" width={28} height={31} />
-          <span className="font-semibold">Box2eat</span>
-        </Link>
-      </div>
+      <Link href="/" className="flex items-center gap-2">
+        <Image src="/brand/box2eat-logo.png" alt="Box2eat" width={28} height={31} />
+        <span className="font-semibold">Box2eat</span>
+      </Link>
       <div className="flex items-center gap-1">
         {user ? (
           <>
@@ -44,6 +35,13 @@ export async function SiteHeader() {
         ) : (
           <AuthToggleButton />
         )}
+        <SideMenu
+          loggedIn={Boolean(user)}
+          isAdmin={isAdmin}
+          fullName={profile?.full_name ?? null}
+          avatarUrl={profile?.avatar_url ?? null}
+          email={user?.email ?? null}
+        />
       </div>
     </header>
   );
