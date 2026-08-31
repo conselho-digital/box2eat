@@ -76,7 +76,7 @@ export default async function Home({
             Peça uma entrega perto de você
           </h1>
           <p className="text-foreground/80">
-            Peça comida das melhores empresas perto de você, ou cadastre a sua e
+            Peça comida dos melhores restaurantes perto de você, ou cadastre o seu e
             comece a vender.
           </p>
           <HeroSearch q={q} open={open} sort={sort} />
@@ -107,7 +107,7 @@ export default async function Home({
         {companies.map((company) => (
           <Link
             key={company.id}
-            href={`/loja/${company.slug}`}
+            href={`/${company.slug}`}
             className="rounded-lg border p-4 transition-colors hover:bg-muted/50"
           >
             <p className="font-medium">{company.name}</p>
@@ -127,7 +127,7 @@ export default async function Home({
         ))}
         {companies.length === 0 && (
           <p className="text-sm text-muted-foreground sm:col-span-2">
-            Nenhuma empresa encontrada.
+            Nenhum restaurante encontrado.
           </p>
         )}
       </div>

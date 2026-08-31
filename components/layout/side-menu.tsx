@@ -5,15 +5,26 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const links = [
-  { href: "/login", label: "Entrar" },
-  { href: "/cadastro", label: "Criar conta" },
-  { href: "/empresas", label: "Conta empresa" },
-  { href: "/validacao", label: "Fazer entregas" },
-];
-
-export function SideMenu() {
+export function SideMenu({
+  loggedIn,
+  isAdmin,
+}: {
+  loggedIn: boolean;
+  isAdmin: boolean;
+}) {
   const [open, setOpen] = useState(false);
+
+  const links = [
+    ...(loggedIn
+      ? []
+      : [
+          { href: "/login", label: "Entrar" },
+          { href: "/cadastro", label: "Criar conta" },
+        ]),
+    { href: "/empresas", label: "Conta restaurante" },
+    { href: "/validacao", label: "Fazer entregas" },
+    ...(isAdmin ? [{ href: "/admin/entregadores", label: "Painel admin" }] : []),
+  ];
 
   return (
     <>

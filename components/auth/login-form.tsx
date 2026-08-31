@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { signInWithPassword } from "@/lib/domain/auth";
-import { loginSchema, isEmailIdentifier, type LoginInput } from "@/lib/validations/auth";
+import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { MfaChallengeForm } from "./mfa-challenge-form";
 
 export function LoginForm() {
@@ -28,15 +28,10 @@ export function LoginForm() {
   async function onSubmit(values: LoginInput) {
     setFormError(null);
 
-    if (!isEmailIdentifier(values.identifier)) {
-      setFormError("Login por telefone chega em breve — por enquanto, use seu e-mail.");
-      return;
-    }
-
     const supabase = createClient();
     const { error } = await signInWithPassword(supabase, values.identifier, values.password);
     if (error) {
-      setFormError("E-mail ou senha inválidos.");
+      setFormError("E-mail/telefone ou senha inválidos.");
       return;
     }
 

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { CartBar } from "@/components/cart/cart-bar";
 import { MustSetPasswordDialog } from "@/components/auth/must-set-password-dialog";
+import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 
 export function Providers({
   header,
@@ -22,6 +23,7 @@ export function Providers({
         {children}
         <CartBar />
         <MustSetPasswordDialog />
+        <RegisterServiceWorker />
       </CartProvider>
     </QueryClientProvider>
   );

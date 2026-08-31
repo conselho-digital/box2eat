@@ -52,7 +52,7 @@ export default async function CompanyDashboardLayout({
         <Link href={`/empresas/${companyId}/cupons`} className="hover:underline">
           Cupons
         </Link>
-        <Link href={`/loja/${company.slug}`} className="hover:underline" target="_blank">
+        <Link href={`/${company.slug}`} className="hover:underline" target="_blank">
           Ver loja pública
         </Link>
       </nav>

@@ -47,7 +47,7 @@ export function CreateCompanyForm({ onCreated }: { onCreated?: () => void }) {
       className="flex flex-col gap-4"
     >
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="name">Nome da empresa</Label>
+        <Label htmlFor="name">Nome do restaurante</Label>
         <Input id="name" {...register("name")} />
         {errors.name && (
           <p className="text-sm text-destructive">{errors.name.message}</p>
@@ -66,7 +66,7 @@ export function CreateCompanyForm({ onCreated }: { onCreated?: () => void }) {
       </div>
       {formError && <p className="text-sm text-destructive">{formError}</p>}
       <Button type="submit" disabled={mutation.isPending}>
-        {mutation.isPending ? "Criando…" : "Criar empresa"}
+        {mutation.isPending ? "Criando…" : "Criar restaurante"}
       </Button>
     </form>
   );

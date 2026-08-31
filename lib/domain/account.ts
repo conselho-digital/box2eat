@@ -15,6 +15,14 @@ export async function updateProfile(
     .eq("id", userId);
 }
 
+export async function updateFullName(supabase: Client, userId: string, fullName: string) {
+  return supabase.from("profiles").update({ full_name: fullName }).eq("id", userId);
+}
+
+export async function updateContactPhone(supabase: Client, userId: string, phone: string) {
+  return supabase.from("profiles").update({ phone: phone || null }).eq("id", userId);
+}
+
 export async function updateEmail(supabase: Client, email: string) {
   return supabase.auth.updateUser({ email });
 }

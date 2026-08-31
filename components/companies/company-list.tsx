@@ -39,7 +39,7 @@ export function CompanyList() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">Minhas empresas</h1>
+          <h1 className="text-xl font-semibold">Meus restaurantes</h1>
           <p className="text-sm text-muted-foreground">
             {connectedCount}/{MAX_COMPANIES_CONNECTED} conectadas ·{" "}
             {ownedCount}/{MAX_COMPANIES_OWNED} criadas por você
@@ -47,7 +47,7 @@ export function CompanyList() {
         </div>
         {canCreate && (
           <Button variant={showForm ? "outline" : "default"} onClick={() => setShowForm((v) => !v)}>
-            {showForm ? "Cancelar" : "Nova empresa"}
+            {showForm ? "Cancelar" : "Novo restaurante"}
           </Button>
         )}
       </div>
@@ -55,9 +55,9 @@ export function CompanyList() {
       {showForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Criar empresa</CardTitle>
+            <CardTitle>Criar restaurante</CardTitle>
             <CardDescription>
-              Você vira o dono desta empresa automaticamente.
+              Você vira o dono deste restaurante automaticamente.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -70,7 +70,7 @@ export function CompanyList() {
 
       {!isLoading && data?.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          Você ainda não está conectado a nenhuma empresa.
+          Você ainda não está conectado a nenhum restaurante.
         </p>
       )}
 

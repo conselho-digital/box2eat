@@ -80,7 +80,7 @@ export function CompanyMap({
               <div className="flex flex-col gap-1">
                 <p className="font-medium">{company.name}</p>
                 <p className="text-xs">{company.is_open ? "Aberto agora" : "Fechado"}</p>
-                <Link href={`/loja/${company.slug}`} className="text-xs underline">
+                <Link href={`/${company.slug}`} className="text-xs underline">
                   Ver loja
                 </Link>
               </div>

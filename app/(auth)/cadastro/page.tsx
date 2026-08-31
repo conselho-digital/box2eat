@@ -17,7 +17,7 @@ export default function SignUpPage() {
         <CardHeader>
           <CardTitle>Criar conta</CardTitle>
           <CardDescription>
-            Peça comida ou cadastre sua empresa no Box2eat.
+            Peça comida ou cadastre seu restaurante no Box2eat.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -37,7 +37,7 @@ export default function SignUpPage() {
           <p className="text-center text-sm text-muted-foreground">
             Quer vender no Box2eat?{" "}
             <Link href="/empresas" className="underline underline-offset-4">
-              Criar conta empresa
+              Criar conta restaurante
             </Link>
           </p>
         </CardContent>

@@ -46,7 +46,7 @@ export function HeroSearch({
       >
         <Input
           type="text"
-          placeholder="Buscar empresas…"
+          placeholder="Buscar restaurantes…"
           value={value}
           onChange={(e) => setValue(e.target.value)}
           className="h-11 flex-1 rounded-xl border-0 bg-muted px-4 text-foreground"

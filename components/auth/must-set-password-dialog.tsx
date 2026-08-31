@@ -13,8 +13,9 @@ import { createClient } from "@/lib/supabase/client";
 
 /**
  * Mounted globally (see app/providers.tsx) so it can pop up over whatever
- * page the user lands on right after logging in through the recovery-e-mail
- * link — not tied to any specific route.
+ * page the user lands on right after logging in through a recovery path
+ * (recovery e-mail link or WhatsApp phone OTP) — not tied to any specific
+ * route.
  */
 export function MustSetPasswordDialog() {
   const [open, setOpen] = useState(false);
@@ -43,8 +44,8 @@ export function MustSetPasswordDialog() {
         <DialogHeader>
           <DialogTitle>Cadastre uma nova senha</DialogTitle>
           <DialogDescription>
-            Você entrou pelo e-mail de recuperação. Por segurança, cadastre uma nova senha antes
-            de continuar.
+            Você entrou por um método de recuperação de acesso. Por segurança, cadastre uma nova
+            senha antes de continuar.
           </DialogDescription>
         </DialogHeader>
         <NewPasswordForm onSuccess={() => setOpen(false)} />

@@ -24,17 +24,17 @@ export function CompanyLanding() {
           Venda sua comida no Box2eat
         </h1>
         <p className="text-muted-foreground">
-          Cadastre sua empresa, monte seu cardápio e comece a receber pedidos perto de você.
+          Cadastre seu restaurante, monte seu cardápio e comece a receber pedidos perto de você.
         </p>
       </div>
 
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>{mode === "signup" ? "Criar conta empresa" : "Entrar"}</CardTitle>
+          <CardTitle>{mode === "signup" ? "Criar conta restaurante" : "Entrar"}</CardTitle>
           <CardDescription>
             {mode === "signup"
-              ? "Crie sua conta para cadastrar sua empresa."
-              : "Entre para acessar suas empresas."}
+              ? "Crie sua conta para cadastrar seu restaurante."
+              : "Entre para acessar seus restaurantes."}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -60,7 +60,7 @@ export function CompanyLanding() {
               <p className="text-center text-sm text-muted-foreground">
                 Não tem conta?{" "}
                 <Button variant="link" size="sm" className="h-auto p-0" onClick={() => setMode("signup")}>
-                  Criar conta empresa
+                  Criar conta restaurante
                 </Button>
               </p>
             </>

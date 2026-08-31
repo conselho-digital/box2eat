@@ -27,7 +27,7 @@ export default async function MapaPage({
           Voltar
         </Link>
         <span className="text-sm text-muted-foreground">
-          {companies.length} {companies.length === 1 ? "empresa" : "empresas"}
+          {companies.length} {companies.length === 1 ? "restaurante" : "restaurantes"}
         </span>
       </div>
       <div className="h-[75vh] w-full">

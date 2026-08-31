@@ -5,7 +5,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { RecoveryLoginForm } from "@/components/auth/recovery-login-form";
+import { RecoveryAccessTabs } from "@/components/auth/recovery-access-tabs";
 
 export default function RecoverAccessPage() {
   return (
@@ -14,12 +14,12 @@ export default function RecoverAccessPage() {
         <CardHeader>
           <CardTitle>Recuperar acesso</CardTitle>
           <CardDescription>
-            Informe o e-mail de recuperação cadastrado na sua conta. Vamos te enviar um link para
-            entrar sem precisar da senha ou do Google.
+            Sem acesso à senha? Entre pelo e-mail de recuperação cadastrado ou por um telefone já
+            verificado na sua conta.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <RecoveryLoginForm />
+          <RecoveryAccessTabs />
         </CardContent>
       </Card>
     </div>

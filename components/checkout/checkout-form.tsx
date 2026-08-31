@@ -168,8 +168,8 @@ export function CheckoutForm() {
 
 function describeCheckoutError(message: string): string {
   const known: Record<string, string> = {
-    company_not_accepting_orders: "Essa empresa não está aceitando pedidos no momento.",
-    below_minimum_order: "O valor do pedido está abaixo do mínimo dessa empresa.",
+    company_not_accepting_orders: "Esse restaurante não está aceitando pedidos no momento.",
+    below_minimum_order: "O valor do pedido está abaixo do mínimo desse restaurante.",
     menu_item_unavailable: "Um dos itens do carrinho não está mais disponível.",
     invalid_option_selection: "A seleção de opções de um dos itens ficou inválida. Revise o carrinho.",
     missing_required_option: "Falta escolher uma opção obrigatória em um dos itens.",

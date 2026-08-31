@@ -98,13 +98,16 @@ export async function createCompany(supabase: Client, input: CreateCompanyInput)
 /** Maps the Postgres exception raised by the membership-limit trigger to a friendly message. */
 export function describeCompanyError(message: string): string {
   if (message.includes("company_owner_limit_exceeded")) {
-    return `Você já atingiu o limite de ${MAX_COMPANIES_OWNED} empresas criadas.`;
+    return `Você já atingiu o limite de ${MAX_COMPANIES_OWNED} restaurantes criados.`;
   }
   if (message.includes("company_connection_limit_exceeded")) {
-    return `Você já atingiu o limite de ${MAX_COMPANIES_CONNECTED} empresas conectadas.`;
+    return `Você já atingiu o limite de ${MAX_COMPANIES_CONNECTED} restaurantes conectados.`;
   }
   if (message.includes("duplicate key") && message.includes("companies_slug_key")) {
-    return "Essa URL já está em uso por outra empresa. Escolha outra.";
+    return "Essa URL já está em uso por outro restaurante. Escolha outra.";
+  }
+  if (message.includes("companies_slug_not_reserved")) {
+    return "Essa URL é reservada. Escolha outra.";
   }
   return message;
 }
