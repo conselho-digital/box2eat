@@ -6,6 +6,7 @@ import { CartProvider } from "@/components/cart/cart-provider";
 import { CartBar } from "@/components/cart/cart-bar";
 import { MustSetPasswordDialog } from "@/components/auth/must-set-password-dialog";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
+import { InstallAppProvider } from "@/components/pwa/install-app-provider";
 
 export function Providers({
   header,
@@ -18,13 +19,15 @@ export function Providers({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CartProvider>
-        {header}
-        {children}
-        <CartBar />
-        <MustSetPasswordDialog />
-        <RegisterServiceWorker />
-      </CartProvider>
+      <InstallAppProvider>
+        <CartProvider>
+          {header}
+          {children}
+          <CartBar />
+          <MustSetPasswordDialog />
+          <RegisterServiceWorker />
+        </CartProvider>
+      </InstallAppProvider>
     </QueryClientProvider>
   );
 }

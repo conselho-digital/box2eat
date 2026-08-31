@@ -32,6 +32,45 @@ export async function setCouponActive(supabase: Client, couponId: string, isActi
   return supabase.from("coupons").update({ is_active: isActive }).eq("id", couponId);
 }
 
+export type PromotedCompany = {
+  id: string;
+  name: string;
+  slug: string;
+  discountType: string;
+  discountValue: number;
+  code: string;
+};
+
+export async function listPromotedCompanies(supabase: Client) {
+  const nowIso = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("coupons")
+    .select("code, discount_type, discount_value, companies!inner(id, name, slug, status)")
+    .eq("is_active", true)
+    .eq("companies.status", "active")
+    .lte("valid_from", nowIso)
+    .or(`valid_until.is.null,valid_until.gte.${nowIso}`);
+  if (error) return { data: null, error };
+
+  const byCompany = new Map<string, PromotedCompany>();
+  for (const row of data) {
+    const company = row.companies;
+    const current = byCompany.get(company.id);
+    if (!current || row.discount_value > current.discountValue) {
+      byCompany.set(company.id, {
+        id: company.id,
+        name: company.name,
+        slug: company.slug,
+        discountType: row.discount_type,
+        discountValue: row.discount_value,
+        code: row.code,
+      });
+    }
+  }
+
+  return { data: [...byCompany.values()], error: null };
+}
+
 // validate_coupon is declared RETURNS TABLE(...) (genuinely array-shaped,
 // unlike the single-row-returning order/company RPCs elsewhere in this
 // codebase) — .single() is correct and safe here since the function always

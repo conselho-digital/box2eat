@@ -31,12 +31,15 @@ export default async function Home({
   searchParams: Promise<SearchParams>;
 }) {
   const { q, open, sort } = await searchParams;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const cookieStore = await cookies();
   const lat = cookieStore.get(LAT_COOKIE)?.value;
   const lng = cookieStore.get(LNG_COOKIE)?.value;
   const nearOff = cookieStore.get(NEAR_OFF_COOKIE)?.value === "1";
 
-  const supabase = await createClient();
   const companies = await listPublicCompanies(supabase, { q, open, sort, lat, lng });
 
   const hasFilters = Boolean(q || open || sort || lat);
@@ -46,6 +49,27 @@ export default async function Home({
   if (open) mapParams.set("open", open);
   if (sort) mapParams.set("sort", sort);
   const mapHref = mapParams.toString() ? `/mapa?${mapParams.toString()}` : "/mapa";
+
+  const filterButtons = (
+    <div className="flex flex-wrap items-center gap-2 text-sm">
+      <NearMeButton lat={lat} lng={lng} nearOff={nearOff} />
+      <Button
+        render={
+          <Link href={buildHref({ q, open, sort }, { open: open === "1" ? undefined : "1" })} />
+        }
+        nativeButton={false}
+        variant={open === "1" ? "default" : "secondary"}
+        size="sm"
+      >
+        Aberto agora
+      </Button>
+      <RatingSortButton
+        active={sort === "rating" && !lat}
+        href={buildHref({ q, open, sort }, { sort: sort === "rating" ? undefined : "rating" })}
+      />
+      {hasFilters && <ClearFiltersLink />}
+    </div>
+  );
 
   return (
     <div className="flex flex-1 flex-col gap-8 p-4 sm:p-6">
@@ -59,49 +83,37 @@ export default async function Home({
         <Map className="size-5" />
       </Button>
 
-      <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">
-        <Image
-          src="/brand/hero-food.webp"
-          alt=""
-          fill
-          priority
-          className="object-cover"
-        />
-        {/* White wash over the photo so it stays in the background instead
-            of competing with the search bar — only ~40% of the original
-            color shows through. */}
-        <div className="absolute inset-0 bg-white/60" />
-        <div className="relative flex max-w-xl flex-col gap-4">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
-            Peça uma entrega perto de você
-          </h1>
-          <p className="text-foreground/80">
-            Peça comida dos melhores restaurantes perto de você, ou cadastre o seu e
-            comece a vender.
-          </p>
+      {user ? (
+        <section className="flex flex-col gap-4">
           <HeroSearch q={q} open={open} sort={sort} />
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <NearMeButton lat={lat} lng={lng} nearOff={nearOff} />
-            <Button
-              render={
-                <Link
-                  href={buildHref({ q, open, sort }, { open: open === "1" ? undefined : "1" })}
-                />
-              }
-              nativeButton={false}
-              variant={open === "1" ? "default" : "secondary"}
-              size="sm"
-            >
-              Aberto agora
-            </Button>
-            <RatingSortButton
-              active={sort === "rating" && !lat}
-              href={buildHref({ q, open, sort }, { sort: sort === "rating" ? undefined : "rating" })}
-            />
-            {hasFilters && <ClearFiltersLink />}
+          {filterButtons}
+        </section>
+      ) : (
+        <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">
+          <Image
+            src="/brand/hero-food.webp"
+            alt=""
+            fill
+            priority
+            className="object-cover"
+          />
+          {/* White wash over the photo so it stays in the background instead
+              of competing with the search bar — only ~40% of the original
+              color shows through. */}
+          <div className="absolute inset-0 bg-white/60" />
+          <div className="relative flex max-w-xl flex-col gap-4">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
+              Peça uma entrega perto de você
+            </h1>
+            <p className="text-foreground/80">
+              Peça comida dos melhores restaurantes perto de você, ou cadastre o seu e
+              comece a vender.
+            </p>
+            <HeroSearch q={q} open={open} sort={sort} />
+            {filterButtons}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <div className="mx-auto grid w-full max-w-2xl gap-3 text-left sm:grid-cols-2">
         {companies.map((company) => (

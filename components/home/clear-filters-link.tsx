@@ -14,7 +14,11 @@ export function ClearFiltersLink() {
   }
 
   return (
-    <button type="button" onClick={handleClick} className="text-foreground/70 hover:underline">
+    <button
+      type="button"
+      onClick={handleClick}
+      className="rounded-full bg-card px-3 py-1.5 text-foreground/80 shadow-sm hover:bg-muted hover:text-foreground"
+    >
       Limpar filtros
     </button>
   );

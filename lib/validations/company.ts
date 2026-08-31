@@ -7,6 +7,7 @@ export const RESERVED_SLUGS = new Set([
   "admin", "auth", "carrinho", "checkout", "conta", "empresas",
   "entregador", "entregas", "loja", "mapa", "nova-senha", "pedidos",
   "recuperar-acesso", "validacao", "cadastro", "login", "api",
+  "ajuda", "promocoes",
 ]);
 
 export const createCompanySchema = z.object({

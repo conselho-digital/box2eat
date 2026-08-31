@@ -9,6 +9,26 @@ export async function getPayment(supabase: Client, orderId: string) {
   return supabase.from("payments").select("*").eq("order_id", orderId).maybeSingle();
 }
 
+export type PaymentMethodUsed = { provider: string; method: string | null };
+
+export async function listMyPaymentMethods(supabase: Client, userId: string) {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("payments(provider, method)")
+    .eq("customer_id", userId)
+    .not("payments", "is", null);
+  if (error) return { data: null, error };
+
+  const seen = new Map<string, PaymentMethodUsed>();
+  for (const order of data ?? []) {
+    const payment = order.payments;
+    if (!payment) continue;
+    const key = `${payment.provider}:${payment.method ?? ""}`;
+    if (!seen.has(key)) seen.set(key, { provider: payment.provider, method: payment.method });
+  }
+  return { data: [...seen.values()], error: null };
+}
+
 async function invokePaymentFunction<T>(
   supabase: Client,
   name: string,
