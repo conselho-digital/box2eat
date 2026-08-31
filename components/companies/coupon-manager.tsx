@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,9 +9,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { createCoupon, listCompanyCoupons, setCouponActive, type Coupon } from "@/lib/domain/coupons";
-import { couponSchema, type CouponInput } from "@/lib/validations/coupon";
+import { couponSchema, PROMO_TYPES, type CouponInput } from "@/lib/validations/coupon";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+
+const PROMO_TYPE_HELP: Record<keyof typeof PROMO_TYPES, string> = {
+  discount: "Um desconto simples em % ou R$ no pedido.",
+  loyalty_purchases:
+    "Pra clientes fiéis: combine com o cliente a partir de quantas compras ele ganha o código (ex.: na 5ª compra) e avise por WhatsApp.",
+  loyalty_spend:
+    "Troca por produto: avise o cliente que, ao atingir um valor gasto acumulado, ele ganha esse código pra resgatar um item.",
+  buy_x_get_y:
+    "Pague 1 leve 2 / ganhe um brinde: use desconto fixo (R$) igual ao preço do item grátis, e pedido mínimo igual ao preço do item pago.",
+};
 
 function describeCouponError(message: string) {
   if (message.includes("coupons_company_code_idx") || message.includes("duplicate key")) {
@@ -38,12 +48,14 @@ export function CouponManager({ companyId }: { companyId: string }) {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<CouponInput>({
     resolver: zodResolver(couponSchema),
-    defaultValues: { discountType: "percentage" },
+    defaultValues: { discountType: "percentage", promoType: "discount" },
   });
   const [formError, setFormError] = useState<string | null>(null);
+  const selectedPromoType = useWatch({ control, name: "promoType" });
 
   async function onSubmit(values: CouponInput) {
     setFormError(null);
@@ -53,7 +65,7 @@ export function CouponManager({ companyId }: { companyId: string }) {
       setFormError(describeCouponError(error.message));
       return;
     }
-    reset({ discountType: "percentage" });
+    reset({ discountType: "percentage", promoType: "discount" });
     queryClient.invalidateQueries({ queryKey });
   }
 
@@ -71,6 +83,25 @@ export function CouponManager({ companyId }: { companyId: string }) {
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 rounded-lg border p-4">
         <h2 className="font-medium">Novo cupom</h2>
         <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5 sm:col-span-2">
+            <Label htmlFor="promoType">Tipo de promoção</Label>
+            <select
+              id="promoType"
+              className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+              {...register("promoType")}
+            >
+              {Object.entries(PROMO_TYPES).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            {selectedPromoType && (
+              <p className="text-xs text-muted-foreground">
+                {PROMO_TYPE_HELP[selectedPromoType as keyof typeof PROMO_TYPES]}
+              </p>
+            )}
+          </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="code">Código</Label>
             <Input id="code" placeholder="BEMVINDO10" {...register("code")} />
@@ -155,6 +186,8 @@ function CouponRow({ coupon, onToggle }: { coupon: Coupon; onToggle: (isActive: 
           {coupon.code} · {value}
         </p>
         <p className="text-xs text-muted-foreground">
+          {PROMO_TYPES[coupon.promo_type as keyof typeof PROMO_TYPES] ?? coupon.promo_type}
+          {" · "}
           {usage}
           {coupon.min_order_value > 0 && ` · Mín. ${currency.format(coupon.min_order_value)}`}
           {coupon.valid_until &&

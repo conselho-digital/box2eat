@@ -19,6 +19,7 @@ export async function createCoupon(supabase: Client, companyId: string, input: C
   return supabase.from("coupons").insert({
     company_id: companyId,
     code: input.code.trim().toUpperCase(),
+    promo_type: input.promoType,
     discount_type: input.discountType,
     discount_value: input.discountValue,
     min_order_value: input.minOrderValue || 0,
@@ -36,6 +37,7 @@ export type PromotedCompany = {
   id: string;
   name: string;
   slug: string;
+  promoType: string;
   discountType: string;
   discountValue: number;
   code: string;
@@ -45,30 +47,24 @@ export async function listPromotedCompanies(supabase: Client) {
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase
     .from("coupons")
-    .select("code, discount_type, discount_value, companies!inner(id, name, slug, status)")
+    .select("code, promo_type, discount_type, discount_value, companies!inner(id, name, slug, status)")
     .eq("is_active", true)
     .eq("companies.status", "active")
     .lte("valid_from", nowIso)
     .or(`valid_until.is.null,valid_until.gte.${nowIso}`);
   if (error) return { data: null, error };
 
-  const byCompany = new Map<string, PromotedCompany>();
-  for (const row of data) {
-    const company = row.companies;
-    const current = byCompany.get(company.id);
-    if (!current || row.discount_value > current.discountValue) {
-      byCompany.set(company.id, {
-        id: company.id,
-        name: company.name,
-        slug: company.slug,
-        discountType: row.discount_type,
-        discountValue: row.discount_value,
-        code: row.code,
-      });
-    }
-  }
+  const promotions: PromotedCompany[] = data.map((row) => ({
+    id: row.companies.id,
+    name: row.companies.name,
+    slug: row.companies.slug,
+    promoType: row.promo_type,
+    discountType: row.discount_type,
+    discountValue: row.discount_value,
+    code: row.code,
+  }));
 
-  return { data: [...byCompany.values()], error: null };
+  return { data: promotions, error: null };
 }
 
 // validate_coupon is declared RETURNS TABLE(...) (genuinely array-shaped,

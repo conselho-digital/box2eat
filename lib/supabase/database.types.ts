@@ -439,6 +439,7 @@ export type Database = {
           max_uses: number | null
           max_uses_per_user: number | null
           min_order_value: number
+          promo_type: string
           uses_count: number
           valid_from: string
           valid_until: string | null
@@ -455,6 +456,7 @@ export type Database = {
           max_uses?: number | null
           max_uses_per_user?: number | null
           min_order_value?: number
+          promo_type?: string
           uses_count?: number
           valid_from?: string
           valid_until?: string | null
@@ -471,6 +473,7 @@ export type Database = {
           max_uses?: number | null
           max_uses_per_user?: number | null
           min_order_value?: number
+          promo_type?: string
           uses_count?: number
           valid_from?: string
           valid_until?: string | null
