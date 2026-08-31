@@ -69,6 +69,24 @@ type NominatimAddress = {
   postcode?: string;
 };
 
+export async function geocodeAddress(input: {
+  street: string;
+  number?: string;
+  city: string;
+  state?: string;
+}) {
+  const query = [input.street, input.number, input.city, input.state, "Brasil"]
+    .filter(Boolean)
+    .join(", ");
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`,
+  );
+  if (!res.ok) throw new Error("Não foi possível localizar o endereço no mapa.");
+  const data: { lat: string; lon: string }[] = await res.json();
+  if (data.length === 0) return null;
+  return { lat: Number(data[0].lat), lng: Number(data[0].lon) };
+}
+
 export async function reverseGeocode(lat: number, lng: number) {
   const res = await fetch(
     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,

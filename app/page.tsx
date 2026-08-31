@@ -114,11 +114,13 @@ export default async function Home({
 
       {user ? (
         <>
-          <AddressBar userId={user.id} initialAddress={initialAddress} />
-          <div className="sticky top-0 z-30 -mx-4 bg-background px-4 py-2 sm:-mx-6 sm:px-6">
-            <SimpleSearch q={q} open={open} sort={sort} category={category} />
+          <div className="flex flex-col">
+            <AddressBar userId={user.id} initialAddress={initialAddress} />
+            <div className="sticky top-0 z-30 -mx-4 bg-background px-4 sm:-mx-6 sm:px-6">
+              <SimpleSearch q={q} open={open} sort={sort} category={category} />
+            </div>
+            <CategoryChips q={q} open={open} sort={sort} category={category} />
           </div>
-          <CategoryChips q={q} open={open} sort={sort} category={category} />
           {(promotedCompanies.length > 0 || (recommendedCompanies?.length ?? 0) > 0) && <Separator />}
           <FeaturedCarousel companies={promotedCompanies} />
           {promotedCompanies.length > 0 && (recommendedCompanies?.length ?? 0) > 0 && <Separator />}

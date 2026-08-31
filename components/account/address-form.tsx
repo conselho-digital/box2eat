@@ -8,8 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { getMyAddress, reverseGeocode, upsertMyAddress, type UserAddress } from "@/lib/domain/address";
+import {
+  geocodeAddress,
+  getMyAddress,
+  reverseGeocode,
+  upsertMyAddress,
+  type UserAddress,
+} from "@/lib/domain/address";
 import { profileAddressSchema, type ProfileAddressInput } from "@/lib/validations/address";
+import { AddressMapView } from "@/components/account/address-map-view";
 
 export function AddressForm({
   userId,
@@ -40,6 +47,7 @@ export function AddressForm({
     register,
     handleSubmit,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<ProfileAddressInput>({
     resolver: zodResolver(profileAddressSchema),
@@ -54,6 +62,17 @@ export function AddressForm({
       postalCode: initialAddress?.postal_code ?? "",
     },
   });
+
+  async function tryLocateOnMap() {
+    const { street, number, city, state } = getValues();
+    if (!street.trim() || !city.trim()) return;
+    try {
+      const found = await geocodeAddress({ street, number, city, state });
+      if (found) setCoords(found);
+    } catch {
+      // Silent: the map still lets the user drop the pin manually.
+    }
+  }
 
   function useMyLocation() {
     if (!navigator.geolocation) {
@@ -125,12 +144,12 @@ export function AddressForm({
       <div className="grid grid-cols-3 gap-3">
         <div className="col-span-2 flex flex-col gap-1.5">
           <Label htmlFor="addr-street">Rua</Label>
-          <Input id="addr-street" {...register("street")} />
+          <Input id="addr-street" {...register("street")} onBlur={tryLocateOnMap} />
           {errors.street && <p className="text-sm text-destructive">{errors.street.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="addr-number">Número</Label>
-          <Input id="addr-number" {...register("number")} />
+          <Input id="addr-number" {...register("number")} onBlur={tryLocateOnMap} />
         </div>
       </div>
       <div className="flex flex-col gap-1.5">
@@ -144,17 +163,30 @@ export function AddressForm({
       <div className="grid grid-cols-3 gap-3">
         <div className="col-span-2 flex flex-col gap-1.5">
           <Label htmlFor="addr-city">Cidade</Label>
-          <Input id="addr-city" {...register("city")} />
+          <Input id="addr-city" {...register("city")} onBlur={tryLocateOnMap} />
           {errors.city && <p className="text-sm text-destructive">{errors.city.message}</p>}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="addr-state">Estado</Label>
-          <Input id="addr-state" {...register("state")} />
+          <Input id="addr-state" {...register("state")} onBlur={tryLocateOnMap} />
         </div>
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="addr-postal">CEP</Label>
         <Input id="addr-postal" {...register("postalCode")} />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label>Localização no mapa</Label>
+        <p className="text-sm text-muted-foreground">
+          Vamos tentar encontrar a localização a partir do endereço. Se o pino não estiver no
+          lugar certo, arraste-o no mapa para corrigir.
+        </p>
+        <AddressMapView
+          lat={coords?.lat ?? null}
+          lng={coords?.lng ?? null}
+          onChange={(newLat, newLng) => setCoords({ lat: newLat, lng: newLng })}
+        />
       </div>
 
       {success && <p className="text-sm text-primary">Endereço salvo.</p>}
