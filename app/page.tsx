@@ -3,17 +3,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { Map } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { HeroSearch } from "@/components/home/hero-search";
+import { SimpleSearch } from "@/components/home/simple-search";
+import { CategoryChips } from "@/components/home/category-chips";
+import { AddressBar } from "@/components/home/address-bar";
+import { FeaturedCarousel } from "@/components/home/featured-carousel";
 import { NearMeButton } from "@/components/home/near-me-button";
 import { RatingSortButton } from "@/components/home/rating-sort-button";
 import { ClearFiltersLink } from "@/components/home/clear-filters-link";
 import { createClient } from "@/lib/supabase/server";
 import { listPublicCompanies, type CompanySearchParams } from "@/lib/domain/companies";
+import { listPromotedCompanies } from "@/lib/domain/coupons";
+import { getMyAddress } from "@/lib/domain/address";
 import { LAT_COOKIE, LNG_COOKIE, NEAR_OFF_COOKIE } from "@/lib/domain/location-cookie";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
-type SearchParams = Pick<CompanySearchParams, "q" | "open" | "sort">;
+type SearchParams = Pick<CompanySearchParams, "q" | "open" | "sort" | "category">;
 
 function buildHref(current: SearchParams, changes: SearchParams) {
   const params = new URLSearchParams();
@@ -21,6 +28,7 @@ function buildHref(current: SearchParams, changes: SearchParams) {
   if (merged.q) params.set("q", merged.q);
   if (merged.open) params.set("open", merged.open);
   if (merged.sort) params.set("sort", merged.sort);
+  if (merged.category) params.set("category", merged.category);
   const query = params.toString();
   return query ? `/?${query}` : "/";
 }
@@ -30,7 +38,7 @@ export default async function Home({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { q, open, sort } = await searchParams;
+  const { q, open, sort, category } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -40,7 +48,11 @@ export default async function Home({
   const lng = cookieStore.get(LNG_COOKIE)?.value;
   const nearOff = cookieStore.get(NEAR_OFF_COOKIE)?.value === "1";
 
-  const companies = await listPublicCompanies(supabase, { q, open, sort, lat, lng });
+  const companies = await listPublicCompanies(supabase, { q, open, sort, lat, lng, category });
+
+  const [{ data: initialAddress }, { data: promotedCompanies }] = user
+    ? await Promise.all([getMyAddress(supabase, user.id), listPromotedCompanies(supabase)])
+    : [{ data: null }, { data: null }];
 
   const hasFilters = Boolean(q || open || sort || lat);
 
@@ -72,7 +84,7 @@ export default async function Home({
   );
 
   return (
-    <div className="flex flex-1 flex-col gap-8 p-4 sm:p-6">
+    <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
       <Button
         className="fixed bottom-6 right-4 z-40 size-12 rounded-full shadow-lg sm:hidden"
         render={<Link href={mapHref} />}
@@ -84,10 +96,13 @@ export default async function Home({
       </Button>
 
       {user ? (
-        <section className="flex flex-col gap-4">
-          <HeroSearch q={q} open={open} sort={sort} />
-          {filterButtons}
-        </section>
+        <>
+          <AddressBar userId={user.id} initialAddress={initialAddress} />
+          <SimpleSearch q={q} open={open} sort={sort} category={category} />
+          <CategoryChips q={q} open={open} sort={sort} category={category} />
+          <Separator />
+          <FeaturedCarousel companies={promotedCompanies ?? []} />
+        </>
       ) : (
         <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">
           <Image

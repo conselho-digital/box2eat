@@ -14,9 +14,17 @@ import { profileAddressSchema, type ProfileAddressInput } from "@/lib/validation
 export function AddressForm({
   userId,
   initialAddress,
+  heading = "Endereço",
+  submitLabel = "Salvar endereço",
+  makeDefault = true,
+  onSaved,
 }: {
   userId: string;
   initialAddress: UserAddress | null;
+  heading?: string;
+  submitLabel?: string;
+  makeDefault?: boolean;
+  onSaved?: () => void;
 }) {
   const [addressId, setAddressId] = useState(initialAddress?.id ?? null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
@@ -36,6 +44,7 @@ export function AddressForm({
   } = useForm<ProfileAddressInput>({
     resolver: zodResolver(profileAddressSchema),
     defaultValues: {
+      label: initialAddress?.label ?? "",
       street: initialAddress?.street ?? "",
       number: initialAddress?.number ?? "",
       complement: initialAddress?.complement ?? "",
@@ -81,29 +90,37 @@ export function AddressForm({
   async function onSubmit(values: ProfileAddressInput) {
     setSuccess(false);
     const supabase = createClient();
-    const { error } = await upsertMyAddress(supabase, userId, addressId, {
-      ...values,
-      lat: coords?.lat,
-      lng: coords?.lng,
-    });
+    const { error } = await upsertMyAddress(
+      supabase,
+      userId,
+      addressId,
+      { ...values, lat: coords?.lat, lng: coords?.lng },
+      makeDefault,
+    );
     if (error) return;
     if (!addressId) {
       const { data } = await getMyAddress(supabase, userId);
       if (data) setAddressId(data.id);
     }
     setSuccess(true);
+    onSaved?.();
   }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h2 className="font-medium">Endereço</h2>
+        <h2 className="font-medium">{heading}</h2>
         <Button type="button" variant="outline" size="sm" onClick={useMyLocation} disabled={locating}>
           <LocateFixed className="size-4" />
           {locating ? "Localizando…" : "Usar minha localização"}
         </Button>
       </div>
       {locateError && <p className="text-sm text-destructive">{locateError}</p>}
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="addr-label">Nome (opcional)</Label>
+        <Input id="addr-label" placeholder="Casa, Trabalho, Namorada…" {...register("label")} />
+      </div>
 
       <div className="grid grid-cols-3 gap-3">
         <div className="col-span-2 flex flex-col gap-1.5">
@@ -142,7 +159,7 @@ export function AddressForm({
 
       {success && <p className="text-sm text-primary">Endereço salvo.</p>}
       <Button type="submit" disabled={isSubmitting} className="w-fit">
-        {isSubmitting ? "Salvando…" : "Salvar endereço"}
+        {isSubmitting ? "Salvando…" : submitLabel}
       </Button>
     </form>
   );

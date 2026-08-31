@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { createCompany, describeCompanyError } from "@/lib/domain/companies";
+import { FOOD_CATEGORIES } from "@/lib/domain/categories";
 import {
   createCompanySchema,
   type CreateCompanyInput,
@@ -63,6 +64,22 @@ export function CreateCompanyForm({ onCreated }: { onCreated?: () => void }) {
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="phone">Telefone</Label>
         <Input id="phone" {...register("phone")} />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="category">Categoria</Label>
+        <select
+          id="category"
+          className="h-8 rounded-lg border border-input bg-transparent px-2.5 text-sm"
+          defaultValue=""
+          {...register("category")}
+        >
+          <option value="">Selecione…</option>
+          {FOOD_CATEGORIES.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
       </div>
       {formError && <p className="text-sm text-destructive">{formError}</p>}
       <Button type="submit" disabled={mutation.isPending}>

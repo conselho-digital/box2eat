@@ -15,14 +15,30 @@ export async function getMyAddress(supabase: Client, userId: string) {
     .maybeSingle();
 }
 
+export async function listMyAddresses(supabase: Client, userId: string) {
+  return supabase
+    .from("user_addresses")
+    .select("*")
+    .eq("user_id", userId)
+    .order("is_default", { ascending: false })
+    .order("created_at", { ascending: true })
+    .returns<UserAddress[]>();
+}
+
+export async function setDefaultAddress(supabase: Client, addressId: string) {
+  return supabase.from("user_addresses").update({ is_default: true }).eq("id", addressId);
+}
+
 export async function upsertMyAddress(
   supabase: Client,
   userId: string,
   existingId: string | null,
   input: ProfileAddressInput & { lat?: number; lng?: number },
+  makeDefault = true,
 ) {
   const row = {
     user_id: userId,
+    label: input.label || null,
     street: input.street,
     number: input.number || null,
     complement: input.complement || null,
@@ -32,7 +48,7 @@ export async function upsertMyAddress(
     postal_code: input.postalCode || null,
     lat: input.lat ?? null,
     lng: input.lng ?? null,
-    is_default: true,
+    is_default: makeDefault,
   };
 
   if (existingId) {

@@ -71,11 +71,13 @@ export type Database = {
       companies: {
         Row: {
           avg_prep_time_minutes: number | null
+          category: string | null
           city: string | null
           cnpj: string | null
           cover_image_url: string | null
           cpf: string | null
           created_at: string
+          delivered_orders_count: number
           delivery_fee_base: number
           delivery_radius_km: number | null
           description: string | null
@@ -104,11 +106,13 @@ export type Database = {
         }
         Insert: {
           avg_prep_time_minutes?: number | null
+          category?: string | null
           city?: string | null
           cnpj?: string | null
           cover_image_url?: string | null
           cpf?: string | null
           created_at?: string
+          delivered_orders_count?: number
           delivery_fee_base?: number
           delivery_radius_km?: number | null
           description?: string | null
@@ -137,11 +141,13 @@ export type Database = {
         }
         Update: {
           avg_prep_time_minutes?: number | null
+          category?: string | null
           city?: string | null
           cnpj?: string | null
           cover_image_url?: string | null
           cpf?: string | null
           created_at?: string
+          delivered_orders_count?: number
           delivery_fee_base?: number
           delivery_radius_km?: number | null
           description?: string | null

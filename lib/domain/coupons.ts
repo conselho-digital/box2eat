@@ -41,13 +41,23 @@ export type PromotedCompany = {
   discountType: string;
   discountValue: number;
   code: string;
+  coverImageUrl: string | null;
+  deliveryFeeBase: number;
+  ratingAvg: number | null;
+  ratingCount: number;
+  avgPrepTimeMinutes: number | null;
+  deliveredOrdersCount: number;
 };
+
+const PROMOTED_COMPANY_COLUMNS =
+  "id, name, slug, status, cover_image_url, delivery_fee_base, rating_avg, rating_count, " +
+  "avg_prep_time_minutes, delivered_orders_count";
 
 export async function listPromotedCompanies(supabase: Client) {
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase
     .from("coupons")
-    .select("code, promo_type, discount_type, discount_value, companies!inner(id, name, slug, status)")
+    .select(`code, promo_type, discount_type, discount_value, companies!inner(${PROMOTED_COMPANY_COLUMNS})`)
     .eq("is_active", true)
     .eq("companies.status", "active")
     .lte("valid_from", nowIso)
@@ -62,6 +72,12 @@ export async function listPromotedCompanies(supabase: Client) {
     discountType: row.discount_type,
     discountValue: row.discount_value,
     code: row.code,
+    coverImageUrl: row.companies.cover_image_url,
+    deliveryFeeBase: row.companies.delivery_fee_base,
+    ratingAvg: row.companies.rating_avg,
+    ratingCount: row.companies.rating_count,
+    avgPrepTimeMinutes: row.companies.avg_prep_time_minutes,
+    deliveredOrdersCount: row.companies.delivered_orders_count,
   }));
 
   return { data: promotions, error: null };

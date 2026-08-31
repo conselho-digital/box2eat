@@ -17,6 +17,11 @@ export type PublicCompany = Pick<
   | "rating_count"
   | "lat"
   | "lng"
+  | "category"
+  | "cover_image_url"
+  | "delivery_fee_base"
+  | "avg_prep_time_minutes"
+  | "delivered_orders_count"
 >;
 
 export type CompanySearchParams = {
@@ -25,22 +30,26 @@ export type CompanySearchParams = {
   sort?: string;
   lat?: string;
   lng?: string;
+  category?: string;
 };
+
+const PUBLIC_COMPANY_COLUMNS =
+  "id, name, slug, description, min_order_value, is_open, rating_avg, rating_count, lat, lng, category, cover_image_url, delivery_fee_base, avg_prep_time_minutes, delivered_orders_count" as const;
 
 /** Shared by the home listing and the map view: same filters, same "closest first" logic. */
 export async function listPublicCompanies(supabase: Client, params: CompanySearchParams) {
-  const { q, open, sort, lat, lng } = params;
+  const { q, open, sort, lat, lng, category } = params;
 
-  let query = supabase
-    .from("companies")
-    .select("id, name, slug, description, min_order_value, is_open, rating_avg, rating_count, lat, lng")
-    .eq("status", "active");
+  let query = supabase.from("companies").select(PUBLIC_COMPANY_COLUMNS).eq("status", "active");
 
   if (q?.trim()) {
     query = query.ilike("name", `%${q.trim()}%`);
   }
   if (open === "1") {
     query = query.eq("is_open", true);
+  }
+  if (category) {
+    query = query.eq("category", category);
   }
   if (!lat && sort === "rating") {
     query = query.order("rating_avg", { ascending: false, nullsFirst: false });
@@ -92,7 +101,12 @@ export async function createCompany(supabase: Client, input: CreateCompanyInput)
     p_slug: input.slug,
     p_description: input.description || undefined,
     p_phone: input.phone || undefined,
+    p_category: input.category || undefined,
   });
+}
+
+export async function updateCompanyCategory(supabase: Client, companyId: string, category: string) {
+  return supabase.from("companies").update({ category }).eq("id", companyId);
 }
 
 /** Maps the Postgres exception raised by the membership-limit trigger to a friendly message. */

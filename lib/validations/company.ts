@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FOOD_CATEGORIES } from "@/lib/domain/categories";
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -21,6 +22,7 @@ export const createCompanySchema = z.object({
     .refine((value) => !RESERVED_SLUGS.has(value), "Essa URL é reservada. Escolha outra."),
   description: z.string().trim().optional(),
   phone: z.string().trim().optional(),
+  category: z.enum(FOOD_CATEGORIES).optional(),
 });
 
 export type CreateCompanyInput = z.infer<typeof createCompanySchema>;

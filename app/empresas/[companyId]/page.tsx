@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMyMembership } from "@/lib/domain/companies-detail";
+import { CompanyCategoryForm } from "@/components/companies/company-category-form";
 
 export default async function CompanyOverviewPage({
   params,
@@ -25,6 +26,10 @@ export default async function CompanyOverviewPage({
       <p>URL: box2eat.com/{company.slug}</p>
       {company.description && <p>{company.description}</p>}
       {company.phone && <p>Telefone: {company.phone}</p>}
+      <div>
+        <p className="mb-1.5">Categoria</p>
+        <CompanyCategoryForm companyId={company.id} category={company.category} />
+      </div>
     </div>
   );
 }

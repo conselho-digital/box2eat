@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const profileAddressSchema = z.object({
+  label: z.string().trim().optional(),
   street: z.string().trim().min(2, "Informe a rua"),
   number: z.string().trim().optional(),
   complement: z.string().trim().optional(),
