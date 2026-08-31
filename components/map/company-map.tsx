@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, AttributionControl } from "react-leaflet";
 import L, { type LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { PublicCompany } from "@/lib/domain/companies";
@@ -60,11 +60,12 @@ export function CompanyMap({
 
   return (
     <div className="relative h-full w-full">
-      <MapContainer center={center} zoom={13} scrollWheelZoom className="h-full w-full">
+      <MapContainer center={center} zoom={13} scrollWheelZoom attributionControl={false} className="h-full w-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <AttributionControl position="bottomright" prefix={false} />
         {userPosition && (
           <CircleMarker
             center={userPosition}

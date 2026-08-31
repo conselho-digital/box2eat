@@ -1,5 +1,19 @@
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
+/** Shared shape the restaurant card component renders, regardless of which
+ *  query (public listing, promotions, recommendations) produced the row. */
+export type RestaurantCardData = {
+  id: string;
+  name: string;
+  slug: string;
+  coverImageUrl: string | null;
+  deliveryFeeBase: number;
+  ratingAvg: number | null;
+  ratingCount: number;
+  avgPrepTimeMinutes: number | null;
+  deliveredOrdersCount: number;
+};
+
 const ORDER_COUNT_BUCKETS = [50, 100, 200, 300, 500, 1000, 2000, 3000, 4000, 5000];
 
 /** Buckets a raw delivered-order count into the marketing-friendly steps the

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
-import { Map } from "lucide-react";
+import { Map as MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { HeroSearch } from "@/components/home/hero-search";
@@ -9,12 +9,14 @@ import { SimpleSearch } from "@/components/home/simple-search";
 import { CategoryChips } from "@/components/home/category-chips";
 import { AddressBar } from "@/components/home/address-bar";
 import { FeaturedCarousel } from "@/components/home/featured-carousel";
+import { RecommendedCarousel } from "@/components/home/recommended-carousel";
 import { NearMeButton } from "@/components/home/near-me-button";
 import { RatingSortButton } from "@/components/home/rating-sort-button";
 import { ClearFiltersLink } from "@/components/home/clear-filters-link";
 import { createClient } from "@/lib/supabase/server";
 import { listPublicCompanies, type CompanySearchParams } from "@/lib/domain/companies";
-import { listPromotedCompanies } from "@/lib/domain/coupons";
+import { listPromotedCompanies, type PromotedCompany } from "@/lib/domain/coupons";
+import { listRecommendedCompanies } from "@/lib/domain/recommendations";
 import { getMyAddress } from "@/lib/domain/address";
 import { LAT_COOKIE, LNG_COOKIE, NEAR_OFF_COOKIE } from "@/lib/domain/location-cookie";
 
@@ -50,9 +52,24 @@ export default async function Home({
 
   const companies = await listPublicCompanies(supabase, { q, open, sort, lat, lng, category });
 
-  const [{ data: initialAddress }, { data: promotedCompanies }] = user
-    ? await Promise.all([getMyAddress(supabase, user.id), listPromotedCompanies(supabase)])
-    : [{ data: null }, { data: null }];
+  let initialAddress = null;
+  let promotedCompanies: PromotedCompany[] = [];
+  let recommendedCompanies: Awaited<ReturnType<typeof listRecommendedCompanies>>["data"] = [];
+  if (user) {
+    const addressResult = await getMyAddress(supabase, user.id);
+    initialAddress = addressResult.data;
+    const userLat = initialAddress?.lat ?? (lat ? Number(lat) : null);
+    const userLng = initialAddress?.lng ?? (lng ? Number(lng) : null);
+
+    const [{ data: promotions }, { data: recommended }] = await Promise.all([
+      listPromotedCompanies(supabase),
+      listRecommendedCompanies(supabase, user.id, userLat, userLng),
+    ]);
+    promotedCompanies = promotions ?? [];
+    recommendedCompanies = recommended ?? [];
+  }
+
+  const promotionsByCompany = new Map(promotedCompanies.map((p) => [p.id, p]));
 
   const hasFilters = Boolean(q || open || sort || lat);
 
@@ -92,16 +109,20 @@ export default async function Home({
         size="icon"
         aria-label="Abrir mapa"
       >
-        <Map className="size-5" />
+        <MapIcon className="size-5" />
       </Button>
 
       {user ? (
         <>
           <AddressBar userId={user.id} initialAddress={initialAddress} />
-          <SimpleSearch q={q} open={open} sort={sort} category={category} />
+          <div className="sticky top-0 z-30 -mx-4 bg-background px-4 py-2 sm:-mx-6 sm:px-6">
+            <SimpleSearch q={q} open={open} sort={sort} category={category} />
+          </div>
           <CategoryChips q={q} open={open} sort={sort} category={category} />
-          <Separator />
-          <FeaturedCarousel companies={promotedCompanies ?? []} />
+          {(promotedCompanies.length > 0 || (recommendedCompanies?.length ?? 0) > 0) && <Separator />}
+          <FeaturedCarousel companies={promotedCompanies} />
+          {promotedCompanies.length > 0 && (recommendedCompanies?.length ?? 0) > 0 && <Separator />}
+          <RecommendedCarousel companies={recommendedCompanies ?? []} promotionsByCompany={promotionsByCompany} />
         </>
       ) : (
         <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">

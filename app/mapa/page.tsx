@@ -30,7 +30,7 @@ export default async function MapaPage({
           {companies.length} {companies.length === 1 ? "restaurante" : "restaurantes"}
         </span>
       </div>
-      <div className="h-[75vh] w-full">
+      <div className="flex-1">
         <MapView
           companies={companies}
           initialLat={lat ? Number(lat) : undefined}
