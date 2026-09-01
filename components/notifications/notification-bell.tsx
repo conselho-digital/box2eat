@@ -10,7 +10,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -122,7 +121,7 @@ export function NotificationBell({ userId }: { userId: string }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 duration-300">
         <div className="flex items-center justify-between px-1.5 py-1">
-          <DropdownMenuLabel className="p-0">Notificações</DropdownMenuLabel>
+          <span className="text-xs font-medium text-muted-foreground">Notificações</span>
           {hasUnread && (
             <button
               type="button"
