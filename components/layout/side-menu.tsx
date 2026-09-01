@@ -52,12 +52,18 @@ function MenuLink({
 function GuestMenu({ isAdmin, onNavigate }: { isAdmin: boolean; onNavigate: () => void }) {
   return (
     <>
-      <Link href="/login" onClick={onNavigate} className="rounded-lg px-3 py-2 hover:bg-muted">
-        Entrar
-      </Link>
-      <Link href="/cadastro" onClick={onNavigate} className="rounded-lg px-3 py-2 hover:bg-muted">
-        Criar conta
-      </Link>
+      <div className="mb-2 flex flex-col gap-2">
+        <Button render={<Link href="/login" onClick={onNavigate} />} nativeButton={false}>
+          Entrar
+        </Button>
+        <Button
+          render={<Link href="/cadastro" onClick={onNavigate} />}
+          nativeButton={false}
+          variant="secondary"
+        >
+          Criar conta
+        </Button>
+      </div>
       <Link href="/empresas" onClick={onNavigate} className="rounded-lg px-3 py-2 hover:bg-muted">
         Conta restaurante
       </Link>
@@ -193,7 +199,7 @@ export function SideMenu({
       />
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/30 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
-        <DialogPrimitive.Popup className="fixed inset-y-0 left-0 z-50 flex w-80 max-w-[85%] flex-col gap-1 overflow-y-auto bg-popover p-4 text-popover-foreground shadow-xl outline-none duration-300 data-open:animate-in data-open:slide-in-from-left data-closed:animate-out data-closed:slide-out-to-left">
+        <DialogPrimitive.Popup className="fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85%] flex-col gap-1 overflow-y-auto bg-popover p-4 text-popover-foreground shadow-xl outline-none duration-300 data-open:animate-in data-open:slide-in-from-right data-closed:animate-out data-closed:slide-out-to-right">
           <span className="mb-2 font-semibold">Menu</span>
           {loggedIn ? (
             <AccountMenu
