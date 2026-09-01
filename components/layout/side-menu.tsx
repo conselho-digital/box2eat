@@ -79,6 +79,8 @@ function GuestMenu({ isAdmin, onNavigate }: { isAdmin: boolean; onNavigate: () =
           Painel admin
         </Link>
       )}
+      <Separator />
+      <GetAppMenuItem />
     </>
   );
 }
