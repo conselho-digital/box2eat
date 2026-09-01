@@ -1414,9 +1414,9 @@ export type Database = {
         Args: { p_company_ids: string[] }
         Returns: { avg_minutes: number | null; company_id: string; has_queue: boolean }[]
       }
-      get_best_selling_item_ids: {
-        Args: { p_company_id: string; p_limit?: number }
-        Returns: { menu_item_id: string; total_quantity: number }[]
+      get_best_selling_items_for_companies: {
+        Args: { p_company_ids: string[]; p_limit_per_company?: number }
+        Returns: { company_id: string; menu_item_id: string; rnk: number; total_quantity: number }[]
       }
       get_qr_login_status: {
         Args: { p_token: string }

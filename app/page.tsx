@@ -97,18 +97,22 @@ export default async function Home({
   const promotionsByCompany = new Map(promotedCompanies.map((p) => [p.id, p]));
 
   const showCategoryFeed = Boolean(user && effectiveCategory);
-  let categoryFeed: { company: (typeof companies)[number]; items: MenuItem[] }[] = [];
+  const companiesWithBestSellers: { company: (typeof companies)[number]; items: MenuItem[] }[] = [];
+  const companiesWithoutBestSellers: (typeof companies)[number][] = [];
   if (showCategoryFeed) {
-    const [feed, categoryQueueInfo] = await Promise.all([
-      Promise.all(
-        companies.map(async (company) => {
-          const { data: items } = await listBestSellingItems(supabase, company.id);
-          return { company, items: items ?? [] };
-        }),
-      ),
-      listCompanyQueueInfo(supabase, companies.map((c) => c.id)),
+    const companyIds = companies.map((c) => c.id);
+    const [{ data: bestSellersByCompany }, categoryQueueInfo] = await Promise.all([
+      listBestSellingItems(supabase, companyIds),
+      listCompanyQueueInfo(supabase, companyIds),
     ]);
-    categoryFeed = feed.filter((entry) => entry.items.length > 0);
+    for (const company of companies) {
+      const items = bestSellersByCompany?.get(company.id) ?? [];
+      if (items.length > 0) {
+        companiesWithBestSellers.push({ company, items });
+      } else {
+        companiesWithoutBestSellers.push(company);
+      }
+    }
     for (const [companyId, info] of categoryQueueInfo) {
       queueInfoByCompany.set(companyId, info);
     }
@@ -172,19 +176,47 @@ export default async function Home({
             />
           </div>
           {showCategoryFeed ? (
-            categoryFeed.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nenhum item em destaque nessa categoria ainda.
-              </p>
+            companies.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum restaurante encontrado.</p>
             ) : (
-              categoryFeed.map(({ company, items }) => (
-                <RestaurantMenuCarousel
-                  key={company.id}
-                  company={company}
-                  items={items}
-                  queueInfo={queueInfoByCompany.get(company.id)}
-                />
-              ))
+              <>
+                {companiesWithBestSellers.map(({ company, items }) => (
+                  <RestaurantMenuCarousel
+                    key={company.id}
+                    company={company}
+                    items={items}
+                    queueInfo={queueInfoByCompany.get(company.id)}
+                  />
+                ))}
+                {companiesWithoutBestSellers.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                    {companiesWithBestSellers.length > 0 && (
+                      <h2 className="text-lg font-semibold">Outros restaurantes</h2>
+                    )}
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {companiesWithoutBestSellers.map((company) => (
+                        <Link
+                          key={company.id}
+                          href={`/${company.slug}`}
+                          className="rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                        >
+                          <p className="font-medium">{company.name}</p>
+                          {company.description && (
+                            <p className="line-clamp-2 text-sm text-muted-foreground">
+                              {company.description}
+                            </p>
+                          )}
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {company.is_open ? "Aberto agora" : "Fechado"}
+                            {company.rating_count > 0 &&
+                              ` · ★ ${company.rating_avg?.toFixed(1)} (${company.rating_count})`}
+                          </p>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )
           ) : (
             <>

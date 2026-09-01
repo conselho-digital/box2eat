@@ -172,28 +172,46 @@ export async function uploadMenuImage(
   return { data: data.publicUrl, error: null };
 }
 
-/** Top-selling items for a company (by total quantity across real orders),
- *  for the category-feed carousels — lets a customer browse and add a
- *  restaurant's popular items without opening its page. */
-export async function listBestSellingItems(supabase: Client, companyId: string, limit = 8) {
-  const { data: ranked, error: rankError } = await supabase.rpc("get_best_selling_item_ids", {
-    p_company_id: companyId,
-    p_limit: limit,
-  });
-  if (rankError) return { data: null, error: rankError };
-  if (!ranked || ranked.length === 0) return { data: [], error: null };
+/** Top-selling items (by total quantity across real orders) for each of the
+ *  given companies in one batch, for the category-feed carousels — lets a
+ *  customer browse and add a restaurant's popular items without opening its
+ *  page. Ranking already excludes unavailable items server-side; the
+ *  availability filter here just guards against one going unavailable in
+ *  the moment between the ranking call and this follow-up select. */
+export async function listBestSellingItems(
+  supabase: Client,
+  companyIds: string[],
+  limitPerCompany = 8,
+) {
+  const empty = new Map<string, MenuItem[]>();
+  if (companyIds.length === 0) return { data: empty, error: null };
 
-  const ids = ranked.map((r) => r.menu_item_id);
+  const { data: ranked, error: rankError } = await supabase.rpc(
+    "get_best_selling_items_for_companies",
+    { p_company_ids: companyIds, p_limit_per_company: limitPerCompany },
+  );
+  if (rankError) return { data: null, error: rankError };
+  if (!ranked || ranked.length === 0) return { data: empty, error: null };
+
+  const ids = [...new Set(ranked.map((r) => r.menu_item_id))];
   const { data: items, error } = await supabase
     .from("menu_items")
     .select(ITEM_WITH_OPTIONS_SELECT)
     .in("id", ids)
+    .eq("is_available", true)
     .returns<MenuItem[]>();
   if (error) return { data: null, error };
 
   const byId = new Map(items.map((item) => [item.id, item]));
-  const ordered = ids.map((id) => byId.get(id)).filter((item): item is MenuItem => Boolean(item));
-  return { data: ordered, error: null };
+  const byCompany = new Map<string, MenuItem[]>();
+  for (const row of ranked) {
+    const item = byId.get(row.menu_item_id);
+    if (!item) continue;
+    const list = byCompany.get(row.company_id) ?? [];
+    list.push(item);
+    byCompany.set(row.company_id, list);
+  }
+  return { data: byCompany, error: null };
 }
 
 /** Public storefront: only available items, grouped by category. */
