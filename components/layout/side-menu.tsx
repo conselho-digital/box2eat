@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
@@ -21,8 +21,15 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { GetAppMenuItem } from "@/components/layout/get-app-menu-item";
+import { ACCOUNT_TABS } from "@/components/account/account-tabs";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/lib/domain/auth";
+
+/** Everything the menu links to — prefetched eagerly (not just on hover/
+ *  viewport-entry) since these routes only render inside the closed dialog,
+ *  where Next.js's default viewport-based <Link> prefetch never gets a
+ *  chance to trigger before the user actually opens it. */
+const MENU_ROUTES = [...ACCOUNT_TABS.map((tab) => tab.href), "/conta/carteira", "/ajuda", "/promocoes", "/empresas"];
 
 function MenuLink({
   href,
@@ -192,6 +199,14 @@ export function SideMenu({
   trigger?: React.ReactElement;
 }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loggedIn) return;
+    for (const route of isAdmin ? [...MENU_ROUTES, "/admin/entregadores"] : MENU_ROUTES) {
+      router.prefetch(route);
+    }
+  }, [loggedIn, isAdmin, router]);
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
@@ -204,7 +219,11 @@ export function SideMenu({
           )
         }
       />
-      <DialogPrimitive.Portal>
+      {/* keepMounted: the menu's DOM subtree is built once and just toggles
+          visibility afterward, instead of a full mount/layout pass on every
+          open — that mount cost (~90ms) was happening before the slide
+          animation even started, reading as a jump/stutter on open. */}
+      <DialogPrimitive.Portal keepMounted>
         <DialogPrimitive.Backdrop className="fixed inset-0 z-[1100] bg-black/30 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
         <DialogPrimitive.Popup className="fixed inset-x-0 bottom-0 z-[1100] flex max-h-[85vh] w-full flex-col gap-1 overflow-y-auto rounded-t-2xl bg-popover p-4 text-popover-foreground shadow-xl outline-none duration-200 data-open:animate-in data-open:slide-in-from-bottom data-closed:animate-out data-closed:slide-out-to-bottom">
           <span className="mb-2 font-semibold">Menu</span>

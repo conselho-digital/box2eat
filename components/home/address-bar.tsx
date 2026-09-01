@@ -64,7 +64,7 @@ export function AddressBar({
           </button>
         }
       />
-      <DialogPrimitive.Portal>
+      <DialogPrimitive.Portal keepMounted>
         <DialogPrimitive.Backdrop className="fixed inset-0 z-[1100] bg-black/30 duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
         <DialogPrimitive.Popup className="fixed inset-x-0 top-0 z-[1100] flex max-h-[85vh] flex-col gap-4 overflow-y-auto rounded-b-2xl bg-popover p-4 text-sm text-popover-foreground shadow-xl outline-none duration-200 data-open:animate-in data-open:slide-in-from-top data-closed:animate-out data-closed:slide-out-to-top">
           <div className="flex items-center justify-between">
