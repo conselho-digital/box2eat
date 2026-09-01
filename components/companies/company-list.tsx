@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -10,17 +10,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import {
   listMyCompanyMemberships,
   MAX_COMPANIES_CONNECTED,
   MAX_COMPANIES_OWNED,
 } from "@/lib/domain/companies";
+import { useCompanyListHeader } from "@/components/companies/company-list-header-context";
 import { CreateCompanyForm } from "./create-company-form";
 
 export function CompanyList() {
-  const [showForm, setShowForm] = useState(false);
+  const { showForm, setShowForm, setCanCreate } = useCompanyListHeader();
   const { data, isLoading } = useQuery({
     queryKey: ["my-companies"],
     queryFn: async () => {
@@ -33,24 +33,17 @@ export function CompanyList() {
 
   const ownedCount = data?.filter((m) => m.role === "owner").length ?? 0;
   const connectedCount = data?.length ?? 0;
-  const canCreate = ownedCount < MAX_COMPANIES_OWNED;
+
+  useEffect(() => {
+    setCanCreate(ownedCount < MAX_COMPANIES_OWNED);
+  }, [ownedCount, setCanCreate]);
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">Meus restaurantes</h1>
-          <p className="text-sm text-muted-foreground">
-            {connectedCount}/{MAX_COMPANIES_CONNECTED} conectadas ·{" "}
-            {ownedCount}/{MAX_COMPANIES_OWNED} criadas por você
-          </p>
-        </div>
-        {canCreate && (
-          <Button variant={showForm ? "outline" : "default"} onClick={() => setShowForm((v) => !v)}>
-            {showForm ? "Cancelar" : "Novo restaurante"}
-          </Button>
-        )}
-      </div>
+      <p className="text-sm text-muted-foreground">
+        {connectedCount}/{MAX_COMPANIES_CONNECTED} conectadas · {ownedCount}/{MAX_COMPANIES_OWNED}{" "}
+        criadas por você
+      </p>
 
       {showForm && (
         <Card>

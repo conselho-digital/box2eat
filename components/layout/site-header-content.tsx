@@ -8,6 +8,7 @@ import { SideMenu } from "@/components/layout/side-menu";
 import { AddressBar } from "@/components/home/address-bar";
 import { AccountTabs, ACCOUNT_TABS } from "@/components/account/account-tabs";
 import { useMapStats } from "@/components/map/map-stats-context";
+import { CompanyListHeaderButton } from "@/components/companies/company-list-header-button";
 import type { UserAddress } from "@/lib/domain/address";
 
 /** The navbar's middle slot and notification bell are route-dependent (home
@@ -34,6 +35,7 @@ export function SiteHeaderContent({
   const isAccount = pathname === "/conta" || pathname.startsWith("/conta/");
   const isCart = pathname === "/carrinho";
   const isMapa = pathname === "/mapa";
+  const isEmpresas = pathname === "/empresas";
   const { visibleCount } = useMapStats();
 
   return (
@@ -56,10 +58,12 @@ export function SiteHeaderContent({
             : `${visibleCount} ${visibleCount === 1 ? "restaurante" : "restaurantes"}`}
         </p>
       )}
+      {user && isEmpresas && <p className="min-w-0 flex-1 truncate font-semibold">Meus restaurantes</p>}
 
       <div className="ml-auto flex shrink-0 items-center gap-1">
         {user ? (
           <>
+            {isEmpresas && <CompanyListHeaderButton />}
             <span className="hidden sm:flex">
               <CartButton />
             </span>
