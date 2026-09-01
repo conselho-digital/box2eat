@@ -1,6 +1,4 @@
 import { cookies } from "next/headers";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { listPublicCompanies, type CompanySearchParams } from "@/lib/domain/companies";
 import { MapView } from "@/components/map/map-view";
@@ -21,11 +19,7 @@ export default async function MapaPage({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex items-center justify-between border-b p-3">
-        <Link href="/" className="flex items-center gap-1 text-sm text-muted-foreground hover:underline">
-          <ArrowLeft className="size-4" />
-          Voltar
-        </Link>
+      <div className="flex items-center justify-end border-b p-3">
         <span className="text-sm text-muted-foreground">
           {companies.length} {companies.length === 1 ? "restaurante" : "restaurantes"}
         </span>

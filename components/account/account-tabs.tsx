@@ -4,6 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
+export const ACCOUNT_TABS = [
+  { href: "/conta", label: "Página inicial" },
+  { href: "/conta/dados-pessoais", label: "Dados pessoais" },
+  { href: "/conta/seguranca", label: "Segurança" },
+  { href: "/conta/favoritos", label: "Favoritos" },
+  { href: "/conta/pedidos", label: "Pedidos" },
+  { href: "/entregador/cadastro", label: "Seja um entregador" },
+];
+
 export function AccountTabs({
   tabs,
 }: {
@@ -12,7 +21,7 @@ export function AccountTabs({
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav className="flex gap-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {tabs.map((tab) => {
         const active = tab.href === "/conta" ? pathname === "/conta" : pathname.startsWith(tab.href);
         return (
