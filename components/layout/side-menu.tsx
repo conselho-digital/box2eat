@@ -29,7 +29,14 @@ import { signOut } from "@/lib/domain/auth";
  *  viewport-entry) since these routes only render inside the closed dialog,
  *  where Next.js's default viewport-based <Link> prefetch never gets a
  *  chance to trigger before the user actually opens it. */
-const MENU_ROUTES = [...ACCOUNT_TABS.map((tab) => tab.href), "/conta/carteira", "/ajuda", "/promocoes", "/empresas"];
+const MENU_ROUTES = [
+  ...ACCOUNT_TABS.map((tab) => tab.href),
+  "/conta/carteira",
+  "/ajuda",
+  "/promocoes",
+  "/empresas",
+  "/entregador/cadastro",
+];
 
 function MenuLink({
   href,
