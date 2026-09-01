@@ -26,33 +26,18 @@ export async function isIdentityVerified(supabase: Client, userId: string) {
   return Boolean(data);
 }
 
-async function uploadIdentityPhoto(supabase: Client, userId: string, file: File) {
+/** Age/identity verification: one photo of the person holding their
+ *  document on their chest, so the document and their face are both
+ *  visible together in the same shot. */
+export async function uploadIdentityVerification(supabase: Client, userId: string, file: File) {
   const ext = file.name.split(".").pop();
   const path = `${userId}/${crypto.randomUUID()}.${ext}`;
-  const { error } = await supabase.storage.from("identity-documents").upload(path, file, { upsert: false });
-  return { path, error };
-}
+  const { error: uploadError } = await supabase.storage
+    .from("identity-documents")
+    .upload(path, file, { upsert: false });
+  if (uploadError) return { error: uploadError };
 
-/** Age/identity verification requires two photos: the person holding their
- *  document below their face, and a separate selfie. */
-export async function uploadIdentityVerification(
-  supabase: Client,
-  userId: string,
-  documentFile: File,
-  selfieFile: File,
-) {
-  const [document, selfie] = await Promise.all([
-    uploadIdentityPhoto(supabase, userId, documentFile),
-    uploadIdentityPhoto(supabase, userId, selfieFile),
-  ]);
-  if (document.error) return { error: document.error };
-  if (selfie.error) return { error: selfie.error };
-
-  return supabase.from("identity_verifications").insert({
-    user_id: userId,
-    document_storage_path: document.path,
-    selfie_storage_path: selfie.path,
-  });
+  return supabase.from("identity_verifications").insert({ user_id: userId, storage_path: path });
 }
 
 export type PendingIdentityVerification = IdentityVerification & {
@@ -67,7 +52,7 @@ export async function listIdentityVerificationsForReview(supabase: Client) {
     .returns<PendingIdentityVerification[]>();
 }
 
-export async function getIdentityPhotoSignedUrl(supabase: Client, storagePath: string) {
+export async function getIdentityDocumentSignedUrl(supabase: Client, storagePath: string) {
   return supabase.storage.from("identity-documents").createSignedUrl(storagePath, 300);
 }
 

@@ -18,9 +18,9 @@ export default async function IdentityVerificationPage() {
       <div>
         <h1 className="text-xl font-semibold">Verificar identidade</h1>
         <p className="text-sm text-muted-foreground">
-          Envie uma foto sua segurando um documento com foto (RG, CNH ou passaporte) abaixo do
-          rosto, e uma selfie, para liberar a categoria Bebidas e outros itens com restrição de
-          idade.
+          Envie uma foto sua segurando um documento com foto (RG, CNH ou passaporte) no peito, de
+          forma que o documento e o seu rosto apareçam juntos na mesma foto, para liberar a
+          categoria Bebidas e outros itens com restrição de idade.
         </p>
       </div>
       <IdentityVerificationForm userId={user.id} initialVerification={verification} />

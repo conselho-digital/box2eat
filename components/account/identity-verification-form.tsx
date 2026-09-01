@@ -7,9 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 import { uploadIdentityVerification, type IdentityVerification } from "@/lib/domain/identity";
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: "Em análise. Avisamos assim que revisarmos suas fotos.",
+  pending: "Em análise. Avisamos assim que revisarmos sua foto.",
   approved: "Identidade verificada.",
-  rejected: "Fotos rejeitadas. Envie novas fotos.",
+  rejected: "Foto rejeitada. Envie uma nova foto.",
 };
 
 export function IdentityVerificationForm({
@@ -20,27 +20,21 @@ export function IdentityVerificationForm({
   initialVerification: IdentityVerification | null;
 }) {
   const [verification, setVerification] = useState(initialVerification);
-  const documentInputRef = useRef<HTMLInputElement>(null);
-  const selfieInputRef = useRef<HTMLInputElement>(null);
-  const [documentFile, setDocumentFile] = useState<File | null>(null);
-  const [selfieFile, setSelfieFile] = useState<File | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: async ({ documentFile, selfieFile }: { documentFile: File; selfieFile: File }) => {
+    mutationFn: async (file: File) => {
       const supabase = createClient();
-      const { error } = await uploadIdentityVerification(supabase, userId, documentFile, selfieFile);
+      const { error } = await uploadIdentityVerification(supabase, userId, file);
       if (error) throw error;
     },
     onSuccess: () => {
       setError(null);
-      setDocumentFile(null);
-      setSelfieFile(null);
       setVerification({
         id: "",
         user_id: userId,
-        document_storage_path: "",
-        selfie_storage_path: "",
+        storage_path: "",
         status: "pending",
         rejection_reason: null,
         reviewed_by: null,
@@ -65,49 +59,24 @@ export function IdentityVerificationForm({
           )}
         </p>
       )}
-
-      <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium">Foto segurando o documento abaixo do rosto</p>
-        <input
-          ref={documentInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
-        />
-        <Button
-          type="button"
-          variant="outline"
-          className="w-fit"
-          onClick={() => documentInputRef.current?.click()}
-        >
-          {documentFile ? documentFile.name : "Escolher foto"}
-        </Button>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <p className="text-sm font-medium">Selfie</p>
-        <input
-          ref={selfieInputRef}
-          type="file"
-          accept="image/*"
-          capture="user"
-          className="hidden"
-          onChange={(e) => setSelfieFile(e.target.files?.[0] ?? null)}
-        />
-        <Button type="button" variant="outline" className="w-fit" onClick={() => selfieInputRef.current?.click()}>
-          {selfieFile ? selfieFile.name : "Escolher selfie"}
-        </Button>
-      </div>
-
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        capture="user"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) mutation.mutate(file);
+        }}
+      />
       <Button
         type="button"
         className="w-fit"
-        disabled={!documentFile || !selfieFile || mutation.isPending}
-        onClick={() => documentFile && selfieFile && mutation.mutate({ documentFile, selfieFile })}
+        disabled={mutation.isPending}
+        onClick={() => inputRef.current?.click()}
       >
-        {mutation.isPending ? "Enviando…" : verification ? "Enviar novas fotos" : "Enviar fotos"}
+        {mutation.isPending ? "Enviando…" : verification ? "Enviar nova foto" : "Enviar foto"}
       </Button>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

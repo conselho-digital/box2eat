@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import {
-  getIdentityPhotoSignedUrl,
+  getIdentityDocumentSignedUrl,
   listIdentityVerificationsForReview,
   reviewIdentityVerification,
   type PendingIdentityVerification,
@@ -80,25 +80,17 @@ function VerificationCard({
   adminId: string;
   onChanged: () => void;
 }) {
-  const [documentUrl, setDocumentUrl] = useState<string | null>(null);
-  const [selfieUrl, setSelfieUrl] = useState<string | null>(null);
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const view = useMutation({
     mutationFn: async () => {
       const supabase = createClient();
-      const [document, selfie] = await Promise.all([
-        getIdentityPhotoSignedUrl(supabase, verification.document_storage_path),
-        getIdentityPhotoSignedUrl(supabase, verification.selfie_storage_path),
-      ]);
-      if (document.error) throw document.error;
-      if (selfie.error) throw selfie.error;
-      return { documentUrl: document.data.signedUrl, selfieUrl: selfie.data.signedUrl };
+      const { data, error } = await getIdentityDocumentSignedUrl(supabase, verification.storage_path);
+      if (error) throw error;
+      return data.signedUrl;
     },
-    onSuccess: ({ documentUrl, selfieUrl }) => {
-      setDocumentUrl(documentUrl);
-      setSelfieUrl(selfieUrl);
-    },
+    onSuccess: (url) => setSignedUrl(url),
     onError: (err: Error) => setError(err.message),
   });
 
@@ -130,18 +122,13 @@ function VerificationCard({
         <p className="text-xs text-muted-foreground">{verification.profiles.phone}</p>
       </div>
 
-      {documentUrl && selfieUrl ? (
-        <div className="flex gap-3">
-          <a href={documentUrl} target="_blank" rel="noreferrer" className="text-xs underline">
-            Ver documento
-          </a>
-          <a href={selfieUrl} target="_blank" rel="noreferrer" className="text-xs underline">
-            Ver selfie
-          </a>
-        </div>
+      {signedUrl ? (
+        <a href={signedUrl} target="_blank" rel="noreferrer" className="w-fit text-xs underline">
+          Ver documento
+        </a>
       ) : (
         <Button size="sm" variant="outline" className="w-fit" onClick={() => view.mutate()} disabled={view.isPending}>
-          Ver fotos
+          Ver documento
         </Button>
       )}
 
