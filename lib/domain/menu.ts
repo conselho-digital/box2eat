@@ -19,7 +19,7 @@ export type MenuItem = Database["public"]["Tables"]["menu_items"]["Row"] & {
 };
 export type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
 
-const ITEM_WITH_OPTIONS_SELECT =
+export const ITEM_WITH_OPTIONS_SELECT =
   "*, menu_item_option_groups(*, menu_item_options(*))";
 
 export async function listCategories(supabase: Client, companyId: string) {
@@ -170,6 +170,30 @@ export async function uploadMenuImage(
   if (error) return { data: null, error };
   const { data } = supabase.storage.from("menu-images").getPublicUrl(path);
   return { data: data.publicUrl, error: null };
+}
+
+/** Top-selling items for a company (by total quantity across real orders),
+ *  for the category-feed carousels — lets a customer browse and add a
+ *  restaurant's popular items without opening its page. */
+export async function listBestSellingItems(supabase: Client, companyId: string, limit = 8) {
+  const { data: ranked, error: rankError } = await supabase.rpc("get_best_selling_item_ids", {
+    p_company_id: companyId,
+    p_limit: limit,
+  });
+  if (rankError) return { data: null, error: rankError };
+  if (!ranked || ranked.length === 0) return { data: [], error: null };
+
+  const ids = ranked.map((r) => r.menu_item_id);
+  const { data: items, error } = await supabase
+    .from("menu_items")
+    .select(ITEM_WITH_OPTIONS_SELECT)
+    .in("id", ids)
+    .returns<MenuItem[]>();
+  if (error) return { data: null, error };
+
+  const byId = new Map(items.map((item) => [item.id, item]));
+  const ordered = ids.map((id) => byId.get(id)).filter((item): item is MenuItem => Boolean(item));
+  return { data: ordered, error: null };
 }
 
 /** Public storefront: only available items, grouped by category. */

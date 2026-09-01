@@ -11,6 +11,7 @@ import { AddressBar } from "@/components/home/address-bar";
 import { FeaturedCarousel } from "@/components/home/featured-carousel";
 import { RecommendedCarousel } from "@/components/home/recommended-carousel";
 import { PromoBannerCarousel } from "@/components/home/promo-banner-carousel";
+import { RestaurantMenuCarousel } from "@/components/home/restaurant-menu-carousel";
 import { NearMeButton } from "@/components/home/near-me-button";
 import { RatingSortButton } from "@/components/home/rating-sort-button";
 import { ClearFiltersLink } from "@/components/home/clear-filters-link";
@@ -20,6 +21,7 @@ import { listPromotedCompanies, type PromotedCompany } from "@/lib/domain/coupon
 import { listRecommendedCompanies } from "@/lib/domain/recommendations";
 import { listCompanyQueueInfo, type QueueInfo } from "@/lib/domain/queue";
 import { listFavoriteCompanyIds } from "@/lib/domain/favorites";
+import { listBestSellingItems, type MenuItem } from "@/lib/domain/menu";
 import { getMyAddress } from "@/lib/domain/address";
 import { isIdentityVerified } from "@/lib/domain/identity";
 import { AGE_RESTRICTED_CATEGORIES, type FoodCategory } from "@/lib/domain/categories";
@@ -94,6 +96,24 @@ export default async function Home({
 
   const promotionsByCompany = new Map(promotedCompanies.map((p) => [p.id, p]));
 
+  const showCategoryFeed = Boolean(user && effectiveCategory);
+  let categoryFeed: { company: (typeof companies)[number]; items: MenuItem[] }[] = [];
+  if (showCategoryFeed) {
+    const [feed, categoryQueueInfo] = await Promise.all([
+      Promise.all(
+        companies.map(async (company) => {
+          const { data: items } = await listBestSellingItems(supabase, company.id);
+          return { company, items: items ?? [] };
+        }),
+      ),
+      listCompanyQueueInfo(supabase, companies.map((c) => c.id)),
+    ]);
+    categoryFeed = feed.filter((entry) => entry.items.length > 0);
+    for (const [companyId, info] of categoryQueueInfo) {
+      queueInfoByCompany.set(companyId, info);
+    }
+  }
+
   const hasFilters = Boolean(q || open || sort || lat);
 
   const mapParams = new URLSearchParams();
@@ -151,23 +171,42 @@ export default async function Home({
               identityVerified={identityVerified}
             />
           </div>
-          {(promotedCompanies.length > 0 || (recommendedCompanies?.length ?? 0) > 0) && <Separator />}
-          <FeaturedCarousel
-            companies={promotedCompanies}
-            userId={user.id}
-            favoriteCompanyIds={favoriteCompanyIds}
-            queueInfoByCompany={queueInfoByCompany}
-          />
-          {promotedCompanies.length > 0 && (recommendedCompanies?.length ?? 0) > 0 && <Separator />}
-          <RecommendedCarousel
-            companies={recommendedCompanies ?? []}
-            promotionsByCompany={promotionsByCompany}
-            userId={user.id}
-            favoriteCompanyIds={favoriteCompanyIds}
-            queueInfoByCompany={queueInfoByCompany}
-          />
-          {(recommendedCompanies?.length ?? 0) > 0 && promotedCompanies.length > 0 && <Separator />}
-          <PromoBannerCarousel companies={promotedCompanies} />
+          {showCategoryFeed ? (
+            categoryFeed.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nenhum item em destaque nessa categoria ainda.
+              </p>
+            ) : (
+              categoryFeed.map(({ company, items }) => (
+                <RestaurantMenuCarousel
+                  key={company.id}
+                  company={company}
+                  items={items}
+                  queueInfo={queueInfoByCompany.get(company.id)}
+                />
+              ))
+            )
+          ) : (
+            <>
+              {(promotedCompanies.length > 0 || (recommendedCompanies?.length ?? 0) > 0) && <Separator />}
+              <FeaturedCarousel
+                companies={promotedCompanies}
+                userId={user.id}
+                favoriteCompanyIds={favoriteCompanyIds}
+                queueInfoByCompany={queueInfoByCompany}
+              />
+              {promotedCompanies.length > 0 && (recommendedCompanies?.length ?? 0) > 0 && <Separator />}
+              <RecommendedCarousel
+                companies={recommendedCompanies ?? []}
+                promotionsByCompany={promotionsByCompany}
+                userId={user.id}
+                favoriteCompanyIds={favoriteCompanyIds}
+                queueInfoByCompany={queueInfoByCompany}
+              />
+              {(recommendedCompanies?.length ?? 0) > 0 && promotedCompanies.length > 0 && <Separator />}
+              <PromoBannerCarousel companies={promotedCompanies} />
+            </>
+          )}
         </>
       ) : (
         <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">
@@ -196,6 +235,7 @@ export default async function Home({
         </section>
       )}
 
+      {!showCategoryFeed && (
       <div className="mx-auto grid w-full max-w-2xl gap-3 text-left sm:grid-cols-2">
         {companies.map((company) => (
           <Link
@@ -224,6 +264,7 @@ export default async function Home({
           </p>
         )}
       </div>
+      )}
     </div>
   );
 }
