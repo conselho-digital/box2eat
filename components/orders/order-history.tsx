@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { ClipboardList } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { groupOrdersByCompany, listMyOrders } from "@/lib/domain/orders";
 
@@ -38,9 +40,28 @@ export function OrderHistory() {
 
   if (groups.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Você ainda não fez nenhum pedido.
-      </p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-6 py-10 text-center">
+        <div className="relative flex size-28 items-center justify-center">
+          <span className="absolute top-0 right-4 size-2.5 rounded-full bg-emerald-400" />
+          <span className="absolute top-3 -right-1 size-6 rotate-45 rounded-md bg-amber-400" />
+          <span className="absolute bottom-2 -left-2 size-5 rounded-full bg-primary/15" />
+          <div className="flex size-20 items-center justify-center rounded-full bg-primary/10">
+            <ClipboardList className="size-9 text-primary" strokeWidth={1.75} />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <h1 className="text-xl font-semibold">Seus pedidos vão aparecer aqui</h1>
+          <p className="max-w-xs text-sm text-muted-foreground">
+            Depois de fazer seu primeiro pedido, o histórico e o status de entrega aparecem nesta
+            página.
+          </p>
+        </div>
+
+        <Button render={<Link href="/" />} nativeButton={false} size="lg" className="rounded-full px-6">
+          Começar a comprar
+        </Button>
+      </div>
     );
   }
 
