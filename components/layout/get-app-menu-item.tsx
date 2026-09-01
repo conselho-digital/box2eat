@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download } from "lucide-react";
+import { Download, Share } from "lucide-react";
 import { AppleLogo, AndroidLogo } from "@/components/layout/os-icons";
 import { useInstallApp } from "@/components/pwa/install-app-provider";
 import {
@@ -45,10 +45,21 @@ export function GetAppMenuItem() {
             <DialogTitle>Instalar o Box2eat</DialogTitle>
             <DialogDescription>
               {platform === "ios"
-                ? "Toque no ícone de compartilhar do Safari e escolha \"Adicionar à Tela de Início\"."
+                ? "O Safari não deixa instalar direto pelo site — é só um toque a mais:"
                 : "Abra o menu do seu navegador e escolha \"Instalar aplicativo\" ou \"Adicionar à tela inicial\"."}
             </DialogDescription>
           </DialogHeader>
+          {platform === "ios" && (
+            <div className="flex items-center gap-3 rounded-lg border bg-muted/50 p-3 text-sm">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-background">
+                <Share className="size-5" />
+              </span>
+              <p>
+                Toque neste ícone <span className="text-muted-foreground">(compartilhar)</span> na
+                barra do Safari e escolha <span className="font-medium">&quot;Adicionar à Tela de Início&quot;</span>.
+              </p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
