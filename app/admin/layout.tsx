@@ -41,6 +41,9 @@ export default async function AdminLayout({
         <Link href="/admin/validacoes" className="hover:underline">
           Validações de usuário
         </Link>
+        <Link href="/admin/whatsapp" className="hover:underline">
+          WhatsApp
+        </Link>
       </nav>
       {children}
     </div>
