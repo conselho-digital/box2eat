@@ -9,6 +9,7 @@ import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { InstallAppProvider } from "@/components/pwa/install-app-provider";
 import { MapStatsProvider } from "@/components/map/map-stats-context";
 import { CompanyListHeaderProvider } from "@/components/companies/company-list-header-context";
+import { CompanyDashboardHeaderProvider } from "@/components/companies/company-dashboard-header-context";
 
 export function Providers({
   header,
@@ -37,18 +38,20 @@ export function Providers({
       <InstallAppProvider>
         <MapStatsProvider>
           <CompanyListHeaderProvider>
-            <CartProvider>
-              {header}
-              {/* Bottom padding reserves room above the fixed mobile bottom nav
-                  (logged-in only) so page content isn't hidden behind it. Pages
-                  that want to bleed under the nav (e.g. the map) cancel this
-                  with a matching negative margin on their own root. */}
-              <div className="flex flex-1 flex-col pb-20 sm:pb-0">{children}</div>
-              <CartBar />
-              {bottomNav}
-              <MustSetPasswordDialog />
-              <RegisterServiceWorker />
-            </CartProvider>
+            <CompanyDashboardHeaderProvider>
+              <CartProvider>
+                {header}
+                {/* Bottom padding reserves room above the fixed mobile bottom nav
+                    (logged-in only) so page content isn't hidden behind it. Pages
+                    that want to bleed under the nav (e.g. the map) cancel this
+                    with a matching negative margin on their own root. */}
+                <div className="flex flex-1 flex-col pb-20 sm:pb-0">{children}</div>
+                <CartBar />
+                {bottomNav}
+                <MustSetPasswordDialog />
+                <RegisterServiceWorker />
+              </CartProvider>
+            </CompanyDashboardHeaderProvider>
           </CompanyListHeaderProvider>
         </MapStatsProvider>
       </InstallAppProvider>

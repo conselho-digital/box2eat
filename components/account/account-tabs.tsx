@@ -18,11 +18,15 @@ export function AccountTabs({
   tabs: { href: string; label: string }[];
 }) {
   const pathname = usePathname();
+  const rootHref = tabs[0]?.href;
 
   return (
     <nav className="flex gap-1 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {tabs.map((tab) => {
-        const active = tab.href === "/conta" ? pathname === "/conta" : pathname.startsWith(tab.href);
+        // The first tab is the section's own root route (e.g. "/conta"),
+        // which every other tab's route also starts with — it needs an
+        // exact match so it doesn't stay "active" once you're on a subpage.
+        const active = tab.href === rootHref ? pathname === tab.href : pathname.startsWith(tab.href);
         return (
           <Link
             key={tab.href}
