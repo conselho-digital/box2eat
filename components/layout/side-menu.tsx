@@ -205,8 +205,8 @@ export function SideMenu({
         }
       />
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/30 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
-        <DialogPrimitive.Popup className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] w-full flex-col gap-1 overflow-y-auto rounded-t-2xl bg-popover p-4 text-popover-foreground shadow-xl outline-none duration-200 data-open:animate-in data-open:slide-in-from-bottom data-closed:animate-out data-closed:slide-out-to-bottom">
+        <DialogPrimitive.Backdrop className="fixed inset-0 z-[1100] bg-black/30 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
+        <DialogPrimitive.Popup className="fixed inset-x-0 bottom-0 z-[1100] flex max-h-[85vh] w-full flex-col gap-1 overflow-y-auto rounded-t-2xl bg-popover p-4 text-popover-foreground shadow-xl outline-none duration-200 data-open:animate-in data-open:slide-in-from-bottom data-closed:animate-out data-closed:slide-out-to-bottom">
           <span className="mb-2 font-semibold">Menu</span>
           {loggedIn ? (
             <AccountMenu
