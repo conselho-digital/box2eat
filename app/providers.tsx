@@ -10,9 +10,11 @@ import { InstallAppProvider } from "@/components/pwa/install-app-provider";
 
 export function Providers({
   header,
+  bottomNav,
   children,
 }: {
   header: React.ReactNode;
+  bottomNav: React.ReactNode;
   children: React.ReactNode;
 }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -22,8 +24,11 @@ export function Providers({
       <InstallAppProvider>
         <CartProvider>
           {header}
-          {children}
+          {/* Bottom padding reserves room above the fixed mobile bottom nav
+              (logged-in only) so page content isn't hidden behind it. */}
+          <div className="flex flex-1 flex-col pb-16 sm:pb-0">{children}</div>
           <CartBar />
+          {bottomNav}
           <MustSetPasswordDialog />
           <RegisterServiceWorker />
         </CartProvider>

@@ -3,6 +3,7 @@ import { Public_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { SiteHeader } from "@/components/layout/site-header";
+import { BottomNav } from "@/components/layout/bottom-nav";
 
 const publicSans = Public_Sans({
   variable: "--font-sans",
@@ -36,7 +37,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${publicSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Providers header={<SiteHeader />}>{children}</Providers>
+        <Providers header={<SiteHeader />} bottomNav={<BottomNav />}>
+          {children}
+        </Providers>
       </body>
     </html>
   );

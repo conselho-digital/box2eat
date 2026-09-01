@@ -5,9 +5,7 @@ import { Map as MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { HeroSearch } from "@/components/home/hero-search";
-import { SimpleSearch } from "@/components/home/simple-search";
 import { CategoryChips } from "@/components/home/category-chips";
-import { AddressBar } from "@/components/home/address-bar";
 import { FeaturedCarousel } from "@/components/home/featured-carousel";
 import { RecommendedCarousel } from "@/components/home/recommended-carousel";
 import { PromoBannerCarousel } from "@/components/home/promo-banner-carousel";
@@ -199,32 +197,28 @@ export default async function Home({
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
-      <Button
-        className="fixed bottom-6 right-4 z-40 size-12 rounded-full shadow-lg sm:hidden"
-        render={<Link href={mapHref} />}
-        nativeButton={false}
-        size="icon"
-        aria-label="Abrir mapa"
-      >
-        <MapIcon className="size-5" />
-      </Button>
+      {!user && (
+        <Button
+          className="fixed bottom-6 right-4 z-40 size-12 rounded-full shadow-lg sm:hidden"
+          render={<Link href={mapHref} />}
+          nativeButton={false}
+          size="icon"
+          aria-label="Abrir mapa"
+        >
+          <MapIcon className="size-5" />
+        </Button>
+      )}
 
       {user ? (
         <>
-          <div className="flex flex-col">
-            <AddressBar userId={user.id} initialAddress={initialAddress} />
-            <div className="sticky top-0 z-30 -mx-4 bg-background px-4 sm:-mx-6 sm:px-6">
-              <SimpleSearch q={q} open={open} sort={sort} category={category} />
-            </div>
-            <CategoryChips
-              q={q}
-              open={open}
-              sort={sort}
-              category={category}
-              loggedIn={Boolean(user)}
-              identityVerified={identityVerified}
-            />
-          </div>
+          <CategoryChips
+            q={q}
+            open={open}
+            sort={sort}
+            category={category}
+            loggedIn={Boolean(user)}
+            identityVerified={identityVerified}
+          />
           {showMenuFeed ? (
             menuFeed
           ) : (

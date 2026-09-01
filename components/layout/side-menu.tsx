@@ -180,6 +180,7 @@ export function SideMenu({
   fullName,
   avatarUrl,
   email,
+  trigger,
 }: {
   loggedIn: boolean;
   isAdmin: boolean;
@@ -187,6 +188,7 @@ export function SideMenu({
   fullName: string | null;
   avatarUrl: string | null;
   email: string | null;
+  trigger?: React.ReactElement;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -194,14 +196,16 @@ export function SideMenu({
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Trigger
         render={
-          <Button variant="ghost" size="icon-sm" aria-label="Abrir menu">
-            <Menu className="size-5" />
-          </Button>
+          trigger ?? (
+            <Button variant="ghost" size="icon-sm" aria-label="Abrir menu">
+              <Menu className="size-5" />
+            </Button>
+          )
         }
       />
       <DialogPrimitive.Portal>
         <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/30 duration-200 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0" />
-        <DialogPrimitive.Popup className="fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85%] flex-col gap-1 overflow-y-auto bg-popover p-4 text-popover-foreground shadow-xl outline-none duration-300 data-open:animate-in data-open:slide-in-from-right data-closed:animate-out data-closed:slide-out-to-right">
+        <DialogPrimitive.Popup className="fixed inset-x-0 bottom-0 z-50 flex max-h-[85vh] w-full flex-col gap-1 overflow-y-auto rounded-t-2xl bg-popover p-4 text-popover-foreground shadow-xl outline-none duration-300 data-open:animate-in data-open:slide-in-from-bottom data-closed:animate-out data-closed:slide-out-to-bottom">
           <span className="mb-2 font-semibold">Menu</span>
           {loggedIn ? (
             <AccountMenu

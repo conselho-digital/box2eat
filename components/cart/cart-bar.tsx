@@ -13,7 +13,9 @@ export function CartBar() {
   if (!cart || count === 0) return null;
 
   return (
-    <div className="sticky bottom-0 z-10 border-t bg-primary p-3 text-primary-foreground">
+    // Sits above the fixed mobile bottom nav (logged-in only, ~56px tall) so
+    // it isn't covered by it; desktop has no bottom nav, so no offset there.
+    <div className="sticky bottom-14 z-30 border-t bg-primary p-3 text-primary-foreground sm:bottom-0">
       <Link
         href="/carrinho"
         className="mx-auto flex w-full max-w-2xl items-center justify-between text-sm font-medium"
