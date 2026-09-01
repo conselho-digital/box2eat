@@ -17,6 +17,7 @@ import {
 import { FOOD_CATEGORIES, type FoodCategory } from "@/lib/domain/categories";
 import type { PublicCompany } from "@/lib/domain/companies";
 import { useMapStats } from "@/components/map/map-stats-context";
+import { CATEGORY_ICONS } from "@/components/home/category-chips";
 
 const restaurantIcon = L.icon({
   iconUrl: "/leaflet/marker-icon.png",
@@ -166,16 +167,20 @@ export function CompanyMap({
             <ListFilter className="size-5" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            {FOOD_CATEGORIES.map((category) => (
-              <DropdownMenuCheckboxItem
-                key={category}
-                checked={selectedCategories.has(category)}
-                onCheckedChange={() => toggleCategory(category)}
-                onSelect={(e) => e.preventDefault()}
-              >
-                {category}
-              </DropdownMenuCheckboxItem>
-            ))}
+            {FOOD_CATEGORIES.map((category) => {
+              const Icon = CATEGORY_ICONS[category];
+              return (
+                <DropdownMenuCheckboxItem
+                  key={category}
+                  checked={selectedCategories.has(category)}
+                  onCheckedChange={() => toggleCategory(category)}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <Icon className="size-4" />
+                  {category}
+                </DropdownMenuCheckboxItem>
+              );
+            })}
           </DropdownMenuContent>
         </DropdownMenu>
 

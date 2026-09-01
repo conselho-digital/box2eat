@@ -18,7 +18,7 @@ import {
 import { AGE_RESTRICTED_CATEGORIES, FOOD_CATEGORIES, type FoodCategory } from "@/lib/domain/categories";
 import { cn } from "@/lib/utils";
 
-const CATEGORY_ICONS: Record<FoodCategory, LucideIcon> = {
+export const CATEGORY_ICONS: Record<FoodCategory, LucideIcon> = {
   Burguers: Hamburger,
   Mexicana: Sandwich,
   Pizza: Pizza,
