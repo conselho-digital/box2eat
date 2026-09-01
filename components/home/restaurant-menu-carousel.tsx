@@ -3,9 +3,9 @@
 import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import type { PublicCompany } from "@/lib/domain/companies";
-import { formatDeliveryFee, formatRatingLine, formatWaitTime } from "@/lib/domain/restaurant-display";
+import { computeDeliveryInfo, formatRatingLine, formatWaitTime } from "@/lib/domain/restaurant-display";
 import type { QueueInfo } from "@/lib/domain/queue";
 import type { MenuItem } from "@/lib/domain/menu";
 import { BestSellerItemCard } from "@/components/home/best-seller-item-card";
@@ -14,16 +14,30 @@ export function RestaurantMenuCarousel({
   company,
   items,
   queueInfo,
+  loggedIn,
+  userLat,
+  userLng,
 }: {
   company: PublicCompany;
   items: MenuItem[];
   queueInfo?: QueueInfo;
+  loggedIn: boolean;
+  userLat: number | null;
+  userLng: number | null;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   if (items.length === 0) return null;
 
-  const rating = formatRatingLine(company.rating_avg, company.rating_count, company.delivered_orders_count);
+  const rating = formatRatingLine(company.rating_avg, company.delivered_orders_count);
+  const delivery = computeDeliveryInfo(
+    loggedIn,
+    company.delivery_fee_base,
+    company.lat,
+    company.lng,
+    userLat,
+    userLng,
+  );
 
   function scroll(direction: 1 | -1) {
     scrollRef.current?.scrollBy({ left: direction * 320, behavior: "smooth" });
@@ -41,10 +55,16 @@ export function RestaurantMenuCarousel({
           <div className="min-w-0">
             <p className="truncate font-semibold">{company.name}</p>
             <p className="text-xs text-muted-foreground">
-              Entrega {formatDeliveryFee(company.delivery_fee_base)}
+              {delivery.kind === "add_address" ? "Adicione um endereço" : `Entrega ${delivery.label}`}
             </p>
-            <p className="text-xs text-muted-foreground">
-              {rating.stars}⭐ ({rating.paren}) · {formatWaitTime(queueInfo, company.avg_prep_time_minutes)}
+            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+              {rating.hasRating ? (
+                `${rating.stars}⭐ (${rating.paren})`
+              ) : (
+                <Star className="size-3.5" />
+              )}
+              {" · "}
+              {formatWaitTime(queueInfo, company.avg_prep_time_minutes)}
             </p>
           </div>
         </Link>

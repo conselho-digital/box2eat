@@ -73,11 +73,13 @@ export default async function Home({
   let recommendedCompanies: Awaited<ReturnType<typeof listRecommendedCompanies>>["data"] = [];
   let favoriteCompanyIds = new Set<string>();
   let queueInfoByCompany = new Map<string, QueueInfo>();
+  let userLat: number | null = lat ? Number(lat) : null;
+  let userLng: number | null = lng ? Number(lng) : null;
   if (user) {
     const addressResult = await getMyAddress(supabase, user.id);
     initialAddress = addressResult.data;
-    const userLat = initialAddress?.lat ?? (lat ? Number(lat) : null);
-    const userLng = initialAddress?.lng ?? (lng ? Number(lng) : null);
+    userLat = initialAddress?.lat ?? userLat;
+    userLng = initialAddress?.lng ?? userLng;
 
     const [{ data: promotions }, { data: recommended }, favorites] = await Promise.all([
       listPromotedCompanies(supabase),
@@ -138,6 +140,9 @@ export default async function Home({
             company={company}
             items={items}
             queueInfo={queueInfoByCompany.get(company.id)}
+            loggedIn={Boolean(user)}
+            userLat={userLat}
+            userLng={userLng}
           />
         ))}
         {companiesWithoutBestSellers.length > 0 && (
@@ -230,6 +235,8 @@ export default async function Home({
                 userId={user.id}
                 favoriteCompanyIds={favoriteCompanyIds}
                 queueInfoByCompany={queueInfoByCompany}
+                userLat={userLat}
+                userLng={userLng}
               />
               {promotedCompanies.length > 0 && (recommendedCompanies?.length ?? 0) > 0 && <Separator />}
               <RecommendedCarousel
@@ -238,6 +245,8 @@ export default async function Home({
                 userId={user.id}
                 favoriteCompanyIds={favoriteCompanyIds}
                 queueInfoByCompany={queueInfoByCompany}
+                userLat={userLat}
+                userLng={userLng}
               />
               {(recommendedCompanies?.length ?? 0) > 0 && promotedCompanies.length > 0 && <Separator />}
               <PromoBannerCarousel companies={promotedCompanies} />

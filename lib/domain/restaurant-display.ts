@@ -1,3 +1,4 @@
+import { haversineDistanceKm } from "@/lib/geo";
 import type { QueueInfo } from "@/lib/domain/queue";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
@@ -14,6 +15,8 @@ export type RestaurantCardData = {
   ratingCount: number;
   avgPrepTimeMinutes: number | null;
   deliveredOrdersCount: number;
+  lat: number | null;
+  lng: number | null;
 };
 
 const ORDER_COUNT_BUCKETS = [50, 100, 200, 300, 500, 1000, 2000, 3000, 4000, 5000];
@@ -30,20 +33,14 @@ function bucketOrderCount(count: number): string {
   return `${bucket}+`;
 }
 
-function pluralize(count: number, singular: string, plural: string) {
-  return count === 1 ? `${count} ${singular}` : `${count} ${plural}`;
-}
-
-/** "4.8⭐ (3.000+)" normally; without a rating yet, "X⭐" with the review
- *  count instead of the order count in parenthesis. */
-export function formatRatingLine(ratingAvg: number | null, ratingCount: number, deliveredOrdersCount: number) {
+/** "4.8⭐ (3.000+)" normally; a restaurant with no reviews yet has nothing
+ *  worth printing next to the star, so callers should render only the bare
+ *  star icon when `hasRating` is false. */
+export function formatRatingLine(ratingAvg: number | null, deliveredOrdersCount: number) {
   if (ratingAvg === null) {
-    return {
-      stars: "X",
-      paren: ratingCount === 0 ? "sem avaliações" : pluralize(ratingCount, "avaliação", "avaliações"),
-    };
+    return { hasRating: false as const, stars: "", paren: "" };
   }
-  return { stars: ratingAvg.toFixed(1), paren: bucketOrderCount(deliveredOrdersCount) };
+  return { hasRating: true as const, stars: ratingAvg.toFixed(1), paren: bucketOrderCount(deliveredOrdersCount) };
 }
 
 /** "Sem fila" when nothing is currently in the queue; otherwise the average
@@ -58,6 +55,42 @@ export function formatWaitTime(queueInfo: QueueInfo | undefined, avgPrepTimeMinu
 
 export function formatDeliveryFee(deliveryFeeBase: number): string {
   return deliveryFeeBase > 0 ? currency.format(deliveryFeeBase) : "Grátis";
+}
+
+/** Assumed average delivery speed used to turn distance into an ETA. */
+const DELIVERY_SPEED_KMH = 25;
+/** R$0,50 per minute of estimated travel time from restaurant to address. */
+const DELIVERY_FEE_PER_MINUTE = 0.5;
+
+export type DeliveryInfo =
+  | { kind: "add_address" }
+  | { kind: "eta"; label: string; etaMinutes: number }
+  | { kind: "flat"; label: string };
+
+/** Logged-in without a saved address/location → prompt to add one instead of
+ *  a fee. With one, price delivery at R$0,50/min of estimated travel time
+ *  from the restaurant. Guests (and restaurants missing coordinates) keep
+ *  the flat `delivery_fee_base` the restaurant configured. */
+export function computeDeliveryInfo(
+  loggedIn: boolean,
+  deliveryFeeBase: number,
+  companyLat: number | null,
+  companyLng: number | null,
+  userLat: number | null,
+  userLng: number | null,
+): DeliveryInfo {
+  if (!loggedIn) {
+    return { kind: "flat", label: formatDeliveryFee(deliveryFeeBase) };
+  }
+  if (userLat === null || userLng === null) {
+    return { kind: "add_address" };
+  }
+  if (companyLat === null || companyLng === null) {
+    return { kind: "flat", label: formatDeliveryFee(deliveryFeeBase) };
+  }
+  const distanceKm = haversineDistanceKm(userLat, userLng, companyLat, companyLng);
+  const etaMinutes = Math.max(1, Math.round((distanceKm / DELIVERY_SPEED_KMH) * 60));
+  return { kind: "eta", label: currency.format(etaMinutes * DELIVERY_FEE_PER_MINUTE), etaMinutes };
 }
 
 type PromotionBadgeInput = {

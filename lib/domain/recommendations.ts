@@ -80,6 +80,8 @@ export async function listRecommendedCompanies(
     ratingCount: company.rating_count,
     avgPrepTimeMinutes: company.avg_prep_time_minutes,
     deliveredOrdersCount: company.delivered_orders_count,
+    lat: company.lat,
+    lng: company.lng,
   }));
 
   return { data: cards, error: null };

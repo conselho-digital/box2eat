@@ -10,12 +10,16 @@ export function RecommendedCarousel({
   userId,
   favoriteCompanyIds,
   queueInfoByCompany,
+  userLat,
+  userLng,
 }: {
   companies: RestaurantCardData[];
   promotionsByCompany: Map<string, PromotedCompany>;
   userId: string;
   favoriteCompanyIds: Set<string>;
   queueInfoByCompany: Map<string, QueueInfo>;
+  userLat?: number | null;
+  userLng?: number | null;
 }) {
   if (companies.length === 0) return null;
 
@@ -33,6 +37,8 @@ export function RecommendedCarousel({
               userId={userId}
               isFavorited={favoriteCompanyIds.has(company.id)}
               queueInfo={queueInfoByCompany.get(company.id)}
+              userLat={userLat}
+              userLng={userLng}
             />
           );
         })}

@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Clock } from "lucide-react";
+import { Clock, Star } from "lucide-react";
 import type { RestaurantCardData } from "@/lib/domain/restaurant-display";
-import { formatDeliveryFee, formatRatingLine, formatWaitTime } from "@/lib/domain/restaurant-display";
+import { computeDeliveryInfo, formatRatingLine, formatWaitTime } from "@/lib/domain/restaurant-display";
 import type { QueueInfo } from "@/lib/domain/queue";
 import { CardFavoriteButton } from "@/components/favorites/card-favorite-button";
 
@@ -12,14 +12,26 @@ export function RestaurantCard({
   queueInfo,
   userId,
   isFavorited,
+  userLat,
+  userLng,
 }: {
   company: RestaurantCardData;
   promotionBadge?: string;
   queueInfo?: QueueInfo;
   userId?: string;
   isFavorited?: boolean;
+  userLat?: number | null;
+  userLng?: number | null;
 }) {
-  const rating = formatRatingLine(company.ratingAvg, company.ratingCount, company.deliveredOrdersCount);
+  const rating = formatRatingLine(company.ratingAvg, company.deliveredOrdersCount);
+  const delivery = computeDeliveryInfo(
+    Boolean(userId),
+    company.deliveryFeeBase,
+    company.lat,
+    company.lng,
+    userLat ?? null,
+    userLng ?? null,
+  );
 
   return (
     <Link
@@ -42,11 +54,15 @@ export function RestaurantCard({
           {userId && <CardFavoriteButton companyId={company.id} userId={userId} initialFavorited={Boolean(isFavorited)} />}
         </div>
         <p className="text-xs text-muted-foreground">
-          Entrega {formatDeliveryFee(company.deliveryFeeBase)}
+          {delivery.kind === "add_address" ? "Adicione um endereço" : `Entrega ${delivery.label}`}
         </p>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>
-            {rating.stars}⭐ ({rating.paren})
+          <span className="flex items-center gap-1">
+            {rating.hasRating ? (
+              `${rating.stars}⭐ (${rating.paren})`
+            ) : (
+              <Star className="size-3.5" />
+            )}
           </span>
           <span className="flex items-center gap-1">
             <Clock className="size-3.5" />
