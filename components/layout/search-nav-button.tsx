@@ -6,7 +6,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
-export function SearchNavButton() {
+export function SearchNavButton({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState("");
   const router = useRouter();
@@ -22,12 +22,8 @@ export function SearchNavButton() {
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Trigger
         render={
-          <button
-            type="button"
-            className="flex flex-1 flex-col items-center gap-0.5 py-1 text-xs text-muted-foreground"
-          >
+          <button type="button" aria-label="Pesquisar" className={className}>
             <Search className="size-5" />
-            Pesquisar
           </button>
         }
       />

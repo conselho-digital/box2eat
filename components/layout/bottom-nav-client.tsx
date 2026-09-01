@@ -2,14 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Map as MapIcon, ShoppingBag, User } from "lucide-react";
+import { Home, MapPin, ShoppingCart, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/components/cart/cart-provider";
 import { cartItemCount } from "@/lib/domain/cart";
 import { SideMenu } from "@/components/layout/side-menu";
 import { SearchNavButton } from "@/components/layout/search-nav-button";
 
-function NavLink({
+const CIRCLE_BASE =
+  "relative flex size-12 items-center justify-center rounded-full shadow-md transition-colors";
+const CIRCLE_ACTIVE = "bg-foreground text-background";
+const CIRCLE_INACTIVE = "bg-card text-foreground";
+
+function NavCircle({
   href,
   icon: Icon,
   label,
@@ -23,17 +28,10 @@ function NavLink({
   badge?: number;
 }) {
   return (
-    <Link
-      href={href}
-      className={cn(
-        "relative flex flex-1 flex-col items-center gap-0.5 py-1 text-xs",
-        active ? "text-primary" : "text-muted-foreground",
-      )}
-    >
+    <Link href={href} aria-label={label} className={cn(CIRCLE_BASE, active ? CIRCLE_ACTIVE : CIRCLE_INACTIVE)}>
       <Icon className="size-5" />
-      {label}
       {Boolean(badge) && (
-        <span className="absolute top-0 right-1/3 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+        <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
           {badge! > 9 ? "9+" : badge}
         </span>
       )}
@@ -60,15 +58,15 @@ export function BottomNavClient({
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 flex items-stretch border-t bg-background px-1 pt-1 sm:hidden"
-      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.25rem)" }}
+      className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-center gap-3 px-4 pt-3 sm:hidden"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
     >
-      <NavLink href="/" icon={Home} label="Início" active={pathname === "/"} />
-      <NavLink href="/mapa" icon={MapIcon} label="Mapa" active={pathname === "/mapa"} />
-      <SearchNavButton />
-      <NavLink
+      <NavCircle href="/" icon={Home} label="Início" active={pathname === "/"} />
+      <NavCircle href="/mapa" icon={MapPin} label="Mapa" active={pathname === "/mapa"} />
+      <SearchNavButton className={cn(CIRCLE_BASE, CIRCLE_INACTIVE)} />
+      <NavCircle
         href="/carrinho"
-        icon={ShoppingBag}
+        icon={ShoppingCart}
         label="Carrinho"
         active={pathname === "/carrinho"}
         badge={count}
@@ -81,12 +79,8 @@ export function BottomNavClient({
         avatarUrl={avatarUrl}
         email={email}
         trigger={
-          <button
-            type="button"
-            className="flex flex-1 flex-col items-center gap-0.5 py-1 text-xs text-muted-foreground"
-          >
+          <button type="button" aria-label="Perfil" className={cn(CIRCLE_BASE, CIRCLE_INACTIVE)}>
             <User className="size-5" />
-            Perfil
           </button>
         }
       />

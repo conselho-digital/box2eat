@@ -26,7 +26,7 @@ export function Providers({
           {header}
           {/* Bottom padding reserves room above the fixed mobile bottom nav
               (logged-in only) so page content isn't hidden behind it. */}
-          <div className="flex flex-1 flex-col pb-16 sm:pb-0">{children}</div>
+          <div className="flex flex-1 flex-col pb-20 sm:pb-0">{children}</div>
           <CartBar />
           {bottomNav}
           <MustSetPasswordDialog />
