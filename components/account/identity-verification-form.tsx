@@ -4,12 +4,12 @@ import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { uploadIdentityDocument, type IdentityVerification } from "@/lib/domain/identity";
+import { uploadIdentityVerification, type IdentityVerification } from "@/lib/domain/identity";
 
 const STATUS_LABEL: Record<string, string> = {
-  pending: "Em análise. Avisamos assim que revisarmos seu documento.",
+  pending: "Em análise. Avisamos assim que revisarmos suas fotos.",
   approved: "Identidade verificada.",
-  rejected: "Documento rejeitado. Envie uma nova foto.",
+  rejected: "Fotos rejeitadas. Envie novas fotos.",
 };
 
 export function IdentityVerificationForm({
@@ -20,21 +20,27 @@ export function IdentityVerificationForm({
   initialVerification: IdentityVerification | null;
 }) {
   const [verification, setVerification] = useState(initialVerification);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
+  const selfieInputRef = useRef<HTMLInputElement>(null);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: async (file: File) => {
+    mutationFn: async ({ documentFile, selfieFile }: { documentFile: File; selfieFile: File }) => {
       const supabase = createClient();
-      const { error } = await uploadIdentityDocument(supabase, userId, file);
+      const { error } = await uploadIdentityVerification(supabase, userId, documentFile, selfieFile);
       if (error) throw error;
     },
     onSuccess: () => {
       setError(null);
+      setDocumentFile(null);
+      setSelfieFile(null);
       setVerification({
         id: "",
         user_id: userId,
-        storage_path: "",
+        document_storage_path: "",
+        selfie_storage_path: "",
         status: "pending",
         rejection_reason: null,
         reviewed_by: null,
@@ -59,23 +65,49 @@ export function IdentityVerificationForm({
           )}
         </p>
       )}
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) mutation.mutate(file);
-        }}
-      />
+
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-medium">Foto segurando o documento abaixo do rosto</p>
+        <input
+          ref={documentInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(e) => setDocumentFile(e.target.files?.[0] ?? null)}
+        />
+        <Button
+          type="button"
+          variant="outline"
+          className="w-fit"
+          onClick={() => documentInputRef.current?.click()}
+        >
+          {documentFile ? documentFile.name : "Escolher foto"}
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <p className="text-sm font-medium">Selfie</p>
+        <input
+          ref={selfieInputRef}
+          type="file"
+          accept="image/*"
+          capture="user"
+          className="hidden"
+          onChange={(e) => setSelfieFile(e.target.files?.[0] ?? null)}
+        />
+        <Button type="button" variant="outline" className="w-fit" onClick={() => selfieInputRef.current?.click()}>
+          {selfieFile ? selfieFile.name : "Escolher selfie"}
+        </Button>
+      </div>
+
       <Button
         type="button"
         className="w-fit"
-        disabled={mutation.isPending}
-        onClick={() => inputRef.current?.click()}
+        disabled={!documentFile || !selfieFile || mutation.isPending}
+        onClick={() => documentFile && selfieFile && mutation.mutate({ documentFile, selfieFile })}
       >
-        {mutation.isPending ? "Enviando…" : verification ? "Enviar novo documento" : "Enviar documento"}
+        {mutation.isPending ? "Enviando…" : verification ? "Enviar novas fotos" : "Enviar fotos"}
       </Button>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

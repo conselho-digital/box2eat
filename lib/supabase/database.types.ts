@@ -507,32 +507,35 @@ export type Database = {
       identity_verifications: {
         Row: {
           created_at: string
+          document_storage_path: string
           id: string
           rejection_reason: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          selfie_storage_path: string
           status: string
-          storage_path: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          document_storage_path: string
           id?: string
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          selfie_storage_path: string
           status?: string
-          storage_path: string
           user_id: string
         }
         Update: {
           created_at?: string
+          document_storage_path?: string
           id?: string
           rejection_reason?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          selfie_storage_path?: string
           status?: string
-          storage_path?: string
           user_id?: string
         }
         Relationships: [
