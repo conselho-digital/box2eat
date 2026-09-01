@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { isPlatformAdmin } from "@/lib/domain/admin";
+import { getCurrentUser, getCachedAccountMenuData } from "@/lib/domain/current-user";
 import { LogoutButton } from "@/components/auth/logout-button";
 
 export default async function AdminLayout({
@@ -9,14 +8,11 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
 
   if (!user) redirect("/login");
 
-  const isAdmin = await isPlatformAdmin(supabase, user.id);
+  const { isAdmin } = await getCachedAccountMenuData(user.id);
   if (!isAdmin) notFound();
 
   return (

@@ -18,7 +18,18 @@ export function Providers({
   bottomNav: React.ReactNode;
   children: React.ReactNode;
 }) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        // Default is 0 (refetch on every mount) — most of this app's data
+        // (account info, addresses, favorites, admin lists) doesn't change
+        // moment-to-moment, so re-opening a menu/dialog was re-fetching
+        // everything even seconds after the last fetch. Queries that do
+        // need live data already invalidate explicitly (e.g. notifications
+        // via Realtime), so this doesn't make anything feel stale.
+        defaultOptions: { queries: { staleTime: 30_000 } },
+      }),
+  );
 
   return (
     <QueryClientProvider client={queryClient}>

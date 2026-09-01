@@ -2,21 +2,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { SiteHeaderContent } from "@/components/layout/site-header-content";
 import { IosBackButton } from "@/components/layout/ios-back-button";
-import { createClient } from "@/lib/supabase/server";
-import { getAccountMenuData } from "@/lib/domain/account-menu";
+import { getCurrentUser, getCachedAccountMenuData } from "@/lib/domain/current-user";
 import { getMyAddress } from "@/lib/domain/address";
 
 export async function SiteHeader() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await getCurrentUser();
 
-  const { isAdmin, hasCompany, fullName, avatarUrl } = user
-    ? await getAccountMenuData(supabase, user.id)
-    : { isAdmin: false, hasCompany: false, fullName: null, avatarUrl: null };
-
-  const initialAddress = user ? (await getMyAddress(supabase, user.id)).data : null;
+  const [menuData, addressResult] = await Promise.all([
+    user
+      ? getCachedAccountMenuData(user.id)
+      : Promise.resolve({ isAdmin: false, hasCompany: false, fullName: null, avatarUrl: null }),
+    user ? getMyAddress(supabase, user.id) : Promise.resolve({ data: null }),
+  ]);
+  const { isAdmin, hasCompany, fullName, avatarUrl } = menuData;
+  const initialAddress = addressResult.data;
 
   return (
     <header className="flex items-center gap-2 border-b p-3 px-4 sm:px-6">

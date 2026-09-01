@@ -1,15 +1,11 @@
-import { createClient } from "@/lib/supabase/server";
-import { getAccountMenuData } from "@/lib/domain/account-menu";
+import { getCurrentUser, getCachedAccountMenuData } from "@/lib/domain/current-user";
 import { BottomNavClient } from "@/components/layout/bottom-nav-client";
 
 export async function BottomNav() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { user } = await getCurrentUser();
   if (!user) return null;
 
-  const { isAdmin, hasCompany, fullName, avatarUrl } = await getAccountMenuData(supabase, user.id);
+  const { isAdmin, hasCompany, fullName, avatarUrl } = await getCachedAccountMenuData(user.id);
 
   return (
     <BottomNavClient
