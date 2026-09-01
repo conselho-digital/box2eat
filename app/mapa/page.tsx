@@ -18,19 +18,15 @@ export default async function MapaPage({
   const companies = await listPublicCompanies(supabase, { q, open, sort, lat, lng });
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="flex items-center justify-end border-b p-3">
-        <span className="text-sm text-muted-foreground">
-          {companies.length} {companies.length === 1 ? "restaurante" : "restaurantes"}
-        </span>
-      </div>
-      <div className="flex-1">
-        <MapView
-          companies={companies}
-          initialLat={lat ? Number(lat) : undefined}
-          initialLng={lng ? Number(lng) : undefined}
-        />
-      </div>
+    // Cancels the mobile bottom-nav padding reserved in Providers, so the
+    // map fills the screen and shows through behind the floating nav
+    // buttons instead of stopping above them.
+    <div className="-mb-20 flex flex-1 flex-col sm:mb-0">
+      <MapView
+        companies={companies}
+        initialLat={lat ? Number(lat) : undefined}
+        initialLng={lng ? Number(lng) : undefined}
+      />
     </div>
   );
 }

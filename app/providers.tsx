@@ -7,6 +7,7 @@ import { CartBar } from "@/components/cart/cart-bar";
 import { MustSetPasswordDialog } from "@/components/auth/must-set-password-dialog";
 import { RegisterServiceWorker } from "@/components/pwa/register-sw";
 import { InstallAppProvider } from "@/components/pwa/install-app-provider";
+import { MapStatsProvider } from "@/components/map/map-stats-context";
 
 export function Providers({
   header,
@@ -22,16 +23,20 @@ export function Providers({
   return (
     <QueryClientProvider client={queryClient}>
       <InstallAppProvider>
-        <CartProvider>
-          {header}
-          {/* Bottom padding reserves room above the fixed mobile bottom nav
-              (logged-in only) so page content isn't hidden behind it. */}
-          <div className="flex flex-1 flex-col pb-20 sm:pb-0">{children}</div>
-          <CartBar />
-          {bottomNav}
-          <MustSetPasswordDialog />
-          <RegisterServiceWorker />
-        </CartProvider>
+        <MapStatsProvider>
+          <CartProvider>
+            {header}
+            {/* Bottom padding reserves room above the fixed mobile bottom nav
+                (logged-in only) so page content isn't hidden behind it. Pages
+                that want to bleed under the nav (e.g. the map) cancel this
+                with a matching negative margin on their own root. */}
+            <div className="flex flex-1 flex-col pb-20 sm:pb-0">{children}</div>
+            <CartBar />
+            {bottomNav}
+            <MustSetPasswordDialog />
+            <RegisterServiceWorker />
+          </CartProvider>
+        </MapStatsProvider>
       </InstallAppProvider>
     </QueryClientProvider>
   );

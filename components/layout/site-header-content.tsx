@@ -7,6 +7,7 @@ import { CartButton } from "@/components/cart/cart-button";
 import { SideMenu } from "@/components/layout/side-menu";
 import { AddressBar } from "@/components/home/address-bar";
 import { AccountTabs, ACCOUNT_TABS } from "@/components/account/account-tabs";
+import { useMapStats } from "@/components/map/map-stats-context";
 import type { UserAddress } from "@/lib/domain/address";
 
 /** The navbar's middle slot and notification bell are route-dependent (home
@@ -32,6 +33,8 @@ export function SiteHeaderContent({
   const isHome = pathname === "/";
   const isAccount = pathname === "/conta" || pathname.startsWith("/conta/");
   const isCart = pathname === "/carrinho";
+  const isMapa = pathname === "/mapa";
+  const { visibleCount } = useMapStats();
 
   return (
     <>
@@ -46,6 +49,13 @@ export function SiteHeaderContent({
         </div>
       )}
       {isCart && <p className="min-w-0 flex-1 truncate font-semibold">Carrinho</p>}
+      {isMapa && (
+        <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
+          {visibleCount === null
+            ? "Carregando…"
+            : `${visibleCount} ${visibleCount === 1 ? "restaurante" : "restaurantes"}`}
+        </p>
+      )}
 
       <div className="ml-auto flex shrink-0 items-center gap-1">
         {user ? (

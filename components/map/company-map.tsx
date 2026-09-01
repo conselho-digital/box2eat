@@ -2,10 +2,21 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMap } from "react-leaflet";
 import L, { type LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { ListFilter, LocateFixed, Star } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
+import { FOOD_CATEGORIES, type FoodCategory } from "@/lib/domain/categories";
 import type { PublicCompany } from "@/lib/domain/companies";
+import { useMapStats } from "@/components/map/map-stats-context";
 
 const restaurantIcon = L.icon({
   iconUrl: "/leaflet/marker-icon.png",
@@ -18,6 +29,23 @@ const restaurantIcon = L.icon({
 });
 
 const DEFAULT_CENTER: LatLngExpression = [-23.5505, -46.6333];
+
+const CIRCLE_BUTTON =
+  "flex size-11 items-center justify-center rounded-full bg-card text-foreground shadow-md";
+
+const RATING_OPTIONS = [1, 2, 3, 4, 5];
+
+/** Imperatively re-centers the map when the GPS button is clicked — needs
+ *  the Leaflet map instance, only available to a component rendered inside
+ *  <MapContainer>. */
+function RecenterController({ position, signal }: { position: LatLngExpression | null; signal: number }) {
+  const map = useMap();
+  useEffect(() => {
+    if (signal > 0 && position) map.flyTo(position, 15);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only fires when the GPS button bumps the signal
+  }, [signal]);
+  return null;
+}
 
 export function CompanyMap({
   companies,
@@ -34,6 +62,10 @@ export function CompanyMap({
   const [locating, setLocating] = useState(
     () => userPosition === null && typeof navigator !== "undefined" && !!navigator.geolocation,
   );
+  const [recenterSignal, setRecenterSignal] = useState(0);
+  const [selectedCategories, setSelectedCategories] = useState<Set<FoodCategory>>(new Set());
+  const [minRating, setMinRating] = useState(0);
+  const { setVisibleCount } = useMapStats();
 
   useEffect(() => {
     if (userPosition || !navigator.geolocation) return;
@@ -52,6 +84,47 @@ export function CompanyMap({
     (c): c is PublicCompany & { lat: number; lng: number } => c.lat !== null && c.lng !== null,
   );
 
+  const filteredCompanies = companiesWithLocation.filter((company) => {
+    if (selectedCategories.size > 0) {
+      if (!company.category || !selectedCategories.has(company.category as FoodCategory)) return false;
+    }
+    if (minRating > 0 && (company.rating_avg === null || company.rating_avg < minRating)) return false;
+    return true;
+  });
+
+  useEffect(() => {
+    setVisibleCount(filteredCompanies.length);
+    return () => setVisibleCount(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setVisibleCount is a stable setState
+  }, [filteredCompanies.length]);
+
+  function toggleCategory(category: FoodCategory) {
+    setSelectedCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(category)) next.delete(category);
+      else next.add(category);
+      return next;
+    });
+  }
+
+  function handleLocate() {
+    if (userPosition) {
+      setRecenterSignal((s) => s + 1);
+      return;
+    }
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserPosition([position.coords.latitude, position.coords.longitude]);
+        setLocating(false);
+        setRecenterSignal((s) => s + 1);
+      },
+      () => setLocating(false),
+      { enableHighAccuracy: false, timeout: 8000 },
+    );
+  }
+
   const center: LatLngExpression =
     userPosition ??
     (companiesWithLocation.length > 0
@@ -62,6 +135,7 @@ export function CompanyMap({
     <div className="relative h-full w-full">
       <MapContainer center={center} zoom={13} scrollWheelZoom attributionControl={false} className="h-full w-full">
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <RecenterController position={userPosition} signal={recenterSignal} />
         {userPosition && (
           <CircleMarker
             center={userPosition}
@@ -71,7 +145,7 @@ export function CompanyMap({
             <Popup>Você está aqui</Popup>
           </CircleMarker>
         )}
-        {companiesWithLocation.map((company) => (
+        {filteredCompanies.map((company) => (
           <Marker key={company.id} position={[company.lat, company.lng]} icon={restaurantIcon}>
             <Popup>
               <div className="flex flex-col gap-1">
@@ -85,8 +159,49 @@ export function CompanyMap({
           </Marker>
         ))}
       </MapContainer>
+
+      <div className="absolute inset-x-0 top-3 z-[1000] flex items-center justify-center gap-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger aria-label="Filtrar por categoria" className={CIRCLE_BUTTON}>
+            <ListFilter className="size-5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {FOOD_CATEGORIES.map((category) => (
+              <DropdownMenuCheckboxItem
+                key={category}
+                checked={selectedCategories.has(category)}
+                onCheckedChange={() => toggleCategory(category)}
+                onSelect={(e) => e.preventDefault()}
+              >
+                {category}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger aria-label="Filtrar por avaliação" className={CIRCLE_BUTTON}>
+            <Star className="size-5" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuRadioGroup value={String(minRating)} onValueChange={(v) => setMinRating(Number(v))}>
+              <DropdownMenuRadioItem value="0">Qualquer avaliação</DropdownMenuRadioItem>
+              {RATING_OPTIONS.map((n) => (
+                <DropdownMenuRadioItem key={n} value={String(n)}>
+                  {n}+ estrelas
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <button type="button" onClick={handleLocate} aria-label="Minha localização" className={CIRCLE_BUTTON}>
+          <LocateFixed className="size-5" />
+        </button>
+      </div>
+
       {locating && (
-        <div className="absolute top-3 left-1/2 z-[1000] -translate-x-1/2 rounded-full bg-card px-3 py-1 text-xs shadow">
+        <div className="absolute top-17 left-1/2 z-[1000] -translate-x-1/2 rounded-full bg-card px-3 py-1 text-xs shadow">
           Localizando você…
         </div>
       )}
