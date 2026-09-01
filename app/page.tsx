@@ -27,8 +27,6 @@ import { isIdentityVerified } from "@/lib/domain/identity";
 import { AGE_RESTRICTED_CATEGORIES, type FoodCategory } from "@/lib/domain/categories";
 import { LAT_COOKIE, LNG_COOKIE, NEAR_OFF_COOKIE } from "@/lib/domain/location-cookie";
 
-const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
-
 type SearchParams = Pick<CompanySearchParams, "q" | "open" | "sort" | "category">;
 
 function buildHref(current: SearchParams, changes: SearchParams) {
@@ -96,10 +94,13 @@ export default async function Home({
 
   const promotionsByCompany = new Map(promotedCompanies.map((p) => [p.id, p]));
 
-  const showCategoryFeed = Boolean(user && effectiveCategory);
+  // Guests always browse via the best-seller carousels (same as a logged-in
+  // user filtering by category); logged-in users without a category filter
+  // keep the personalized Destaques/Recomendados/Banners home instead.
+  const showMenuFeed = Boolean(!user || effectiveCategory);
   const companiesWithBestSellers: { company: (typeof companies)[number]; items: MenuItem[] }[] = [];
   const companiesWithoutBestSellers: (typeof companies)[number][] = [];
-  if (showCategoryFeed) {
+  if (showMenuFeed) {
     const companyIds = companies.map((c) => c.id);
     const [{ data: bestSellersByCompany }, categoryQueueInfo] = await Promise.all([
       listBestSellingItems(supabase, companyIds),
@@ -125,6 +126,50 @@ export default async function Home({
   if (open) mapParams.set("open", open);
   if (sort) mapParams.set("sort", sort);
   const mapHref = mapParams.toString() ? `/mapa?${mapParams.toString()}` : "/mapa";
+
+  const menuFeed =
+    companies.length === 0 ? (
+      <p className="text-sm text-muted-foreground">Nenhum restaurante encontrado.</p>
+    ) : (
+      <>
+        {companiesWithBestSellers.map(({ company, items }) => (
+          <RestaurantMenuCarousel
+            key={company.id}
+            company={company}
+            items={items}
+            queueInfo={queueInfoByCompany.get(company.id)}
+          />
+        ))}
+        {companiesWithoutBestSellers.length > 0 && (
+          <div className="flex flex-col gap-3">
+            {companiesWithBestSellers.length > 0 && (
+              <h2 className="text-lg font-semibold">Outros restaurantes</h2>
+            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {companiesWithoutBestSellers.map((company) => (
+                <Link
+                  key={company.id}
+                  href={`/${company.slug}`}
+                  className="rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                >
+                  <p className="font-medium">{company.name}</p>
+                  {company.description && (
+                    <p className="line-clamp-2 text-sm text-muted-foreground">
+                      {company.description}
+                    </p>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {company.is_open ? "Aberto agora" : "Fechado"}
+                    {company.rating_count > 0 &&
+                      ` · ★ ${company.rating_avg?.toFixed(1)} (${company.rating_count})`}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+      </>
+    );
 
   const filterButtons = (
     <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -175,49 +220,8 @@ export default async function Home({
               identityVerified={identityVerified}
             />
           </div>
-          {showCategoryFeed ? (
-            companies.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Nenhum restaurante encontrado.</p>
-            ) : (
-              <>
-                {companiesWithBestSellers.map(({ company, items }) => (
-                  <RestaurantMenuCarousel
-                    key={company.id}
-                    company={company}
-                    items={items}
-                    queueInfo={queueInfoByCompany.get(company.id)}
-                  />
-                ))}
-                {companiesWithoutBestSellers.length > 0 && (
-                  <div className="flex flex-col gap-3">
-                    {companiesWithBestSellers.length > 0 && (
-                      <h2 className="text-lg font-semibold">Outros restaurantes</h2>
-                    )}
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {companiesWithoutBestSellers.map((company) => (
-                        <Link
-                          key={company.id}
-                          href={`/${company.slug}`}
-                          className="rounded-lg border p-4 transition-colors hover:bg-muted/50"
-                        >
-                          <p className="font-medium">{company.name}</p>
-                          {company.description && (
-                            <p className="line-clamp-2 text-sm text-muted-foreground">
-                              {company.description}
-                            </p>
-                          )}
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            {company.is_open ? "Aberto agora" : "Fechado"}
-                            {company.rating_count > 0 &&
-                              ` · ★ ${company.rating_avg?.toFixed(1)} (${company.rating_count})`}
-                          </p>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            )
+          {showMenuFeed ? (
+            menuFeed
           ) : (
             <>
               {(promotedCompanies.length > 0 || (recommendedCompanies?.length ?? 0) > 0) && <Separator />}
@@ -241,61 +245,41 @@ export default async function Home({
           )}
         </>
       ) : (
-        <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">
-          <Image
-            src="/brand/hero-food.webp"
-            alt=""
-            fill
-            priority
-            className="object-cover"
-          />
-          {/* White wash over the photo so it stays in the background instead
-              of competing with the search bar — only ~40% of the original
-              color shows through. */}
-          <div className="absolute inset-0 bg-white/60" />
-          <div className="relative flex max-w-xl flex-col gap-4">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
-              Peça uma entrega perto de você
-            </h1>
-            <p className="text-foreground/80">
-              Peça comida dos melhores restaurantes perto de você, ou cadastre o seu e
-              comece a vender.
-            </p>
-            <HeroSearch q={q} open={open} sort={sort} />
-            {filterButtons}
-          </div>
-        </section>
-      )}
-
-      {!showCategoryFeed && (
-      <div className="mx-auto grid w-full max-w-2xl gap-3 text-left sm:grid-cols-2">
-        {companies.map((company) => (
-          <Link
-            key={company.id}
-            href={`/${company.slug}`}
-            className="rounded-lg border p-4 transition-colors hover:bg-muted/50"
-          >
-            <p className="font-medium">{company.name}</p>
-            {company.description && (
-              <p className="line-clamp-2 text-sm text-muted-foreground">
-                {company.description}
+        <>
+          <section className="relative overflow-hidden rounded-3xl p-6 sm:p-10">
+            <Image
+              src="/brand/hero-food.webp"
+              alt=""
+              fill
+              priority
+              className="object-cover"
+            />
+            {/* White wash over the photo so it stays in the background instead
+                of competing with the search bar — only ~40% of the original
+                color shows through. */}
+            <div className="absolute inset-0 bg-white/60" />
+            <div className="relative flex max-w-xl flex-col gap-4">
+              <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
+                Peça uma entrega perto de você
+              </h1>
+              <p className="text-foreground/80">
+                Peça comida dos melhores restaurantes perto de você, ou cadastre o seu e
+                comece a vender.
               </p>
-            )}
-            <p className="mt-1 text-xs text-muted-foreground">
-              {company.is_open ? "Aberto agora" : "Fechado"}
-              {company.min_order_value > 0 &&
-                ` · Pedido mínimo ${currency.format(company.min_order_value)}`}
-              {company.rating_count > 0 &&
-                ` · ★ ${company.rating_avg?.toFixed(1)} (${company.rating_count})`}
-            </p>
-          </Link>
-        ))}
-        {companies.length === 0 && (
-          <p className="text-sm text-muted-foreground sm:col-span-2">
-            Nenhum restaurante encontrado.
-          </p>
-        )}
-      </div>
+              <HeroSearch q={q} open={open} sort={sort} />
+              {filterButtons}
+            </div>
+          </section>
+          <CategoryChips
+            q={q}
+            open={open}
+            sort={sort}
+            category={category}
+            loggedIn={Boolean(user)}
+            identityVerified={identityVerified}
+          />
+          {menuFeed}
+        </>
       )}
     </div>
   );
