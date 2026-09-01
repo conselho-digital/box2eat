@@ -79,12 +79,14 @@ function GuestMenu({ isAdmin, onNavigate }: { isAdmin: boolean; onNavigate: () =
 
 function AccountMenu({
   isAdmin,
+  hasCompany,
   fullName,
   avatarUrl,
   email,
   onNavigate,
 }: {
   isAdmin: boolean;
+  hasCompany: boolean;
   fullName: string | null;
   avatarUrl: string | null;
   email: string | null;
@@ -146,7 +148,12 @@ function AccountMenu({
 
       <Separator />
 
-      <MenuLink href="/empresas" icon={Store} label="Criar uma conta Restaurante" onClick={onNavigate} />
+      <MenuLink
+        href="/empresas"
+        icon={Store}
+        label={hasCompany ? "Meu Restaurante" : "Criar uma conta Restaurante"}
+        onClick={onNavigate}
+      />
       <MenuLink
         href="/entregador/cadastro"
         icon={Bike}
@@ -161,12 +168,14 @@ function AccountMenu({
 export function SideMenu({
   loggedIn,
   isAdmin,
+  hasCompany,
   fullName,
   avatarUrl,
   email,
 }: {
   loggedIn: boolean;
   isAdmin: boolean;
+  hasCompany: boolean;
   fullName: string | null;
   avatarUrl: string | null;
   email: string | null;
@@ -189,6 +198,7 @@ export function SideMenu({
           {loggedIn ? (
             <AccountMenu
               isAdmin={isAdmin}
+              hasCompany={hasCompany}
               fullName={fullName}
               avatarUrl={avatarUrl}
               email={email}

@@ -22,6 +22,7 @@ import {
   markNotificationRead,
   subscribeToNotifications,
 } from "@/lib/domain/notifications";
+import { getPushSubscriptionStatus, subscribeToPush } from "@/lib/domain/push";
 
 const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
 
@@ -30,7 +31,7 @@ const NOTIFICATION_LINK: Record<string, (data: unknown) => string | null> = {
     const orderId = (data as { order_id?: string } | null)?.order_id;
     return orderId ? `/pedidos/${orderId}` : null;
   },
-  order_status_change: (data) => {
+  order_status_changed: (data) => {
     const orderId = (data as { order_id?: string } | null)?.order_id;
     return orderId ? `/pedidos/${orderId}` : null;
   },
@@ -97,15 +98,29 @@ export function NotificationBell({ userId }: { userId: string }) {
 
   const hasUnread = Boolean(unreadCount && unreadCount > 0);
 
+  async function requestPushPermissionIfNeeded() {
+    try {
+      const status = await getPushSubscriptionStatus();
+      if (status === "unsubscribed") {
+        await subscribeToPush(createClient(), userId);
+      }
+    } catch {
+      // The browser prompt may have been dismissed — nothing to recover from here.
+    }
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        onClick={() => {
+          void requestPushPermissionIfNeeded();
+        }}
         className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "relative")}
       >
         <Bell />
         {hasUnread && <span className="absolute top-1 right-1 size-2 rounded-full bg-destructive" />}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent align="end" className="w-80 duration-300">
         <div className="flex items-center justify-between px-1.5 py-1">
           <DropdownMenuLabel className="p-0">Notificações</DropdownMenuLabel>
           {hasUnread && (

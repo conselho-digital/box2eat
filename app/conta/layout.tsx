@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { AccountTabs } from "@/components/account/account-tabs";
 
@@ -14,27 +16,27 @@ export default async function AccountLayout({
 
   if (!user) redirect("/login");
 
-  const { data: membership } = await supabase
-    .from("company_members")
-    .select("id")
-    .eq("status", "active")
-    .limit(1)
-    .maybeSingle();
-
   const tabs = [
     { href: "/conta", label: "Página inicial" },
     { href: "/conta/dados-pessoais", label: "Dados pessoais" },
     { href: "/conta/seguranca", label: "Segurança" },
     { href: "/conta/favoritos", label: "Favoritos" },
     { href: "/conta/pedidos", label: "Pedidos" },
-    ...(membership ? [{ href: "/empresas", label: "Meus restaurantes" }] : []),
     { href: "/entregador/cadastro", label: "Seja um entregador" },
   ];
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold">Conta Box2eat</h1>
-      <AccountTabs tabs={tabs} />
+      <div className="flex items-center gap-2 border-b pb-1">
+        <Link
+          href="/"
+          aria-label="Voltar"
+          className="shrink-0 rounded-lg p-1.5 hover:bg-muted"
+        >
+          <ArrowLeft className="size-5" />
+        </Link>
+        <AccountTabs tabs={tabs} />
+      </div>
       {children}
     </div>
   );

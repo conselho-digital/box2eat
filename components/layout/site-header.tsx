@@ -20,6 +20,19 @@ export async function SiteHeader() {
       ).data
     : null;
 
+  const hasCompany = user
+    ? Boolean(
+        (
+          await supabase
+            .from("company_members")
+            .select("id")
+            .eq("status", "active")
+            .limit(1)
+            .maybeSingle()
+        ).data,
+      )
+    : false;
+
   return (
     <header className="flex items-center justify-between border-b p-3 px-6">
       <Link href="/" className="flex items-center gap-2">
@@ -38,6 +51,7 @@ export async function SiteHeader() {
         <SideMenu
           loggedIn={Boolean(user)}
           isAdmin={isAdmin}
+          hasCompany={hasCompany}
           fullName={profile?.full_name ?? null}
           avatarUrl={profile?.avatar_url ?? null}
           email={user?.email ?? null}
