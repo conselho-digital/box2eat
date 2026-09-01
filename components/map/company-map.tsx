@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker, ZoomControl, useMap } from "react-leaflet";
 import L, { type LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { ListFilter, LocateFixed, Star } from "lucide-react";
@@ -133,9 +133,20 @@ export function CompanyMap({
       : DEFAULT_CENTER);
 
   return (
-    <div className="relative h-full w-full">
-      <MapContainer center={center} zoom={13} scrollWheelZoom attributionControl={false} className="h-full w-full">
+    // The [&_...] rule pushes Leaflet's bottom-right zoom control up above
+    // the fixed mobile bottom nav (it defaults to sitting flush with the
+    // container's own bottom edge, which the nav now covers).
+    <div className="relative h-full w-full [&_.leaflet-bottom.leaflet-right]:mb-[calc(env(safe-area-inset-bottom)+4.5rem)] sm:[&_.leaflet-bottom.leaflet-right]:mb-0">
+      <MapContainer
+        center={center}
+        zoom={13}
+        scrollWheelZoom
+        attributionControl={false}
+        zoomControl={false}
+        className="h-full w-full"
+      >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <ZoomControl position="bottomright" />
         <RecenterController position={userPosition} signal={recenterSignal} />
         {userPosition && (
           <CircleMarker

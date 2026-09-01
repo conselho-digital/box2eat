@@ -19,7 +19,7 @@ export function CartBar() {
     // and leaving a gap of bare page background between the two. Desktop
     // has no bottom nav, so it just sticks to the true bottom there.
     <div
-      className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] z-30 border-t bg-primary p-3 text-primary-foreground sm:sticky sm:bottom-0"
+      className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+4.5rem)] z-[1100] border-t bg-primary p-3 text-primary-foreground sm:sticky sm:bottom-0"
     >
       <Link
         href="/carrinho"

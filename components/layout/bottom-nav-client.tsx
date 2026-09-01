@@ -57,8 +57,13 @@ export function BottomNavClient({
   const count = cartItemCount(cart);
 
   return (
+    // z-[1100]: Leaflet's own panes/controls (e.g. loaded map tiles) go up
+    // to z-index 1000 and don't form their own stacking context, so at the
+    // old z-40 they could paint right over these buttons on the map page —
+    // invisible in a sandbox with no tile access, very visible with real
+    // tiles loaded. Match the same z-index used for dialogs above the map.
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 flex items-center justify-center gap-3 px-4 pt-3 sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-[1100] flex items-center justify-center gap-3 px-4 pt-3 sm:hidden"
       style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
     >
       <NavCircle href="/" icon={Home} label="Início" active={pathname === "/"} />
