@@ -18,6 +18,7 @@ import { FOOD_CATEGORIES, type FoodCategory } from "@/lib/domain/categories";
 import type { PublicCompany } from "@/lib/domain/companies";
 import { useMapStats } from "@/components/map/map-stats-context";
 import { CATEGORY_ICONS } from "@/components/home/category-chips";
+import { DoubleTapDragZoom } from "@/components/map/double-tap-drag-zoom";
 
 const restaurantIcon = L.icon({
   iconUrl: "/leaflet/marker-icon.png",
@@ -140,6 +141,13 @@ export function CompanyMap({
       <MapContainer
         center={center}
         zoom={13}
+        // zoomSnap/zoomDelta split: the +/- buttons and keyboard still step
+        // by a whole level (zoomDelta), but the map itself can sit at any
+        // fractional zoom (zoomSnap) — needed for DoubleTapDragZoom's
+        // continuous drag-to-zoom to render smoothly instead of jumping
+        // between integer levels.
+        zoomSnap={0.1}
+        zoomDelta={1}
         scrollWheelZoom
         attributionControl={false}
         zoomControl={false}
@@ -147,6 +155,7 @@ export function CompanyMap({
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <ZoomControl position="bottomright" />
+        <DoubleTapDragZoom />
         <RecenterController position={userPosition} signal={recenterSignal} />
         {userPosition && (
           <CircleMarker
