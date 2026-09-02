@@ -36,6 +36,7 @@ export function SiteHeaderContent({
   const isHome = pathname === "/";
   const isAccount = pathname === "/conta" || pathname.startsWith("/conta/");
   const isCart = pathname === "/carrinho";
+  const isCheckout = pathname === "/checkout";
   const isMapa = pathname === "/mapa";
   const isEmpresas = pathname === "/empresas";
   const companyDashboardMatch = pathname.match(/^\/empresas\/([^/]+)/);
@@ -56,6 +57,7 @@ export function SiteHeaderContent({
         </div>
       )}
       {isCart && <p className="min-w-0 flex-1 truncate font-semibold">Carrinho</p>}
+      {isCheckout && <p className="min-w-0 flex-1 truncate font-semibold">Checkout</p>}
       {isMapa && (
         <p className="min-w-0 flex-1 truncate text-sm text-muted-foreground">
           {visibleCount === null

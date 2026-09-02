@@ -55,9 +55,12 @@ export default function CartPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6">
+    // pb clears the fixed CartBar (floats above the bottom nav on mobile,
+    // and would otherwise sit right over "Ir para o checkout" once scrolled
+    // to the end of the page).
+    <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 p-6 pb-[calc(env(safe-area-inset-bottom)+8rem)] sm:pb-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Carrinho · {cart.companyName}</h1>
+        <p className="text-sm text-muted-foreground">{cart.companyName}</p>
         <button
           type="button"
           className="text-sm text-muted-foreground hover:text-destructive"

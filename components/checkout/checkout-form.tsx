@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { Pencil } from "lucide-react";
+import { Pencil, LocateFixed } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +15,13 @@ import { createClient } from "@/lib/supabase/client";
 import { submitOrder } from "@/lib/domain/checkout";
 import { cartSubtotal } from "@/lib/domain/cart";
 import { validateCoupon } from "@/lib/domain/coupons";
-import { listMyAddresses, type UserAddress } from "@/lib/domain/address";
+import {
+  geocodeAddress,
+  listMyAddresses,
+  reverseGeocode,
+  type UserAddress,
+} from "@/lib/domain/address";
+import { AddressMapView } from "@/components/account/address-map-view";
 import {
   deliveryAddressSchema,
   type DeliveryAddressFormInput,
@@ -83,17 +89,65 @@ export function CheckoutForm({
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const selectedAddress = addresses?.find((a) => a.id === selectedAddressId) ?? null;
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locateError, setLocateError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     reset,
     getValues,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<DeliveryAddressFormInput>({
     resolver: zodResolver(deliveryAddressSchema),
     defaultValues: selectedAddress ? formValuesFromAddress(selectedAddress) : undefined,
   });
+
+  async function tryLocateOnMap() {
+    const { street, city, state } = getValues();
+    const number = getValues("number");
+    if (!street?.trim() || !city?.trim()) return;
+    try {
+      const found = await geocodeAddress({ street, number, city, state });
+      if (found) setCoords(found);
+    } catch {
+      // Silent: the map still lets the user drop the pin manually.
+    }
+  }
+
+  function useMyLocation() {
+    if (!navigator.geolocation) {
+      setLocateError("Geolocalização não suportada neste navegador.");
+      return;
+    }
+    setLocating(true);
+    setLocateError(null);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const address = await reverseGeocode(latitude, longitude);
+          setValue("street", address.street);
+          setValue("number", address.number);
+          setValue("neighborhood", address.neighborhood);
+          setValue("city", address.city);
+          setValue("state", address.state);
+          setValue("postal_code", address.postalCode);
+          setCoords({ lat: latitude, lng: longitude });
+        } catch {
+          setLocateError("Não foi possível identificar seu endereço.");
+        }
+        setLocating(false);
+      },
+      () => {
+        setLocateError("Não foi possível acessar sua localização.");
+        setLocating(false);
+      },
+      { enableHighAccuracy: false, timeout: 8000 },
+    );
+  }
 
   // Keeps the form fields in sync whenever a different saved address is
   // picked — the fields themselves stay hidden behind the summary card
@@ -256,17 +310,30 @@ export function CheckoutForm({
 
         {(manualEntry || !selectedAddress) && (
           <>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-fit"
+              onClick={useMyLocation}
+              disabled={locating}
+            >
+              <LocateFixed className="size-4" />
+              {locating ? "Localizando…" : "Usar minha localização"}
+            </Button>
+            {locateError && <p className="text-sm text-destructive">{locateError}</p>}
+
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2 flex flex-col gap-1.5">
                 <Label htmlFor="street">Rua</Label>
-                <Input id="street" {...register("street")} />
+                <Input id="street" {...register("street")} onBlur={tryLocateOnMap} />
                 {errors.street && (
                   <p className="text-sm text-destructive">{errors.street.message}</p>
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="number">Número</Label>
-                <Input id="number" {...register("number")} />
+                <Input id="number" {...register("number")} onBlur={tryLocateOnMap} />
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
@@ -280,18 +347,31 @@ export function CheckoutForm({
             <div className="grid grid-cols-3 gap-3">
               <div className="col-span-2 flex flex-col gap-1.5">
                 <Label htmlFor="city">Cidade</Label>
-                <Input id="city" {...register("city")} />
+                <Input id="city" {...register("city")} onBlur={tryLocateOnMap} />
                 {errors.city && <p className="text-sm text-destructive">{errors.city.message}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="state">UF</Label>
-                <Input id="state" maxLength={2} {...register("state")} />
+                <Input id="state" maxLength={2} {...register("state")} onBlur={tryLocateOnMap} />
                 {errors.state && <p className="text-sm text-destructive">{errors.state.message}</p>}
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="postal_code">CEP</Label>
               <Input id="postal_code" {...register("postal_code")} />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label>Localização no mapa</Label>
+              <p className="text-sm text-muted-foreground">
+                Vamos tentar encontrar a localização a partir do endereço. Se o pino não estiver
+                no lugar certo, arraste-o no mapa para corrigir.
+              </p>
+              <AddressMapView
+                lat={coords?.lat ?? null}
+                lng={coords?.lng ?? null}
+                onChange={(newLat, newLng) => setCoords({ lat: newLat, lng: newLng })}
+              />
             </div>
           </>
         )}
