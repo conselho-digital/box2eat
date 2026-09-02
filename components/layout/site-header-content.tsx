@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AuthToggleButton } from "@/components/auth/auth-toggle-button";
@@ -10,6 +9,7 @@ import { AddressBar } from "@/components/home/address-bar";
 import { AccountTabs, ACCOUNT_TABS } from "@/components/account/account-tabs";
 import { useMapStats } from "@/components/map/map-stats-context";
 import { CompanyListHeaderButton } from "@/components/companies/company-list-header-button";
+import { CompanyPublicLink } from "@/components/companies/company-public-link";
 import { useCompanyDashboardHeader } from "@/components/companies/company-dashboard-header-context";
 import type { UserAddress } from "@/lib/domain/address";
 
@@ -40,7 +40,6 @@ export function SiteHeaderContent({
   const isEmpresas = pathname === "/empresas";
   const companyDashboardMatch = pathname.match(/^\/empresas\/([^/]+)/);
   const companyDashboardId = companyDashboardMatch?.[1];
-  const isCompanyOverview = companyDashboardId !== undefined && pathname === `/empresas/${companyDashboardId}`;
   const { visibleCount } = useMapStats();
   const { company } = useCompanyDashboardHeader();
 
@@ -68,15 +67,7 @@ export function SiteHeaderContent({
       {companyDashboardId && company && (
         <div className="min-w-0 flex-1">
           <p className="truncate font-semibold">{company.name}</p>
-          {isCompanyOverview && (
-            <Link
-              href={`/${company.slug}`}
-              target="_blank"
-              className="block truncate text-xs text-primary hover:underline"
-            >
-              Ver loja pública
-            </Link>
-          )}
+          <CompanyPublicLink slug={company.slug} />
         </div>
       )}
 

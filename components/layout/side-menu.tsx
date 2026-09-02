@@ -215,6 +215,25 @@ export function SideMenu({
     }
   }, [loggedIn, isAdmin, router]);
 
+  // Pushes a dummy history entry while the menu is open, so the device's
+  // back gesture/button closes the menu (consuming that entry via
+  // popstate) instead of navigating away from the page underneath. If the
+  // menu instead closes some other way (a link, the backdrop, Escape), the
+  // cleanup below removes that dummy entry itself — otherwise it'd sit in
+  // the history stack and eat one extra back press later.
+  useEffect(() => {
+    if (!open) return;
+    history.pushState({ menuOpen: true }, "");
+    const handlePopState = () => setOpen(false);
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if ((history.state as { menuOpen?: boolean } | null)?.menuOpen) {
+        history.back();
+      }
+    };
+  }, [open]);
+
   return (
     // modal="trap-focus": full `modal` (the default) still locks page scroll
     // via a JS style write on <body>/<html>, deferred to fire mid-animation —

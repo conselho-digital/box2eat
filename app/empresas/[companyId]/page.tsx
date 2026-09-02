@@ -23,7 +23,6 @@ export default async function CompanyOverviewPage({
 
   return (
     <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-      <p>URL: box2eat.com/{company.slug}</p>
       {company.description && <p>{company.description}</p>}
       {company.phone && <p>Telefone: {company.phone}</p>}
       <div>
