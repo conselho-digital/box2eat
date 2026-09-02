@@ -29,6 +29,10 @@ export async function setDefaultAddress(supabase: Client, addressId: string) {
   return supabase.from("user_addresses").update({ is_default: true }).eq("id", addressId);
 }
 
+export async function deleteAddress(supabase: Client, addressId: string) {
+  return supabase.from("user_addresses").delete().eq("id", addressId);
+}
+
 export async function upsertMyAddress(
   supabase: Client,
   userId: string,

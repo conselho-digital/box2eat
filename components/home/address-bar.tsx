@@ -3,11 +3,16 @@
 import { useState } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { MapPin, ChevronDown, Plus, X } from "lucide-react";
+import { MapPin, ChevronDown, Plus, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AddressForm } from "@/components/account/address-form";
 import { createClient } from "@/lib/supabase/client";
-import { listMyAddresses, setDefaultAddress, type UserAddress } from "@/lib/domain/address";
+import {
+  deleteAddress,
+  listMyAddresses,
+  setDefaultAddress,
+  type UserAddress,
+} from "@/lib/domain/address";
 
 function addressLine(address: UserAddress) {
   return address.number ? `${address.street}, ${address.number}` : address.street;
@@ -51,6 +56,33 @@ export function AddressBar({
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (address: UserAddress) => {
+      const supabase = createClient();
+      const { error } = await deleteAddress(supabase, address.id);
+      if (error) throw error;
+
+      // Deleting the default address doesn't auto-promote another one (the
+      // DB trigger only enforces a single default on insert/update) — pick
+      // the next remaining address ourselves so there's still a "current"
+      // one, consistent with what the rest of the app expects.
+      if (address.is_default) {
+        const { data: remaining } = await listMyAddresses(supabase, userId);
+        const next = remaining?.[0];
+        if (next) {
+          await setDefaultAddress(supabase, next.id);
+          return next;
+        }
+        return null;
+      }
+      return undefined;
+    },
+    onSuccess: (nextDefault) => {
+      if (nextDefault !== undefined) setCurrent(nextDefault);
+      queryClient.invalidateQueries({ queryKey });
+    },
+  });
+
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       <DialogPrimitive.Trigger
@@ -81,20 +113,33 @@ export function AddressBar({
 
           <div className="flex flex-col divide-y">
             {addresses?.map((address) => (
-              <button
-                key={address.id}
-                type="button"
-                onClick={() => selectMutation.mutate(address)}
-                className="flex items-start gap-3 py-3 text-left hover:bg-muted/50"
-              >
-                <MapPin
-                  className={`mt-0.5 size-4 shrink-0 ${address.is_default ? "text-primary" : "text-muted-foreground"}`}
-                />
-                <div>
-                  <p className="font-medium">{address.label || "Endereço"}</p>
-                  <p className="text-sm text-muted-foreground">{addressLine(address)}</p>
-                </div>
-              </button>
+              <div key={address.id} className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => selectMutation.mutate(address)}
+                  className="flex flex-1 items-start gap-3 py-3 text-left hover:bg-muted/50"
+                >
+                  <MapPin
+                    className={`mt-0.5 size-4 shrink-0 ${address.is_default ? "text-primary" : "text-muted-foreground"}`}
+                  />
+                  <div>
+                    <p className="font-medium">{address.label || "Endereço"}</p>
+                    <p className="text-sm text-muted-foreground">{addressLine(address)}</p>
+                  </div>
+                </button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`Excluir ${address.label || "endereço"}`}
+                  disabled={deleteMutation.isPending}
+                  onClick={() => {
+                    if (window.confirm("Excluir este endereço?")) deleteMutation.mutate(address);
+                  }}
+                >
+                  <Trash2 className="size-4 text-muted-foreground" />
+                </Button>
+              </div>
             ))}
             {addresses?.length === 0 && !adding && (
               <p className="py-3 text-sm text-muted-foreground">Nenhum endereço salvo ainda.</p>
