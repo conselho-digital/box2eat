@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { itemsQueryKey } from "./hooks";
 import { ItemForm } from "./item-form";
 import { ItemEditForm } from "./item-edit-form";
 import { ItemImageUpload } from "./item-image-upload";
-import { OptionGroupManager } from "./option-group-manager";
+import { ItemAddonPicker } from "./item-addon-picker";
 
 export function ItemDialog({
   companyId,
@@ -31,6 +32,19 @@ export function ItemDialog({
 }) {
   const queryClient = useQueryClient();
 
+  // Toggling availability used to fire the write immediately, but the
+  // button reads from `item` — a snapshot handed down at open time — so a
+  // successful save never showed up until the dialog was closed and
+  // reopened (looked like the click did nothing). Now the click just
+  // flips this local flag for instant feedback, and the save happens once,
+  // on close, only if it actually changed.
+  const [syncedItemId, setSyncedItemId] = useState(item?.id);
+  const [localAvailable, setLocalAvailable] = useState(item?.is_available ?? true);
+  if (item?.id !== syncedItemId) {
+    setSyncedItemId(item?.id);
+    setLocalAvailable(item?.is_available ?? true);
+  }
+
   const availabilityMutation = useMutation({
     mutationFn: async (value: boolean) => {
       if (!item) return;
@@ -40,6 +54,13 @@ export function ItemDialog({
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: itemsQueryKey(companyId) }),
   });
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen && item && localAvailable !== item.is_available) {
+      availabilityMutation.mutate(localAvailable);
+    }
+    onOpenChange(nextOpen);
+  }
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -55,7 +76,7 @@ export function ItemDialog({
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{item ? "Editar item" : "Novo item"}</DialogTitle>
@@ -70,10 +91,10 @@ export function ItemDialog({
               <Button
                 type="button"
                 size="sm"
-                variant={item.is_available ? "secondary" : "outline"}
-                onClick={() => availabilityMutation.mutate(!item.is_available)}
+                variant={localAvailable ? "secondary" : "outline"}
+                onClick={() => setLocalAvailable((v) => !v)}
               >
-                {item.is_available ? "Disponível" : "Indisponível"}
+                {localAvailable ? "Disponível" : "Indisponível"}
               </Button>
               <Button
                 type="button"
@@ -88,7 +109,7 @@ export function ItemDialog({
             </div>
 
             <Separator />
-            <OptionGroupManager itemId={item.id} />
+            <ItemAddonPicker companyId={companyId} item={item} />
           </div>
         ) : (
           <ItemForm companyId={companyId} onCreated={onItemCreated} />

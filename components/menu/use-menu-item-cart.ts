@@ -13,6 +13,7 @@ export function useMenuItemCart(
   const { addItem } = useCart();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Record<string, string[]>>({});
+  const [selectedAddonIds, setSelectedAddonIds] = useState<Set<string>>(new Set());
   const [justAdded, setJustAdded] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -22,11 +23,21 @@ export function useMenuItemCart(
     };
   }, []);
 
-  const hasOptions = item.menu_item_option_groups.length > 0;
+  const hasOptions = item.menu_item_option_groups.length > 0 || item.menu_item_addons.length > 0;
 
   function openDialog() {
     setSelected(Object.fromEntries(item.menu_item_option_groups.map((g) => [g.id, []])));
+    setSelectedAddonIds(new Set());
     setOpen(true);
+  }
+
+  function toggleAddon(addonItemId: string) {
+    setSelectedAddonIds((current) => {
+      const next = new Set(current);
+      if (next.has(addonItemId)) next.delete(addonItemId);
+      else next.add(addonItemId);
+      return next;
+    });
   }
 
   function toggleOption(groupId: string, optionId: string, max: number) {
@@ -60,6 +71,13 @@ export function useMenuItemCart(
         return { optionId, name: option.name, priceDelta: option.price_delta };
       }),
     );
+    const addonOptions = item.menu_item_addons
+      .filter((a) => selectedAddonIds.has(a.addon_item_id))
+      .map((a) => ({
+        optionId: a.addon_item_id,
+        name: a.menu_items.name,
+        priceDelta: a.menu_items.price,
+      }));
     addItem({
       companyId,
       companyName,
@@ -68,7 +86,7 @@ export function useMenuItemCart(
       name: item.name,
       unitPrice: item.price,
       quantity: 1,
-      options,
+      options: [...options, ...addonOptions],
     });
     setOpen(false);
     flashAdded();
@@ -92,10 +110,12 @@ export function useMenuItemCart(
     open,
     setOpen,
     selected,
+    selectedAddonIds,
     hasOptions,
     justAdded,
     openDialog,
     toggleOption,
+    toggleAddon,
     isValid,
     confirmAdd,
     addSimple,

@@ -19,6 +19,8 @@ export function MenuItemOptionsDialog({
   onOpenChange,
   selected,
   onToggleOption,
+  selectedAddonIds,
+  onToggleAddon,
   isValid,
   onConfirm,
 }: {
@@ -27,9 +29,24 @@ export function MenuItemOptionsDialog({
   onOpenChange: (open: boolean) => void;
   selected: Record<string, string[]>;
   onToggleOption: (groupId: string, optionId: string, max: number) => void;
+  selectedAddonIds: Set<string>;
+  onToggleAddon: (addonItemId: string) => void;
   isValid: boolean;
   onConfirm: () => void;
 }) {
+  const addonsByCategory = Object.values(
+    item.menu_item_addons
+      .filter((a) => a.menu_items.is_available)
+      .reduce<Record<string, { name: string; addons: typeof item.menu_item_addons }>>(
+        (acc, addon) => {
+          const key = addon.menu_items.category_id ?? "__uncategorized";
+          const name = addon.menu_items.menu_categories?.name ?? "Outros";
+          (acc[key] ??= { name, addons: [] }).addons.push(addon);
+          return acc;
+        },
+        {},
+      ),
+  );
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -69,6 +86,27 @@ export function MenuItemOptionsDialog({
                       </label>
                     );
                   })}
+              </div>
+            </div>
+          ))}
+
+          {addonsByCategory.map(({ name, addons }) => (
+            <div key={name} className="flex flex-col gap-1.5">
+              <p className="text-sm font-medium">{name}</p>
+              <div className="flex flex-col gap-1">
+                {addons.map((addon) => (
+                  <label key={addon.addon_item_id} className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={selectedAddonIds.has(addon.addon_item_id)}
+                      onChange={() => onToggleAddon(addon.addon_item_id)}
+                    />
+                    <span className="flex-1">{addon.menu_items.name}</span>
+                    <span className="text-muted-foreground">
+                      +{currency.format(addon.menu_items.price)}
+                    </span>
+                  </label>
+                ))}
               </div>
             </div>
           ))}

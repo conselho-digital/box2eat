@@ -10,13 +10,24 @@ export type MenuOptionGroup =
     menu_item_options: MenuOption[];
   };
 export type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
+/** "Opcional": another real, separately-sellable menu item offered
+ *  alongside this one (e.g. a burger's opcional pointing at a soda in
+ *  Bebidas) — not a named choice like menu_item_option_groups. */
+export type MenuItemAddonEntry = {
+  addon_item_id: string;
+  menu_items: Pick<
+    Database["public"]["Tables"]["menu_items"]["Row"],
+    "id" | "name" | "price" | "image_url" | "is_available" | "category_id"
+  > & { menu_categories: Pick<MenuCategory, "id" | "name"> | null };
+};
 export type MenuItem = Database["public"]["Tables"]["menu_items"]["Row"] & {
   menu_item_option_groups: MenuOptionGroup[];
   menu_categories: Pick<MenuCategory, "id" | "name"> | null;
+  menu_item_addons: MenuItemAddonEntry[];
 };
 
 export const ITEM_WITH_OPTIONS_SELECT =
-  "*, menu_categories(id, name), menu_item_option_groups(*, menu_item_options(*))";
+  "*, menu_categories(id, name), menu_item_option_groups(*, menu_item_options(*)), menu_item_addons!menu_item_addons_menu_item_id_fkey(addon_item_id, menu_items!menu_item_addons_addon_item_id_fkey(id, name, price, image_url, is_available, category_id, menu_categories(id, name)))";
 
 export async function listCategories(supabase: Client, companyId: string) {
   return supabase
@@ -141,6 +152,23 @@ export async function setItemAvailability(
 
 export async function deleteItem(supabase: Client, itemId: string) {
   return supabase.from("menu_items").delete().eq("id", itemId);
+}
+
+/** Replaces the full set of "opcional" items attached to menuItemId — the
+ *  picker always submits the whole desired selection, so a clear-then-
+ *  insert is simpler and just as correct as diffing it. */
+export async function setItemAddons(supabase: Client, menuItemId: string, addonItemIds: string[]) {
+  const { error: deleteError } = await supabase
+    .from("menu_item_addons")
+    .delete()
+    .eq("menu_item_id", menuItemId);
+  if (deleteError) return { error: deleteError };
+  if (addonItemIds.length === 0) return { error: null };
+
+  const { error: insertError } = await supabase
+    .from("menu_item_addons")
+    .insert(addonItemIds.map((addonItemId) => ({ menu_item_id: menuItemId, addon_item_id: addonItemId })));
+  return { error: insertError };
 }
 
 export async function createOptionGroup(

@@ -628,6 +628,39 @@ export type Database = {
           },
         ]
       }
+      menu_item_addons: {
+        Row: {
+          addon_item_id: string
+          created_at: string
+          menu_item_id: string
+        }
+        Insert: {
+          addon_item_id: string
+          created_at?: string
+          menu_item_id: string
+        }
+        Update: {
+          addon_item_id?: string
+          created_at?: string
+          menu_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_addons_addon_item_id_fkey"
+            columns: ["addon_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_addons_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_item_option_groups: {
         Row: {
           created_at: string

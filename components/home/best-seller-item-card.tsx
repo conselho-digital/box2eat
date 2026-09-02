@@ -50,6 +50,8 @@ export function BestSellerItemCard({
         onOpenChange={cart.setOpen}
         selected={cart.selected}
         onToggleOption={cart.toggleOption}
+        selectedAddonIds={cart.selectedAddonIds}
+        onToggleAddon={cart.toggleAddon}
         isValid={cart.isValid()}
         onConfirm={cart.confirmAdd}
       />
