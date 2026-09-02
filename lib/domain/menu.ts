@@ -96,8 +96,8 @@ export async function createItem(
       description: input.description || null,
       price: input.price,
     })
-    .select()
-    .single();
+    .select(ITEM_WITH_OPTIONS_SELECT)
+    .single<MenuItem>();
 }
 
 export async function updateItem(

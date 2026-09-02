@@ -27,7 +27,14 @@ export function CompanyPublicLink({ slug }: { slug: string }) {
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-1">
+    <div className="flex min-w-0 items-center gap-3">
+      <Link
+        href={`/${slug}`}
+        target="_blank"
+        className="truncate text-xs text-primary hover:underline"
+      >
+        Ver loja pública
+      </Link>
       <button
         type="button"
         onClick={handleShare}
@@ -36,13 +43,6 @@ export function CompanyPublicLink({ slug }: { slug: string }) {
       >
         {copied ? <Check className="size-3.5" /> : <Share2 className="size-3.5" />}
       </button>
-      <Link
-        href={`/${slug}`}
-        target="_blank"
-        className="truncate text-xs text-primary hover:underline"
-      >
-        Ver loja pública
-      </Link>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
-import { createItem } from "@/lib/domain/menu";
+import { createItem, type MenuItem } from "@/lib/domain/menu";
 import { menuItemSchema, type MenuItemInput } from "@/lib/validations/menu";
 import { itemsQueryKey } from "./hooks";
 import { CategoryCombobox } from "./category-combobox";
@@ -17,7 +17,7 @@ export function ItemForm({
   onCreated,
 }: {
   companyId: string;
-  onCreated?: () => void;
+  onCreated?: (item: MenuItem) => void;
 }) {
   const queryClient = useQueryClient();
   const {
@@ -31,13 +31,14 @@ export function ItemForm({
   const mutation = useMutation({
     mutationFn: async (values: MenuItemInput) => {
       const supabase = createClient();
-      const { error } = await createItem(supabase, companyId, values);
+      const { data, error } = await createItem(supabase, companyId, values);
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (item) => {
       reset();
       queryClient.invalidateQueries({ queryKey: itemsQueryKey(companyId) });
-      onCreated?.();
+      onCreated?.(item);
     },
   });
 

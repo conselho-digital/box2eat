@@ -16,12 +16,17 @@ export function ItemDialog({
   item,
   open,
   onOpenChange,
+  onItemCreated,
 }: {
   companyId: string;
   /** null means "create a new item" instead of editing one. */
   item: MenuItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Called right after a new item is created, so the caller can switch
+   *  this same dialog into edit mode for it — that's the only place a
+   *  photo can be attached, since uploads need the item to already exist. */
+  onItemCreated?: (item: MenuItem) => void;
 }) {
   const queryClient = useQueryClient();
 
@@ -89,7 +94,7 @@ export function ItemDialog({
             </Link>
           </div>
         ) : (
-          <ItemForm companyId={companyId} onCreated={() => onOpenChange(false)} />
+          <ItemForm companyId={companyId} onCreated={onItemCreated} />
         )}
       </DialogContent>
     </Dialog>

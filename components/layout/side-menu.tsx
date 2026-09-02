@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
@@ -207,6 +207,17 @@ export function SideMenu({
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  // Set right before closing the menu to navigate somewhere (a link, or the
+  // logout button's router.push) — tells the history-cleanup effect below
+  // to skip its own history.back(), since calling that while a navigation
+  // is also about to run pushState() races with it and can cancel the
+  // navigation outright (back() lands after the new entry is pushed).
+  const closingToNavigateRef = useRef(false);
+
+  function handleNavigate() {
+    closingToNavigateRef.current = true;
+    setOpen(false);
+  }
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -218,16 +229,25 @@ export function SideMenu({
   // Pushes a dummy history entry while the menu is open, so the device's
   // back gesture/button closes the menu (consuming that entry via
   // popstate) instead of navigating away from the page underneath. If the
-  // menu instead closes some other way (a link, the backdrop, Escape), the
-  // cleanup below removes that dummy entry itself — otherwise it'd sit in
-  // the history stack and eat one extra back press later.
+  // menu instead closes some other way (the backdrop, Escape), the cleanup
+  // below removes that dummy entry itself — otherwise it'd sit in the
+  // history stack and eat one extra back press later. Closing via a link
+  // (closingToNavigateRef) skips that cleanup — see the ref's comment.
   useEffect(() => {
     if (!open) return;
-    history.pushState({ menuOpen: true }, "");
+    // Merge into the existing history.state rather than replacing it —
+    // Next's App Router stores its own routing data there (the RSC tree
+    // used to restore the page on back/forward), and overwriting it with a
+    // bare object broke client-side navigation once this entry was visited.
+    history.pushState({ ...(history.state ?? {}), menuOpen: true }, "");
     const handlePopState = () => setOpen(false);
     window.addEventListener("popstate", handlePopState);
     return () => {
       window.removeEventListener("popstate", handlePopState);
+      if (closingToNavigateRef.current) {
+        closingToNavigateRef.current = false;
+        return;
+      }
       if ((history.state as { menuOpen?: boolean } | null)?.menuOpen) {
         history.back();
       }
@@ -267,10 +287,10 @@ export function SideMenu({
               fullName={fullName}
               avatarUrl={avatarUrl}
               email={email}
-              onNavigate={() => setOpen(false)}
+              onNavigate={handleNavigate}
             />
           ) : (
-            <GuestMenu isAdmin={isAdmin} onNavigate={() => setOpen(false)} />
+            <GuestMenu isAdmin={isAdmin} onNavigate={handleNavigate} />
           )}
         </DialogPrimitive.Popup>
       </DialogPrimitive.Portal>
