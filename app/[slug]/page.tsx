@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCompanyBySlug } from "@/lib/domain/companies-detail";
-import { incrementCompanyView } from "@/lib/domain/companies";
+import { incrementCompanyView, formatCompanyAddress } from "@/lib/domain/companies";
 import { listPublicMenu, type MenuItem } from "@/lib/domain/menu";
 import { isFavorite } from "@/lib/domain/favorites";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
@@ -36,6 +36,14 @@ export default async function StorePage({
     (acc[key] ??= []).push(item);
     return acc;
   }, {});
+
+  const cartCompany = {
+    id: company.id,
+    name: company.name,
+    slug: company.slug,
+    logoUrl: company.logo_url,
+    address: formatCompanyAddress(company),
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-8 p-6">
@@ -77,13 +85,7 @@ export default async function StorePage({
           <h2 className="text-lg font-semibold">{category}</h2>
           <div className="flex flex-col divide-y rounded-lg border">
             {categoryItems.map((item) => (
-              <MenuItemCard
-                key={item.id}
-                item={item}
-                companyId={company.id}
-                companyName={company.name}
-                companySlug={company.slug}
-              />
+              <MenuItemCard key={item.id} item={item} company={cartCompany} />
             ))}
           </div>
         </div>

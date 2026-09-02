@@ -12,6 +12,11 @@ export function CartBar() {
 
   if (!cart || count === 0) return null;
 
+  const restaurantLabel =
+    cart.length === 1
+      ? cart[0].companyName
+      : `${cart.length} restaurantes`;
+
   return (
     // Pinned directly above the fixed mobile bottom nav (logged-in only) —
     // fixed instead of sticky so it always sits flush against the nav's
@@ -26,7 +31,7 @@ export function CartBar() {
         className="mx-auto flex w-full max-w-2xl items-center justify-between text-sm font-medium"
       >
         <span>
-          {count} item{count > 1 ? "s" : ""} · {cart.companyName}
+          {count} item{count > 1 ? "s" : ""} · {restaurantLabel}
         </span>
         <span>Ver carrinho · {currency.format(cartSubtotal(cart))}</span>
       </Link>

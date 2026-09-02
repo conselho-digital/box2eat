@@ -270,6 +270,20 @@ export async function listBestSellingItems(
   return { data: byCompany, error: null };
 }
 
+/** Opcionais attached to any of the given items (e.g. everything currently
+ *  in a customer's cart for one restaurant) — used by the pre-checkout
+ *  screen that offers add-ons before the customer continues. */
+export async function listAddonsForItems(supabase: Client, menuItemIds: string[]) {
+  if (menuItemIds.length === 0) return { data: [] as MenuItemAddonEntry[], error: null };
+  return supabase
+    .from("menu_item_addons")
+    .select(
+      "addon_item_id, menu_items!menu_item_addons_addon_item_id_fkey(id, name, price, image_url, is_available, category_id, menu_categories(id, name))",
+    )
+    .in("menu_item_id", menuItemIds)
+    .returns<MenuItemAddonEntry[]>();
+}
+
 /** Public storefront: only available items, grouped by category. */
 export async function listPublicMenu(supabase: Client, companyId: string) {
   const [{ data: categories, error: categoriesError }, { data: items, error: itemsError }] =

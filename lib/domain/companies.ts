@@ -22,7 +22,28 @@ export type PublicCompany = Pick<
   | "delivery_fee_base"
   | "avg_prep_time_minutes"
   | "delivered_orders_count"
+  | "street"
+  | "number"
+  | "neighborhood"
+  | "city"
+  | "state"
 >;
+
+/** Single-line delivery address for display (cart cards, checkout summaries).
+ *  Returns null when there isn't enough address data to say anything useful. */
+export function formatCompanyAddress(company: {
+  street: string | null;
+  number: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+}) {
+  const streetLine = [company.street, company.number].filter(Boolean).join(", ");
+  const cityLine = [company.neighborhood, company.city && company.state ? `${company.city} - ${company.state}` : company.city]
+    .filter(Boolean)
+    .join(", ");
+  return [streetLine, cityLine].filter(Boolean).join(" · ") || null;
+}
 
 export type CompanySearchParams = {
   q?: string;
@@ -34,7 +55,7 @@ export type CompanySearchParams = {
 };
 
 const PUBLIC_COMPANY_COLUMNS =
-  "id, name, slug, description, min_order_value, is_open, rating_avg, rating_count, lat, lng, category, cover_image_url, delivery_fee_base, avg_prep_time_minutes, delivered_orders_count" as const;
+  "id, name, slug, description, min_order_value, is_open, rating_avg, rating_count, lat, lng, category, cover_image_url, delivery_fee_base, avg_prep_time_minutes, delivered_orders_count, street, number, neighborhood, city, state" as const;
 
 /** Shared by the home listing and the map view: same filters, same "closest first" logic. */
 export async function listPublicCompanies(supabase: Client, params: CompanySearchParams) {

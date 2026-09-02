@@ -4,12 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import type { MenuItem } from "@/lib/domain/menu";
 
-export function useMenuItemCart(
-  item: MenuItem,
-  companyId: string,
-  companyName: string,
-  companySlug: string,
-) {
+export type MenuItemCartCompany = {
+  id: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  address: string | null;
+};
+
+export function useMenuItemCart(item: MenuItem, company: MenuItemCartCompany) {
   const { addItem } = useCart();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Record<string, string[]>>({});
@@ -79,11 +82,15 @@ export function useMenuItemCart(
         priceDelta: a.menu_items.price,
       }));
     addItem({
-      companyId,
-      companyName,
-      companySlug,
+      companyId: company.id,
+      companyName: company.name,
+      companySlug: company.slug,
+      companyLogoUrl: company.logoUrl,
+      companyAddress: company.address,
       menuItemId: item.id,
       name: item.name,
+      description: item.description,
+      imageUrl: item.image_url,
       unitPrice: item.price,
       quantity: 1,
       options: [...options, ...addonOptions],
@@ -94,11 +101,15 @@ export function useMenuItemCart(
 
   function addSimple() {
     addItem({
-      companyId,
-      companyName,
-      companySlug,
+      companyId: company.id,
+      companyName: company.name,
+      companySlug: company.slug,
+      companyLogoUrl: company.logoUrl,
+      companyAddress: company.address,
       menuItemId: item.id,
       name: item.name,
+      description: item.description,
+      imageUrl: item.image_url,
       unitPrice: item.price,
       quantity: 1,
       options: [],

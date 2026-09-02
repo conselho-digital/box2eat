@@ -13,8 +13,12 @@ type AddItemInput = {
   companyId: string;
   companyName: string;
   companySlug: string;
+  companyLogoUrl: string | null;
+  companyAddress: string | null;
   menuItemId: string;
   name: string;
+  description: string | null;
+  imageUrl: string | null;
   unitPrice: number;
   quantity: number;
   options: CartOptionSelection[];
@@ -22,9 +26,15 @@ type AddItemInput = {
 
 type CartContextValue = {
   cart: Cart | null;
-  addItem: (input: AddItemInput) => { replaced: boolean };
-  removeItem: (key: string) => void;
-  updateQuantity: (key: string, quantity: number) => void;
+  /** False until the localStorage hydration effect below has run — code
+   *  that redirects away on an "empty" cart must wait for this, since the
+   *  cart is always null for that first render even when localStorage
+   *  actually has items. */
+  hydrated: boolean;
+  addItem: (input: AddItemInput) => void;
+  removeItem: (companyId: string, key: string) => void;
+  updateQuantity: (companyId: string, key: string, quantity: number) => void;
+  removeRestaurant: (companyId: string) => void;
   clearCart: () => void;
 };
 
@@ -51,59 +61,84 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       input.menuItemId,
       input.options.map((o) => o.optionId),
     );
-    let replaced = false;
 
     setCart((current) => {
-      if (current && current.companyId !== input.companyId) {
-        replaced = true;
-      }
-      const base: Cart =
-        current && current.companyId === input.companyId
-          ? current
-          : { companyId: input.companyId, companyName: input.companyName, companySlug: input.companySlug, items: [] };
+      const restaurants = current ?? [];
+      const existingRestaurant = restaurants.find((r) => r.companyId === input.companyId);
 
-      const existing = base.items.find((item) => item.key === key);
-      const items = existing
-        ? base.items.map((item) =>
+      const baseItems = existingRestaurant?.items ?? [];
+      const existingItem = baseItems.find((item) => item.key === key);
+      const items = existingItem
+        ? baseItems.map((item) =>
             item.key === key ? { ...item, quantity: item.quantity + input.quantity } : item,
           )
         : [
-            ...base.items,
+            ...baseItems,
             {
               key,
               menuItemId: input.menuItemId,
               name: input.name,
+              description: input.description,
+              imageUrl: input.imageUrl,
               unitPrice: input.unitPrice,
               quantity: input.quantity,
               options: input.options,
             },
           ];
 
-      return { ...base, items };
-    });
+      const updatedRestaurant = {
+        companyId: input.companyId,
+        companyName: input.companyName,
+        companySlug: input.companySlug,
+        companyLogoUrl: input.companyLogoUrl,
+        companyAddress: input.companyAddress,
+        items,
+      };
 
-    return { replaced };
+      if (existingRestaurant) {
+        return restaurants.map((r) => (r.companyId === input.companyId ? updatedRestaurant : r));
+      }
+      return [...restaurants, updatedRestaurant];
+    });
   }
 
-  function removeItem(key: string) {
+  function removeItem(companyId: string, key: string) {
     setCart((current) => {
       if (!current) return current;
-      const items = current.items.filter((item) => item.key !== key);
-      return items.length > 0 ? { ...current, items } : null;
+      const next = current
+        .map((restaurant) => {
+          if (restaurant.companyId !== companyId) return restaurant;
+          return { ...restaurant, items: restaurant.items.filter((item) => item.key !== key) };
+        })
+        .filter((restaurant) => restaurant.items.length > 0);
+      return next.length > 0 ? next : null;
     });
   }
 
-  function updateQuantity(key: string, quantity: number) {
+  function updateQuantity(companyId: string, key: string, quantity: number) {
     if (quantity <= 0) {
-      removeItem(key);
+      removeItem(companyId, key);
       return;
     }
     setCart((current) => {
       if (!current) return current;
-      return {
-        ...current,
-        items: current.items.map((item) => (item.key === key ? { ...item, quantity } : item)),
-      };
+      return current.map((restaurant) => {
+        if (restaurant.companyId !== companyId) return restaurant;
+        return {
+          ...restaurant,
+          items: restaurant.items.map((item) =>
+            item.key === key ? { ...item, quantity } : item,
+          ),
+        };
+      });
+    });
+  }
+
+  function removeRestaurant(companyId: string) {
+    setCart((current) => {
+      if (!current) return current;
+      const next = current.filter((restaurant) => restaurant.companyId !== companyId);
+      return next.length > 0 ? next : null;
     });
   }
 
@@ -112,7 +147,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <CartContext.Provider value={{ cart, addItem, removeItem, updateQuantity, clearCart }}>
+    <CartContext.Provider
+      value={{ cart, hydrated, addItem, removeItem, updateQuantity, removeRestaurant, clearCart }}
+    >
       {children}
     </CartContext.Provider>
   );
