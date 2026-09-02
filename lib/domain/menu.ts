@@ -155,7 +155,7 @@ export async function createOptionGroup(
       name: input.name,
       min_select: input.minSelect,
       max_select: input.maxSelect,
-      is_required: input.isRequired,
+      is_required: input.minSelect > 0,
     })
     .select()
     .single();

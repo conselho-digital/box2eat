@@ -1,15 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/client";
 import { deleteItem, setItemAvailability, type MenuItem } from "@/lib/domain/menu";
 import { itemsQueryKey } from "./hooks";
 import { ItemForm } from "./item-form";
 import { ItemEditForm } from "./item-edit-form";
 import { ItemImageUpload } from "./item-image-upload";
+import { OptionGroupManager } from "./option-group-manager";
 
 export function ItemDialog({
   companyId,
@@ -86,12 +87,8 @@ export function ItemDialog({
               </Button>
             </div>
 
-            <Link
-              href={`/empresas/${companyId}/cardapio/${item.id}`}
-              className="text-sm text-primary hover:underline"
-            >
-              Opções e variações →
-            </Link>
+            <Separator />
+            <OptionGroupManager itemId={item.id} />
           </div>
         ) : (
           <ItemForm companyId={companyId} onCreated={onItemCreated} />

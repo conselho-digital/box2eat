@@ -52,7 +52,7 @@ export function OptionGroupManager({ itemId }: { itemId: string }) {
     formState: { errors: groupErrors },
   } = useForm<OptionGroupInput>({
     resolver: zodResolver(optionGroupSchema),
-    defaultValues: { minSelect: 0, maxSelect: 1, isRequired: false },
+    defaultValues: { maxSelect: 1 },
   });
 
   const createGroupMutation = useMutation({
@@ -100,18 +100,25 @@ export function OptionGroupManager({ itemId }: { itemId: string }) {
           </div>
           <div className="flex gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="group-min">Mínimo</Label>
-              <Input id="group-min" type="number" min="0" className="w-20" {...registerGroup("minSelect")} />
+              <Label htmlFor="group-min">Mínimo obrigatório</Label>
+              <Input
+                id="group-min"
+                type="number"
+                min="0"
+                placeholder="Opcional"
+                className="w-28"
+                {...registerGroup("minSelect")}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="group-max">Máximo</Label>
               <Input id="group-max" type="number" min="1" className="w-20" {...registerGroup("maxSelect")} />
             </div>
-            <label className="mt-6 flex items-center gap-2 text-sm">
-              <input type="checkbox" {...registerGroup("isRequired")} />
-              Obrigatório
-            </label>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Deixe o mínimo em branco pra um grupo opcional, ou um número pra exigir pelo menos
+            essa quantidade (ex: 1 pra obrigar escolher pelo menos uma opção).
+          </p>
           {groupErrors.minSelect && (
             <p className="text-sm text-destructive">{groupErrors.minSelect.message}</p>
           )}

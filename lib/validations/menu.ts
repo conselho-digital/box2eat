@@ -9,12 +9,14 @@ export const menuItemSchema = z.object({
 
 export type MenuItemInput = z.infer<typeof menuItemSchema>;
 
+// minSelect left blank coerces to 0 (an optional group) — no separate
+// "obrigatório" flag to keep in sync with it; is_required is just
+// minSelect > 0, computed where the group is created (lib/domain/menu.ts).
 export const optionGroupSchema = z
   .object({
     name: z.string().trim().min(1, "Informe o nome do grupo"),
     minSelect: z.coerce.number().int().min(0),
     maxSelect: z.coerce.number().int().min(1),
-    isRequired: z.boolean(),
   })
   .refine((data) => data.minSelect <= data.maxSelect, {
     message: "O mínimo não pode ser maior que o máximo",
