@@ -1,11 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import type {
-  CategoryInput,
-  MenuItemInput,
-  MenuOptionInput,
-  OptionGroupInput,
-} from "@/lib/validations/menu";
+import type { MenuItemInput, MenuOptionInput, OptionGroupInput } from "@/lib/validations/menu";
 
 type Client = SupabaseClient<Database>;
 
@@ -14,13 +9,14 @@ export type MenuOptionGroup =
   Database["public"]["Tables"]["menu_item_option_groups"]["Row"] & {
     menu_item_options: MenuOption[];
   };
+export type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
 export type MenuItem = Database["public"]["Tables"]["menu_items"]["Row"] & {
   menu_item_option_groups: MenuOptionGroup[];
+  menu_categories: Pick<MenuCategory, "id" | "name"> | null;
 };
-export type MenuCategory = Database["public"]["Tables"]["menu_categories"]["Row"];
 
 export const ITEM_WITH_OPTIONS_SELECT =
-  "*, menu_item_option_groups(*, menu_item_options(*))";
+  "*, menu_categories(id, name), menu_item_option_groups(*, menu_item_options(*))";
 
 export async function listCategories(supabase: Client, companyId: string) {
   return supabase
@@ -30,20 +26,36 @@ export async function listCategories(supabase: Client, companyId: string) {
     .order("sort_order", { ascending: true });
 }
 
-export async function createCategory(
-  supabase: Client,
-  companyId: string,
-  input: CategoryInput,
-) {
+/** Reuses an existing category with the same name (case-insensitive) for
+ *  this company, or creates a new one — backs the item form's category
+ *  field, which is a free-text combobox rather than a fixed picker. */
+export async function findOrCreateCategory(supabase: Client, companyId: string, name: string) {
+  const trimmed = name.trim();
+  const escaped = trimmed.replace(/[%_]/g, (match) => `\\${match}`);
+
+  const { data: existing, error: findError } = await supabase
+    .from("menu_categories")
+    .select("*")
+    .eq("company_id", companyId)
+    .ilike("name", escaped)
+    .maybeSingle();
+  if (findError) return { data: null, error: findError };
+  if (existing) return { data: existing, error: null };
+
   return supabase
     .from("menu_categories")
-    .insert({ company_id: companyId, name: input.name })
+    .insert({ company_id: companyId, name: trimmed })
     .select()
     .single();
 }
 
-export async function deleteCategory(supabase: Client, categoryId: string) {
-  return supabase.from("menu_categories").delete().eq("id", categoryId);
+async function resolveCategoryId(supabase: Client, companyId: string, categoryName: string | undefined) {
+  const trimmed = categoryName?.trim();
+  if (!trimmed) return { data: null as string | null, error: null };
+
+  const { data, error } = await findOrCreateCategory(supabase, companyId, trimmed);
+  if (error) return { data: null as string | null, error };
+  return { data: data.id as string | null, error: null };
 }
 
 export async function listItems(supabase: Client, companyId: string) {
@@ -68,11 +80,18 @@ export async function createItem(
   companyId: string,
   input: MenuItemInput,
 ) {
+  const { data: categoryId, error: categoryError } = await resolveCategoryId(
+    supabase,
+    companyId,
+    input.categoryName,
+  );
+  if (categoryError) return { data: null, error: categoryError };
+
   return supabase
     .from("menu_items")
     .insert({
       company_id: companyId,
-      category_id: input.categoryId || null,
+      category_id: categoryId,
       name: input.name,
       description: input.description || null,
       price: input.price,
@@ -83,17 +102,26 @@ export async function createItem(
 
 export async function updateItem(
   supabase: Client,
+  companyId: string,
   itemId: string,
-  input: Partial<MenuItemInput> & { imageUrl?: string | null },
+  input: Partial<MenuItemInput> & { imageUrl?: string | null; isAvailable?: boolean },
 ) {
+  let categoryId: string | null | undefined;
+  if (input.categoryName !== undefined) {
+    const resolved = await resolveCategoryId(supabase, companyId, input.categoryName);
+    if (resolved.error) return { data: null, error: resolved.error };
+    categoryId = resolved.data;
+  }
+
   return supabase
     .from("menu_items")
     .update({
-      ...(input.categoryId !== undefined && { category_id: input.categoryId || null }),
+      ...(categoryId !== undefined && { category_id: categoryId }),
       ...(input.name !== undefined && { name: input.name }),
       ...(input.description !== undefined && { description: input.description || null }),
       ...(input.price !== undefined && { price: input.price }),
       ...(input.imageUrl !== undefined && { image_url: input.imageUrl }),
+      ...(input.isAvailable !== undefined && { is_available: input.isAvailable }),
     })
     .eq("id", itemId)
     .select()

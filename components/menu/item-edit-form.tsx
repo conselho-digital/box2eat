@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,14 +9,23 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { updateItem, type MenuItem } from "@/lib/domain/menu";
 import { menuItemSchema, type MenuItemInput } from "@/lib/validations/menu";
-import { itemsQueryKey, useCategories } from "./hooks";
+import { itemsQueryKey } from "./hooks";
+import { CategoryCombobox } from "./category-combobox";
 
-export function ItemEditForm({ item, companyId }: { item: MenuItem; companyId: string }) {
+export function ItemEditForm({
+  item,
+  companyId,
+  onSaved,
+}: {
+  item: MenuItem;
+  companyId: string;
+  onSaved?: () => void;
+}) {
   const queryClient = useQueryClient();
-  const { data: categories } = useCategories(companyId);
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isDirty },
   } = useForm<MenuItemInput>({
     resolver: zodResolver(menuItemSchema),
@@ -24,19 +33,20 @@ export function ItemEditForm({ item, companyId }: { item: MenuItem; companyId: s
       name: item.name,
       description: item.description ?? "",
       price: item.price,
-      categoryId: item.category_id ?? "",
+      categoryName: item.menu_categories?.name ?? "",
     },
   });
 
   const mutation = useMutation({
     mutationFn: async (values: MenuItemInput) => {
       const supabase = createClient();
-      const { error } = await updateItem(supabase, item.id, values);
+      const { error } = await updateItem(supabase, companyId, item.id, values);
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["menu-item", item.id] });
       queryClient.invalidateQueries({ queryKey: itemsQueryKey(companyId) });
+      onSaved?.();
     },
   });
 
@@ -61,18 +71,18 @@ export function ItemEditForm({ item, companyId }: { item: MenuItem; companyId: s
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="edit-category">Categoria</Label>
-        <select
-          id="edit-category"
-          className="h-8 rounded-lg border border-border bg-background px-2.5 text-sm"
-          {...register("categoryId")}
-        >
-          <option value="">Sem categoria</option>
-          {categories?.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+        <Controller
+          name="categoryName"
+          control={control}
+          render={({ field }) => (
+            <CategoryCombobox
+              id="edit-category"
+              companyId={companyId}
+              value={field.value ?? ""}
+              onChange={field.onChange}
+            />
+          )}
+        />
       </div>
       <Button type="submit" disabled={mutation.isPending || !isDirty} className="w-fit">
         {mutation.isPending ? "Salvando…" : "Salvar alterações"}

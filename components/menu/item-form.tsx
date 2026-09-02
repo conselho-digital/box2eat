@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { createItem } from "@/lib/domain/menu";
 import { menuItemSchema, type MenuItemInput } from "@/lib/validations/menu";
-import { itemsQueryKey, useCategories } from "./hooks";
+import { itemsQueryKey } from "./hooks";
+import { CategoryCombobox } from "./category-combobox";
 
 export function ItemForm({
   companyId,
@@ -19,10 +20,10 @@ export function ItemForm({
   onCreated?: () => void;
 }) {
   const queryClient = useQueryClient();
-  const { data: categories } = useCategories(companyId);
   const {
     register,
     handleSubmit,
+    control,
     reset,
     formState: { errors },
   } = useForm<MenuItemInput>({ resolver: zodResolver(menuItemSchema) });
@@ -65,18 +66,18 @@ export function ItemForm({
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="item-category">Categoria</Label>
-        <select
-          id="item-category"
-          className="h-8 rounded-lg border border-border bg-background px-2.5 text-sm"
-          {...register("categoryId")}
-        >
-          <option value="">Sem categoria</option>
-          {categories?.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+        <Controller
+          name="categoryName"
+          control={control}
+          render={({ field }) => (
+            <CategoryCombobox
+              id="item-category"
+              companyId={companyId}
+              value={field.value ?? ""}
+              onChange={field.onChange}
+            />
+          )}
+        />
       </div>
       <Button type="submit" disabled={mutation.isPending}>
         {mutation.isPending ? "Adicionando…" : "Adicionar item"}

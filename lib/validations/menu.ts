@@ -1,13 +1,7 @@
 import { z } from "zod";
 
-export const categorySchema = z.object({
-  name: z.string().trim().min(1, "Informe o nome da categoria"),
-});
-
-export type CategoryInput = z.infer<typeof categorySchema>;
-
 export const menuItemSchema = z.object({
-  categoryId: z.string().uuid().optional().or(z.literal("")),
+  categoryName: z.string().trim().optional().or(z.literal("")),
   name: z.string().trim().min(1, "Informe o nome do item"),
   description: z.string().trim().optional(),
   price: z.coerce.number().min(0, "O preço não pode ser negativo"),

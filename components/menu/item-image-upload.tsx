@@ -29,7 +29,7 @@ export function ItemImageUpload({
         file,
       );
       if (uploadError) throw uploadError;
-      const { error: updateError } = await updateItem(supabase, itemId, {
+      const { error: updateError } = await updateItem(supabase, companyId, itemId, {
         imageUrl: publicUrl,
       });
       if (updateError) throw updateError;
