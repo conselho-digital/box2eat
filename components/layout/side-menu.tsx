@@ -216,7 +216,14 @@ export function SideMenu({
   }, [loggedIn, isAdmin, router]);
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+    // modal="trap-focus": full `modal` (the default) still locks page scroll
+    // via a JS style write on <body>/<html>, deferred to fire mid-animation —
+    // that single forced style recalculation was landing right in the middle
+    // of the 200ms slide, dropping frames on a throttled/slower device (the
+    // backdrop below already blocks all pointer interaction with the page,
+    // so scroll locking isn't actually needed here). trap-focus keeps focus
+    // trapped inside the menu without that scroll-lock write.
+    <DialogPrimitive.Root open={open} onOpenChange={setOpen} modal="trap-focus">
       <DialogPrimitive.Trigger
         render={
           trigger ?? (
