@@ -124,8 +124,8 @@ export async function updateItem(
       ...(input.isAvailable !== undefined && { is_available: input.isAvailable }),
     })
     .eq("id", itemId)
-    .select()
-    .single();
+    .select(ITEM_WITH_OPTIONS_SELECT)
+    .single<MenuItem>();
 }
 
 export async function setItemAvailability(
