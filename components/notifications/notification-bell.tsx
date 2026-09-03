@@ -34,6 +34,16 @@ const NOTIFICATION_LINK: Record<string, (data: unknown) => string | null> = {
     const orderId = (data as { order_id?: string } | null)?.order_id;
     return orderId ? `/pedidos/${orderId}` : null;
   },
+  preferred_delivery_offer: () => "/entregador/painel",
+  preferred_delivery_request: () => "/entregador/painel",
+  preferred_delivery_confirmed: (data) => {
+    const companyId = (data as { company_id?: string } | null)?.company_id;
+    return companyId ? `/empresas/${companyId}/pedidos` : null;
+  },
+  preferred_delivery_declined: (data) => {
+    const companyId = (data as { company_id?: string } | null)?.company_id;
+    return companyId ? `/empresas/${companyId}/pedidos` : null;
+  },
 };
 
 export function NotificationBell({ userId }: { userId: string }) {

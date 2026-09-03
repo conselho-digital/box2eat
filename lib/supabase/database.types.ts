@@ -94,6 +94,7 @@ export type Database = {
           owner_id: string
           phone: string | null
           postal_code: string | null
+          preferred_delivery_partner_confirmed: boolean
           preferred_delivery_partner_id: string | null
           rating_avg: number | null
           rating_count: number
@@ -131,6 +132,7 @@ export type Database = {
           owner_id: string
           phone?: string | null
           postal_code?: string | null
+          preferred_delivery_partner_confirmed?: boolean
           preferred_delivery_partner_id?: string | null
           rating_avg?: number | null
           rating_count?: number
@@ -168,6 +170,7 @@ export type Database = {
           owner_id?: string
           phone?: string | null
           postal_code?: string | null
+          preferred_delivery_partner_confirmed?: boolean
           preferred_delivery_partner_id?: string | null
           rating_avg?: number | null
           rating_count?: number
@@ -1709,6 +1712,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      request_preferred_delivery_partner: {
+        Args: { p_company_id: string; p_partner_user_id: string }
+        Returns: undefined
+      }
+      respond_preferred_delivery_partner: {
+        Args: { p_accept: boolean; p_company_id: string }
+        Returns: undefined
       }
       submit_review: {
         Args: {

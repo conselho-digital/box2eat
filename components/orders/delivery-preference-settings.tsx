@@ -9,6 +9,7 @@ import {
   findDeliveryPartnerByEmail,
   getCompanyDeliveryPreference,
   getDeliveryPartnerName,
+  requestPreferredDeliveryPartner,
   setCompanyDeliveryPreference,
   type DeliveryPreference,
 } from "@/lib/domain/delivery";
@@ -41,6 +42,7 @@ export function DeliveryPreferenceSettings({ companyId }: { companyId: string })
   const queryKey = deliveryPreferenceQueryKey(companyId);
   const [email, setEmail] = useState("");
   const [lookupError, setLookupError] = useState<string | null>(null);
+  const [requestSent, setRequestSent] = useState(false);
   const [expanded, setExpanded] = useState(false);
 
   const { data } = useQuery({
@@ -70,18 +72,16 @@ export function DeliveryPreferenceSettings({ companyId }: { companyId: string })
   const saveMode = useMutation({
     mutationFn: async (deliveryPreference: DeliveryPreference) => {
       const supabase = createClient();
-      const { error } = await setCompanyDeliveryPreference(supabase, companyId, {
-        deliveryPreference,
-        preferredDeliveryPartnerId: data?.preferred_delivery_partner_id ?? null,
-      });
+      const { error } = await setCompanyDeliveryPreference(supabase, companyId, deliveryPreference);
       if (error) throw error;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
-  const lookupAndSave = useMutation({
+  const lookupAndRequest = useMutation({
     mutationFn: async () => {
       setLookupError(null);
+      setRequestSent(false);
       const supabase = createClient();
       const { data: matches, error } = await findDeliveryPartnerByEmail(supabase, email.trim());
       if (error) throw error;
@@ -90,11 +90,13 @@ export function DeliveryPreferenceSettings({ companyId }: { companyId: string })
         setLookupError("Nenhum entregador aprovado encontrado com esse e-mail.");
         return;
       }
-      const { error: saveError } = await setCompanyDeliveryPreference(supabase, companyId, {
-        deliveryPreference: (data?.delivery_preference as DeliveryPreference) ?? "preferred",
-        preferredDeliveryPartnerId: match.user_id,
-      });
-      if (saveError) throw saveError;
+      const { error: requestError } = await requestPreferredDeliveryPartner(
+        supabase,
+        companyId,
+        match.user_id,
+      );
+      if (requestError) throw requestError;
+      setRequestSent(true);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
@@ -105,6 +107,7 @@ export function DeliveryPreferenceSettings({ companyId }: { companyId: string })
   if (!data) return null;
 
   const currentOption = OPTIONS.find((o) => o.value === data.delivery_preference);
+  const hasPendingRequest = data.preferred_delivery_partner_id && !data.preferred_delivery_partner_confirmed;
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border p-3">
@@ -117,7 +120,10 @@ export function DeliveryPreferenceSettings({ companyId }: { companyId: string })
           <h2 className="font-medium">Preferência de entrega</h2>
           <p className="text-xs text-muted-foreground">
             {currentOption?.label}
-            {preferredName && ` · ${preferredName}`}
+            {preferredName &&
+              (data.preferred_delivery_partner_confirmed
+                ? ` · ${preferredName}`
+                : ` · ${preferredName} (aguardando confirmação)`)}
           </p>
         </div>
         <span className="text-xs text-muted-foreground">{expanded ? "Fechar" : "Alterar"}</span>
@@ -126,21 +132,32 @@ export function DeliveryPreferenceSettings({ companyId }: { companyId: string })
       {expanded && (
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-2">
-            {OPTIONS.map((opt) => (
-              <label key={opt.value} className="flex items-start gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="delivery-preference"
-                  className="mt-0.5"
-                  checked={data.delivery_preference === opt.value}
-                  onChange={() => saveMode.mutate(opt.value)}
-                />
-                <span>
-                  <span className="font-medium">{opt.label}</span>
-                  <span className="block text-xs text-muted-foreground">{opt.description}</span>
-                </span>
-              </label>
-            ))}
+            {OPTIONS.map((opt) => {
+              const disabled = opt.value === "preferred" && !data.preferred_delivery_partner_confirmed;
+              return (
+                <label
+                  key={opt.value}
+                  className={`flex items-start gap-2 text-sm ${disabled ? "opacity-50" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="delivery-preference"
+                    className="mt-0.5"
+                    disabled={disabled}
+                    checked={data.delivery_preference === opt.value}
+                    onChange={() => saveMode.mutate(opt.value)}
+                  />
+                  <span>
+                    <span className="font-medium">{opt.label}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {disabled
+                        ? "Disponível depois que o entregador escolhido abaixo confirmar."
+                        : opt.description}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
           </div>
 
           {(data.delivery_preference === "preferred" || data.delivery_preference === "ask") && (
@@ -160,13 +177,25 @@ export function DeliveryPreferenceSettings({ companyId }: { companyId: string })
                   type="button"
                   size="sm"
                   variant="outline"
-                  disabled={!email.trim() || lookupAndSave.isPending}
-                  onClick={() => lookupAndSave.mutate()}
+                  disabled={!email.trim() || lookupAndRequest.isPending}
+                  onClick={() => lookupAndRequest.mutate()}
                 >
-                  {lookupAndSave.isPending ? "Buscando…" : "Definir"}
+                  {lookupAndRequest.isPending ? "Buscando…" : "Definir"}
                 </Button>
               </div>
               {lookupError && <p className="text-xs text-destructive">{lookupError}</p>}
+              {requestSent && (
+                <p className="text-xs text-muted-foreground">
+                  Pedido de confirmação enviado. Assim que o entregador confirmar no painel dele, a
+                  preferência passa a valer — se ele não confirmar, mantemos em &ldquo;perguntar a cada
+                  pedido&rdquo;.
+                </p>
+              )}
+              {hasPendingRequest && !requestSent && (
+                <p className="text-xs text-muted-foreground">
+                  Aguardando o entregador confirmar.
+                </p>
+              )}
             </div>
           )}
         </div>

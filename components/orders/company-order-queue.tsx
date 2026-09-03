@@ -85,7 +85,10 @@ export function CompanyOrderQueue({ companyId }: { companyId: string }) {
             key={order.id}
             order={order}
             queryKey={queryKey}
-            askDeliveryPreference={deliverySettings?.delivery_preference === "ask"}
+            askDeliveryPreference={
+              deliverySettings?.delivery_preference === "ask" &&
+              Boolean(deliverySettings?.preferred_delivery_partner_confirmed)
+            }
           />
         ))}
       </div>

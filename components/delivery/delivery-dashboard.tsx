@@ -15,6 +15,7 @@ import {
   type AvailableOrder,
 } from "@/lib/domain/delivery";
 import { markDelivered, subscribeToDeliveryUpdates } from "@/lib/domain/orders";
+import { PreferredPartnerRequests } from "./preferred-partner-requests";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -130,6 +131,8 @@ export function DeliveryDashboard({ userId }: { userId: string }) {
 
   return (
     <div className="flex flex-col gap-8">
+      <PreferredPartnerRequests userId={userId} />
+
       <div className="flex items-center justify-between rounded-lg border p-3">
         <div>
           <p className="font-medium">{partner.is_online ? "Você está online" : "Você está offline"}</p>

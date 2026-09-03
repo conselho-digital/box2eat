@@ -124,23 +124,20 @@ export type DeliveryPreference = "platform" | "preferred" | "ask";
 export async function getCompanyDeliveryPreference(supabase: Client, companyId: string) {
   return supabase
     .from("companies")
-    .select("delivery_preference, preferred_delivery_partner_id")
+    .select("delivery_preference, preferred_delivery_partner_id, preferred_delivery_partner_confirmed")
     .eq("id", companyId)
     .single();
 }
 
+/** Switches between "platform"/"preferred"/"ask" — doesn't touch which
+ *  courier is configured (that only ever changes via
+ *  requestPreferredDeliveryPartner, which requires their confirmation). */
 export async function setCompanyDeliveryPreference(
   supabase: Client,
   companyId: string,
-  input: { deliveryPreference: DeliveryPreference; preferredDeliveryPartnerId: string | null },
+  deliveryPreference: DeliveryPreference,
 ) {
-  return supabase
-    .from("companies")
-    .update({
-      delivery_preference: input.deliveryPreference,
-      preferred_delivery_partner_id: input.preferredDeliveryPartnerId,
-    })
-    .eq("id", companyId);
+  return supabase.from("companies").update({ delivery_preference: deliveryPreference }).eq("id", companyId);
 }
 
 /** Looks up an approved delivery partner by e-mail, for the "entregador de
@@ -153,8 +150,53 @@ export async function getDeliveryPartnerName(supabase: Client, userId: string) {
   return supabase.rpc("get_delivery_partner_name", { p_user_id: userId });
 }
 
+/** Sets a pending preferred courier and notifies them to confirm — until
+ *  they do, the company's delivery_preference is forced to "ask" so orders
+ *  never silently route to someone who hasn't agreed to it. */
+export async function requestPreferredDeliveryPartner(
+  supabase: Client,
+  companyId: string,
+  partnerUserId: string,
+) {
+  return supabase.rpc("request_preferred_delivery_partner", {
+    p_company_id: companyId,
+    p_partner_user_id: partnerUserId,
+  });
+}
+
+/** The courier's side of requestPreferredDeliveryPartner: accepting flips
+ *  the company to "preferred" mode; declining clears the request and moves
+ *  the company to "ask each time" instead. */
+export async function respondToPreferredDeliveryPartner(
+  supabase: Client,
+  companyId: string,
+  accept: boolean,
+) {
+  return supabase.rpc("respond_preferred_delivery_partner", {
+    p_company_id: companyId,
+    p_accept: accept,
+  });
+}
+
+export type PendingPreferredDeliveryRequest = Pick<
+  Database["public"]["Tables"]["companies"]["Row"],
+  "id" | "name" | "slug"
+>;
+
+/** Companies waiting on this courier to confirm/decline being their
+ *  preferred delivery partner — shown on the delivery dashboard. */
+export async function listPendingPreferredDeliveryRequests(supabase: Client, userId: string) {
+  return supabase
+    .from("companies")
+    .select("id, name, slug")
+    .eq("preferred_delivery_partner_id", userId)
+    .eq("preferred_delivery_partner_confirmed", false)
+    .returns<PendingPreferredDeliveryRequest[]>();
+}
+
 /** "Ask each time" mode: staff explicitly routes one ready order to the
- *  company's preferred courier instead of leaving it for the open pool. */
+ *  company's confirmed preferred courier instead of leaving it for the
+ *  open pool. */
 export async function notifyPreferredDeliveryPartner(supabase: Client, orderId: string) {
   return supabase.rpc("notify_preferred_delivery_partner", { p_order_id: orderId });
 }
