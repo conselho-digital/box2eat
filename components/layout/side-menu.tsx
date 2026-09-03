@@ -13,6 +13,7 @@ import {
   HelpCircle,
   Tag,
   LogOut,
+  Moon,
   Store,
   Bike,
   ShieldCheck,
@@ -20,10 +21,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { GetAppMenuItem } from "@/components/layout/get-app-menu-item";
 import { ACCOUNT_TABS } from "@/components/account/account-tabs";
 import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/lib/domain/auth";
+import { useTheme } from "@/components/theme/theme-provider";
 
 /** Everything the menu links to — prefetched eagerly (not just on hover/
  *  viewport-entry) since these routes only render inside the closed dialog,
@@ -115,6 +118,7 @@ function AccountMenu({
   onNavigate: () => void;
 }) {
   const router = useRouter();
+  const { isDark, setDark } = useTheme();
   const initials = (fullName || email || "?").trim().charAt(0).toUpperCase();
 
   async function handleLogout() {
@@ -159,6 +163,12 @@ function AccountMenu({
       <MenuLink href="/promocoes" icon={Tag} label="Promoções" onClick={onNavigate} />
 
       <Separator />
+
+      <label className="flex items-center gap-3 rounded-lg px-3 py-2">
+        <Moon className="size-5" />
+        <span className="flex-1">Modo escuro</span>
+        <Switch checked={isDark} onCheckedChange={setDark} />
+      </label>
 
       <button
         type="button"

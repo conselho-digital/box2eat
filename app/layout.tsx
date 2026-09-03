@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Public_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import { SiteHeader } from "@/components/layout/site-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 
@@ -35,11 +36,27 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="pt-BR"
       className={`${publicSans.variable} ${geistMono.variable} h-full antialiased`}
+      // The no-flash script below adds "dark" to this element's classList
+      // before React hydrates, which legitimately differs from what the
+      // server rendered — expected, not a real mismatch to warn about.
+      suppressHydrationWarning
     >
       <body className="h-full flex flex-col">
-        <Providers header={<SiteHeader />} bottomNav={<BottomNav />}>
-          {children}
-        </Providers>
+        {/* Runs synchronously before anything else paints, so the page never
+            flashes the light theme before switching to dark. Reads directly
+            from localStorage rather than via React state, since that state
+            doesn't exist yet this early. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('theme')==='dark')document.documentElement.classList.add('dark')}catch(e){}",
+          }}
+        />
+        <ThemeProvider>
+          <Providers header={<SiteHeader />} bottomNav={<BottomNav />}>
+            {children}
+          </Providers>
+        </ThemeProvider>
       </body>
     </html>
   );
