@@ -15,6 +15,7 @@ type OrderRow = {
   customer_id: string
   delivered_at: string | null
   delivery_address: Json | null
+  delivery_code: string | null
   delivery_fee: number
   delivery_lat: number | null
   delivery_lng: number | null
@@ -1157,6 +1158,7 @@ export type Database = {
           customer_id: string
           delivered_at?: string | null
           delivery_address?: Json | null
+          delivery_code?: string | null
           delivery_fee?: number
           delivery_lat?: number | null
           delivery_lng?: number | null
@@ -1178,6 +1180,7 @@ export type Database = {
           customer_id?: string
           delivered_at?: string | null
           delivery_address?: Json | null
+          delivery_code?: string | null
           delivery_fee?: number
           delivery_lat?: number | null
           delivery_lng?: number | null
@@ -1718,6 +1721,16 @@ export type Database = {
           p_raw_payload: Json
           p_status: string
         }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      confirm_delivery: {
+        Args: { p_code: string; p_order_id: string }
         Returns: OrderRow
         SetofOptions: {
           from: "*"

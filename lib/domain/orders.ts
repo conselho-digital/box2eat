@@ -88,8 +88,16 @@ export async function confirmPickup(supabase: Client, orderId: string, code: str
   return supabase.rpc("confirm_pickup", { p_order_id: orderId, p_code: code });
 }
 
+/** Restaurant's own no-courier fallback only — a courier-assigned order
+ *  must go through confirmDelivery() with the customer's code instead. */
 export async function markDelivered(supabase: Client, orderId: string) {
   return supabase.rpc("mark_delivered", { p_order_id: orderId });
+}
+
+/** Courier confirms delivery by entering the code the customer shows them
+ *  — replaces the courier's own self-report of "entreguei o pedido". */
+export async function confirmDelivery(supabase: Client, orderId: string, code: string) {
+  return supabase.rpc("confirm_delivery", { p_order_id: orderId, p_code: code });
 }
 
 export async function cancelOrder(supabase: Client, orderId: string, reason?: string) {

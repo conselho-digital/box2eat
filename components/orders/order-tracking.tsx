@@ -164,6 +164,13 @@ export function OrderTracking({
         />
       )}
 
+      {isCustomer && order.delivery_partner_id && order.status === "picked_up" && order.delivery_code && (
+        <p className="rounded-lg border border-dashed p-3 text-sm">
+          Seu entregador está chegando! Mostre este código a ele para confirmar a entrega:{" "}
+          <span className="font-mono text-base font-semibold">{order.delivery_code}</span>
+        </p>
+      )}
+
       {isCustomer &&
         order.delivery_partner_id &&
         (order.status === "picked_up" || order.status === "delivered") && (
