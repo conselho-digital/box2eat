@@ -15,7 +15,7 @@ import {
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { FOOD_CATEGORIES, type FoodCategory } from "@/lib/domain/categories";
-import type { PublicCompany } from "@/lib/domain/companies";
+import { isCompanyAcceptingOrders, type PublicCompany } from "@/lib/domain/companies";
 import { useMapStats } from "@/components/map/map-stats-context";
 import { CATEGORY_ICONS } from "@/components/home/category-chips";
 import { DoubleTapDragZoom } from "@/components/map/double-tap-drag-zoom";
@@ -171,7 +171,9 @@ export function CompanyMap({
             <Popup>
               <div className="flex flex-col gap-1">
                 <p className="font-medium">{company.name}</p>
-                <p className="text-xs">{company.is_open ? "Aberto agora" : "Fechado"}</p>
+                <p className="text-xs">
+                  {isCompanyAcceptingOrders(company) ? "Aberto agora" : "Fechado"}
+                </p>
                 <Link href={`/${company.slug}`} className="text-xs underline">
                   Ver loja
                 </Link>

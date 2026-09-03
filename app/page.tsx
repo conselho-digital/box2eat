@@ -14,7 +14,11 @@ import { NearMeButton } from "@/components/home/near-me-button";
 import { RatingSortButton } from "@/components/home/rating-sort-button";
 import { ClearFiltersLink } from "@/components/home/clear-filters-link";
 import { createClient } from "@/lib/supabase/server";
-import { listPublicCompanies, type CompanySearchParams } from "@/lib/domain/companies";
+import {
+  listPublicCompanies,
+  isCompanyAcceptingOrders,
+  type CompanySearchParams,
+} from "@/lib/domain/companies";
 import { listPromotedCompanies, type PromotedCompany } from "@/lib/domain/coupons";
 import { listRecommendedCompanies } from "@/lib/domain/recommendations";
 import { listCompanyQueueInfo, type QueueInfo } from "@/lib/domain/queue";
@@ -162,7 +166,7 @@ export default async function Home({
                     </p>
                   )}
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {company.is_open ? "Aberto agora" : "Fechado"}
+                    {isCompanyAcceptingOrders(company) ? "Aberto agora" : "Fechado"}
                     {company.rating_count > 0 &&
                       ` · ★ ${company.rating_avg?.toFixed(1)} (${company.rating_count})`}
                   </p>

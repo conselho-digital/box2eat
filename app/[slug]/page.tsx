@@ -2,7 +2,11 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCompanyBySlug } from "@/lib/domain/companies-detail";
-import { incrementCompanyView, formatCompanyAddress } from "@/lib/domain/companies";
+import {
+  incrementCompanyView,
+  formatCompanyAddress,
+  isCompanyAcceptingOrders,
+} from "@/lib/domain/companies";
 import { listPublicMenu, type MenuItem } from "@/lib/domain/menu";
 import { isFavorite } from "@/lib/domain/favorites";
 import { FavoriteButton } from "@/components/favorites/favorite-button";
@@ -59,7 +63,7 @@ export default async function StorePage({
               <span className="text-xs">({company.rating_count} avaliações)</span>
             </p>
           )}
-          {!company.is_open && (
+          {!isCompanyAcceptingOrders(company) && (
             <p className="mt-1 text-sm text-destructive">
               Restaurante fechado no momento.
             </p>
