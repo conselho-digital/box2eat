@@ -10,6 +10,7 @@ const dateFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeSt
 
 const TYPE_LABEL: Record<string, string> = {
   restaurant_report: "Reportar restaurante",
+  delivery_partner_report: "Reportar entregador",
   refund_request: "Solicitar reembolso",
 };
 

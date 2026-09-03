@@ -3,7 +3,7 @@ import type { Database } from "@/lib/supabase/database.types";
 
 type Client = SupabaseClient<Database>;
 
-export type OrderReportType = "restaurant_report" | "refund_request";
+export type OrderReportType = "restaurant_report" | "delivery_partner_report" | "refund_request";
 
 export async function submitOrderReport(
   supabase: Client,
@@ -18,4 +18,13 @@ export async function submitOrderReport(
     type,
     message,
   });
+}
+
+/** Whether the customer has already opened any complaint for this order —
+ *  used to hold back the post-delivery review prompt while one is open. */
+export async function hasOrderReport(supabase: Client, orderId: string) {
+  return supabase
+    .from("order_reports")
+    .select("id", { count: "exact", head: true })
+    .eq("order_id", orderId);
 }

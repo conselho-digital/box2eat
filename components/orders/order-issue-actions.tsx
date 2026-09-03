@@ -107,7 +107,13 @@ function ReportDialog({
   );
 }
 
-export function OrderIssueActions({ orderId }: { orderId: string }) {
+export function OrderIssueActions({
+  orderId,
+  hasDeliveryPartner,
+}: {
+  orderId: string;
+  hasDeliveryPartner?: boolean;
+}) {
   return (
     <div className="flex flex-wrap gap-2">
       <ReportDialog
@@ -122,6 +128,20 @@ export function OrderIssueActions({ orderId }: { orderId: string }) {
           </Button>
         }
       />
+      {hasDeliveryPartner && (
+        <ReportDialog
+          orderId={orderId}
+          type="delivery_partner_report"
+          title="Reportar entregador"
+          description="Conte o que aconteceu com o entregador deste pedido. Nossa equipe vai avaliar."
+          placeholder="O que aconteceu?"
+          trigger={
+            <Button type="button" variant="outline" size="sm">
+              Reportar entregador
+            </Button>
+          }
+        />
+      )}
       <ReportDialog
         orderId={orderId}
         type="refund_request"

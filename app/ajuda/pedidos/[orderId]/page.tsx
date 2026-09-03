@@ -56,7 +56,7 @@ export default async function HelpOrderPage({
 
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">O que você precisa?</h2>
-        <OrderIssueActions orderId={orderId} />
+        <OrderIssueActions orderId={orderId} hasDeliveryPartner={Boolean(order.delivery_partner_id)} />
       </div>
 
       <Link href={`/pedidos/${orderId}`} className="text-sm text-primary underline underline-offset-4">
