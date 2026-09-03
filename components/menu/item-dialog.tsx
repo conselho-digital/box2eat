@@ -92,7 +92,7 @@ export function ItemDialog({
   });
 
   function addGroup() {
-    setAddonGroups((prev) => [{ key: crypto.randomUUID(), categoryId: "", minSelect: 0 }, ...prev]);
+    setAddonGroups((prev) => [{ key: crypto.randomUUID(), categoryId: "", minSelect: 1 }, ...prev]);
   }
 
   function setGroupCategory(key: string, categoryId: string) {

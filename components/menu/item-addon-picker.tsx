@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Plus, X } from "lucide-react";
+import { Minus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { MenuCategory, MenuItem } from "@/lib/domain/menu";
 
@@ -94,18 +94,42 @@ export function ItemAddonPicker({
 
             {group.categoryId && (
               <>
-                <div className="ml-auto flex w-44 flex-col gap-1">
-                  <label className="text-xs text-muted-foreground">
-                    Seleções obrigatórias
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={categoryItems.length}
-                    value={group.minSelect}
-                    onChange={(e) => onSetGroupMinSelect(group.key, Number(e.target.value) || 0)}
-                    className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
-                  />
+                <div className="ml-auto flex w-36 flex-col gap-1">
+                  <label className="text-xs text-muted-foreground">Quantidade mínima</label>
+                  {(() => {
+                    const maxSelect = Math.max(1, categoryItems.length);
+                    const clamp = (value: number) => Math.min(Math.max(value, 1), maxSelect);
+                    return (
+                      <div className="flex h-8 items-center rounded-lg border border-input bg-background">
+                        <button
+                          type="button"
+                          aria-label="Diminuir quantidade mínima"
+                          disabled={group.minSelect <= 1}
+                          onClick={() => onSetGroupMinSelect(group.key, clamp(group.minSelect - 1))}
+                          className="flex h-full w-8 shrink-0 items-center justify-center text-muted-foreground disabled:opacity-30"
+                        >
+                          <Minus className="size-3.5" />
+                        </button>
+                        <input
+                          type="number"
+                          min={1}
+                          max={maxSelect}
+                          value={group.minSelect}
+                          onChange={(e) => onSetGroupMinSelect(group.key, clamp(Number(e.target.value) || 1))}
+                          className="h-full w-full border-x border-input bg-transparent text-center text-sm outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        />
+                        <button
+                          type="button"
+                          aria-label="Aumentar quantidade mínima"
+                          disabled={group.minSelect >= maxSelect}
+                          onClick={() => onSetGroupMinSelect(group.key, clamp(group.minSelect + 1))}
+                          className="flex h-full w-8 shrink-0 items-center justify-center text-muted-foreground disabled:opacity-30"
+                        >
+                          <Plus className="size-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {categoryItems.length === 0 ? (
