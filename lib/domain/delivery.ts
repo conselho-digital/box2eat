@@ -16,6 +16,32 @@ export async function getMyDeliveryPartner(supabase: Client, userId: string) {
     .maybeSingle();
 }
 
+/** The courier's live position — visible to the customer once the order is
+ *  picked up (RLS on delivery_partners), for the trip-tracking map. */
+export async function getDeliveryPartnerLocation(supabase: Client, userId: string) {
+  return supabase
+    .from("delivery_partners")
+    .select("current_lat, current_lng, last_location_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+}
+
+/** Realtime: fires when the courier's row changes (location updates). */
+export function subscribeToDeliveryPartnerLocation(supabase: Client, userId: string, onChange: () => void) {
+  const channel = supabase
+    .channel(`delivery-partner-location-${userId}`)
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "delivery_partners", filter: `user_id=eq.${userId}` },
+      onChange,
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
 export async function applyAsDeliveryPartner(
   supabase: Client,
   userId: string,

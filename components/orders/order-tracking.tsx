@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ReviewForm } from "@/components/reviews/review-form";
@@ -14,6 +15,18 @@ import {
 } from "@/lib/domain/orders";
 import { listReviewsForOrder } from "@/lib/domain/reviews";
 import { OrderChat } from "./order-chat";
+
+const CourierTrackingMap = dynamic(
+  () => import("./courier-tracking-map").then((mod) => mod.CourierTrackingMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-56 w-full items-center justify-center rounded-lg border text-sm text-muted-foreground">
+        Carregando mapa…
+      </div>
+    ),
+  },
+);
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -138,6 +151,17 @@ export function OrderTracking({
             </li>
           ))}
         </ol>
+      )}
+
+      {isCustomer && order.delivery_partner_id && order.status === "picked_up" && (
+        <CourierTrackingMap
+          courierUserId={order.delivery_partner_id}
+          destination={
+            order.delivery_lat !== null && order.delivery_lng !== null
+              ? { lat: order.delivery_lat, lng: order.delivery_lng }
+              : null
+          }
+        />
       )}
 
       {isCustomer &&
