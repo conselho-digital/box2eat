@@ -5,6 +5,7 @@ import { listBusinessHours } from "@/lib/domain/business-hours";
 import { RestaurantSettingsForm } from "@/components/companies/restaurant-settings-form";
 import { RestaurantAddressForm } from "@/components/companies/restaurant-address-form";
 import { BusinessHoursEditor } from "@/components/companies/business-hours-editor";
+import { CompanyCoverPhotoForm } from "@/components/companies/company-cover-photo-form";
 
 export default async function CompanyRestaurantPage({
   params,
@@ -27,6 +28,7 @@ export default async function CompanyRestaurantPage({
 
   return (
     <div className="flex flex-col gap-6">
+      <CompanyCoverPhotoForm companyId={company.id} initialCoverImageUrl={company.cover_image_url} />
       <RestaurantSettingsForm
         companyId={company.id}
         initial={{

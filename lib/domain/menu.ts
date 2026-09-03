@@ -30,6 +30,8 @@ export type MenuItemAddonCategory = {
 };
 /** An extra gallery photo beyond the item's cover photo (menu_items.image_url). */
 export type MenuItemImage = Database["public"]["Tables"]["menu_item_images"]["Row"];
+/** Cover + gallery together, per item — enforced client-side in the item dialog. */
+export const MAX_ITEM_PHOTOS = 3;
 export type MenuItem = Database["public"]["Tables"]["menu_items"]["Row"] & {
   menu_item_option_groups: MenuOptionGroup[];
   menu_categories: Pick<MenuCategory, "id" | "name"> | null;
@@ -79,6 +81,25 @@ async function resolveCategoryId(supabase: Client, companyId: string, categoryNa
   const { data, error } = await findOrCreateCategory(supabase, companyId, trimmed);
   if (error) return { data: null as string | null, error };
   return { data: data.id as string | null, error: null };
+}
+
+/** Every photo already uploaded across this company's menu (item covers +
+ *  gallery photos), flattened and de-duplicated — feeds the "usar uma foto
+ *  existente" picker for the company's own profile/banner photo, so staff
+ *  don't have to re-upload something they already have. */
+export async function listCompanyMenuPhotos(supabase: Client, companyId: string) {
+  const { data, error } = await supabase
+    .from("menu_items")
+    .select("image_url, menu_item_images(url)")
+    .eq("company_id", companyId);
+  if (error) return { data: null, error };
+
+  const urls = new Set<string>();
+  for (const item of data) {
+    if (item.image_url) urls.add(item.image_url);
+    for (const image of item.menu_item_images) urls.add(image.url);
+  }
+  return { data: [...urls], error: null };
 }
 
 export async function listItems(supabase: Client, companyId: string) {

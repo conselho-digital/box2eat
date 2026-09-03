@@ -214,6 +214,13 @@ export async function getCompanyCheckoutInfo(supabase: Client, companyId: string
     .single();
 }
 
+/** The photo shown on the company's banners/cards across the app (home
+ *  carousels, map, storefront) — either a fresh upload or one of the
+ *  company's own product photos, picked via CompanyCoverPhotoForm. */
+export async function updateCompanyCoverImage(supabase: Client, companyId: string, url: string) {
+  return supabase.from("companies").update({ cover_image_url: url }).eq("id", companyId);
+}
+
 export async function updateAcceptedPaymentMethods(
   supabase: Client,
   companyId: string,

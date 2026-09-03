@@ -27,6 +27,7 @@ import {
   setItemAddons,
   setItemAddonCategories,
   setItemImages,
+  MAX_ITEM_PHOTOS,
   type MenuItem,
 } from "@/lib/domain/menu";
 import { menuItemSchema, type MenuItemInput } from "@/lib/validations/menu";
@@ -153,13 +154,18 @@ export function ItemDialog({
   }
 
   function addPhotos(files: FileList) {
-    const drafts: PhotoDraft[] = Array.from(files).map((file) => ({
-      key: crypto.randomUUID(),
-      kind: "new",
-      file,
-      previewUrl: URL.createObjectURL(file),
-    }));
-    setPhotos((prev) => [...prev, ...drafts]);
+    setPhotos((prev) => {
+      const room = Math.max(0, MAX_ITEM_PHOTOS - prev.length);
+      const drafts: PhotoDraft[] = Array.from(files)
+        .slice(0, room)
+        .map((file) => ({
+          key: crypto.randomUUID(),
+          kind: "new",
+          file,
+          previewUrl: URL.createObjectURL(file),
+        }));
+      return [...prev, ...drafts];
+    });
   }
 
   function removePhoto(key: string) {
@@ -312,6 +318,7 @@ export function ItemDialog({
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
             <Label>Fotos</Label>
+            <p className="text-xs text-muted-foreground">Até {MAX_ITEM_PHOTOS} fotos por produto.</p>
             <div className="flex flex-wrap items-center gap-2">
               {photos.map((photo) => {
                 const url = photo.kind === "existing" ? photo.url : photo.previewUrl;
@@ -356,14 +363,16 @@ export function ItemDialog({
                   e.target.value = "";
                 }}
               />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                aria-label="Adicionar foto"
-                className="flex size-16 shrink-0 items-center justify-center rounded-lg border border-dashed text-muted-foreground hover:bg-muted"
-              >
-                <PlusIcon className="size-5" />
-              </button>
+              {photos.length < MAX_ITEM_PHOTOS && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  aria-label="Adicionar foto"
+                  className="flex size-16 shrink-0 items-center justify-center rounded-lg border border-dashed text-muted-foreground hover:bg-muted"
+                >
+                  <PlusIcon className="size-5" />
+                </button>
+              )}
             </div>
           </div>
 
