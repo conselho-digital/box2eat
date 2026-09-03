@@ -144,6 +144,38 @@ export async function updateCompanySettings(
     .eq("id", companyId);
 }
 
+/** The restaurant's own address/coordinates — used for the delivery-fee and
+ *  ETA calculations everywhere the company shows up, and doubles as the
+ *  pickup point a delivery partner is routed to for that order. */
+export async function updateCompanyAddress(
+  supabase: Client,
+  companyId: string,
+  input: {
+    street: string;
+    number?: string;
+    neighborhood?: string;
+    city: string;
+    state?: string;
+    postalCode?: string;
+    lat?: number;
+    lng?: number;
+  },
+) {
+  return supabase
+    .from("companies")
+    .update({
+      street: input.street,
+      number: input.number || null,
+      neighborhood: input.neighborhood || null,
+      city: input.city,
+      state: input.state || null,
+      postal_code: input.postalCode || null,
+      lat: input.lat ?? null,
+      lng: input.lng ?? null,
+    })
+    .eq("id", companyId);
+}
+
 /** Used by the settings form to warn before saving a slug that's already
  *  taken or reserved — the database constraint is still the source of
  *  truth, this is just a friendlier up-front check. */

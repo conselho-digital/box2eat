@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getMyMembership } from "@/lib/domain/companies-detail";
 import { listBusinessHours } from "@/lib/domain/business-hours";
 import { RestaurantSettingsForm } from "@/components/companies/restaurant-settings-form";
+import { RestaurantAddressForm } from "@/components/companies/restaurant-address-form";
 import { BusinessHoursEditor } from "@/components/companies/business-hours-editor";
 
 export default async function CompanyRestaurantPage({
@@ -33,6 +34,19 @@ export default async function CompanyRestaurantPage({
           slug: company.slug,
           phone: company.phone,
           category: company.category,
+        }}
+      />
+      <RestaurantAddressForm
+        companyId={company.id}
+        initial={{
+          street: company.street,
+          number: company.number,
+          neighborhood: company.neighborhood,
+          city: company.city,
+          state: company.state,
+          postalCode: company.postal_code,
+          lat: company.lat,
+          lng: company.lng,
         }}
       />
       <BusinessHoursEditor companyId={company.id} initialHours={hours ?? []} />
