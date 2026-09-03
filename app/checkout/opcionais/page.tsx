@@ -54,7 +54,7 @@ export default function CheckoutOpcionaisPage() {
   const cartMenuItemIds = new Set(menuItemIds);
   const offeredById = new Map<string, MenuItemAddonEntry>();
   for (const addon of addons ?? []) {
-    if (!addon.menu_items.is_available) continue;
+    if (!addon.menu_items.is_available || !addon.menu_items.show_as_addon) continue;
     if (cartMenuItemIds.has(addon.addon_item_id)) continue;
     offeredById.set(addon.addon_item_id, addon);
   }

@@ -36,12 +36,15 @@ export function MenuItemOptionsDialog({
 }) {
   const addonsByCategory = Object.values(
     item.menu_item_addons
-      .filter((a) => a.menu_items.is_available)
-      .reduce<Record<string, { name: string; addons: typeof item.menu_item_addons }>>(
+      .filter((a) => a.menu_items.is_available && a.menu_items.show_as_addon)
+      .reduce<Record<string, { name: string; minSelect: number; addons: typeof item.menu_item_addons }>>(
         (acc, addon) => {
           const key = addon.menu_items.category_id ?? "__uncategorized";
           const name = addon.menu_items.menu_categories?.name ?? "Outros";
-          (acc[key] ??= { name, addons: [] }).addons.push(addon);
+          const minSelect =
+            item.menu_item_addon_categories.find((g) => g.category_id === addon.menu_items.category_id)
+              ?.min_select ?? 0;
+          (acc[key] ??= { name, minSelect, addons: [] }).addons.push(addon);
           return acc;
         },
         {},
@@ -90,9 +93,15 @@ export function MenuItemOptionsDialog({
             </div>
           ))}
 
-          {addonsByCategory.map(({ name, addons }) => (
+          {addonsByCategory.map(({ name, minSelect, addons }) => (
             <div key={name} className="flex flex-col gap-1.5">
-              <p className="text-sm font-medium">{name}</p>
+              <p className="text-sm font-medium">
+                {name}
+                {minSelect > 0 && <span className="text-destructive"> *</span>}
+                <span className="ml-1 text-xs text-muted-foreground">
+                  {minSelect > 0 ? `(mínimo ${minSelect})` : "(opcional)"}
+                </span>
+              </p>
               <div className="flex flex-col gap-1">
                 {addons.map((addon) => (
                   <label key={addon.addon_item_id} className="flex items-center gap-2 text-sm">

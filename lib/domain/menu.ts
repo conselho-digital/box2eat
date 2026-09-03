@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import type { MenuItemInput, MenuOptionInput, OptionGroupInput } from "@/lib/validations/menu";
+import type { MenuItemInput } from "@/lib/validations/menu";
 
 type Client = SupabaseClient<Database>;
 
@@ -17,17 +17,26 @@ export type MenuItemAddonEntry = {
   addon_item_id: string;
   menu_items: Pick<
     Database["public"]["Tables"]["menu_items"]["Row"],
-    "id" | "name" | "price" | "image_url" | "is_available" | "category_id"
+    "id" | "name" | "price" | "image_url" | "is_available" | "show_as_addon" | "category_id"
   > & { menu_categories: Pick<MenuCategory, "id" | "name"> | null };
+};
+/** For this item's own "opcional" configuration: how many selections are
+ *  required from each category of addons attached to it (0 = optional). */
+export type MenuItemAddonCategory = {
+  id: string;
+  category_id: string;
+  min_select: number;
+  menu_categories: Pick<MenuCategory, "id" | "name"> | null;
 };
 export type MenuItem = Database["public"]["Tables"]["menu_items"]["Row"] & {
   menu_item_option_groups: MenuOptionGroup[];
   menu_categories: Pick<MenuCategory, "id" | "name"> | null;
   menu_item_addons: MenuItemAddonEntry[];
+  menu_item_addon_categories: MenuItemAddonCategory[];
 };
 
 export const ITEM_WITH_OPTIONS_SELECT =
-  "*, menu_categories(id, name), menu_item_option_groups(*, menu_item_options(*)), menu_item_addons!menu_item_addons_menu_item_id_fkey(addon_item_id, menu_items!menu_item_addons_addon_item_id_fkey(id, name, price, image_url, is_available, category_id, menu_categories(id, name)))";
+  "*, menu_categories(id, name), menu_item_option_groups(*, menu_item_options(*)), menu_item_addons!menu_item_addons_menu_item_id_fkey(addon_item_id, menu_items!menu_item_addons_addon_item_id_fkey(id, name, price, image_url, is_available, show_as_addon, category_id, menu_categories(id, name))), menu_item_addon_categories(id, category_id, min_select, menu_categories(id, name))";
 
 export async function listCategories(supabase: Client, companyId: string) {
   return supabase
@@ -115,7 +124,11 @@ export async function updateItem(
   supabase: Client,
   companyId: string,
   itemId: string,
-  input: Partial<MenuItemInput> & { imageUrl?: string | null; isAvailable?: boolean },
+  input: Partial<MenuItemInput> & {
+    imageUrl?: string | null;
+    isAvailable?: boolean;
+    showAsAddon?: boolean;
+  },
 ) {
   let categoryId: string | null | undefined;
   if (input.categoryName !== undefined) {
@@ -133,6 +146,7 @@ export async function updateItem(
       ...(input.price !== undefined && { price: input.price }),
       ...(input.imageUrl !== undefined && { image_url: input.imageUrl }),
       ...(input.isAvailable !== undefined && { is_available: input.isAvailable }),
+      ...(input.showAsAddon !== undefined && { show_as_addon: input.showAsAddon }),
     })
     .eq("id", itemId)
     .select(ITEM_WITH_OPTIONS_SELECT)
@@ -147,6 +161,17 @@ export async function setItemAvailability(
   return supabase
     .from("menu_items")
     .update({ is_available: isAvailable })
+    .eq("id", itemId);
+}
+
+export async function setItemShowAsAddon(
+  supabase: Client,
+  itemId: string,
+  showAsAddon: boolean,
+) {
+  return supabase
+    .from("menu_items")
+    .update({ show_as_addon: showAsAddon })
     .eq("id", itemId);
 }
 
@@ -171,47 +196,34 @@ export async function setItemAddons(supabase: Client, menuItemId: string, addonI
   return { error: insertError };
 }
 
-export async function createOptionGroup(
+export type AddonCategoryGroupInput = { categoryId: string; minSelect: number };
+
+/** Replaces the full set of addon-category groups (and their minimum
+ *  required selections) configured for menuItemId — same clear-then-insert
+ *  approach as setItemAddons, and for the same reason: the picker always
+ *  submits the whole desired configuration at once. */
+export async function setItemAddonCategories(
   supabase: Client,
   menuItemId: string,
-  input: OptionGroupInput,
+  groups: AddonCategoryGroupInput[],
 ) {
-  return supabase
-    .from("menu_item_option_groups")
-    .insert({
+  const { error: deleteError } = await supabase
+    .from("menu_item_addon_categories")
+    .delete()
+    .eq("menu_item_id", menuItemId);
+  if (deleteError) return { error: deleteError };
+  if (groups.length === 0) return { error: null };
+
+  const { error: insertError } = await supabase.from("menu_item_addon_categories").insert(
+    groups.map((g) => ({
       menu_item_id: menuItemId,
-      name: input.name,
-      min_select: input.minSelect,
-      max_select: input.maxSelect,
-      is_required: input.minSelect > 0,
-    })
-    .select()
-    .single();
+      category_id: g.categoryId,
+      min_select: g.minSelect,
+    })),
+  );
+  return { error: insertError };
 }
 
-export async function deleteOptionGroup(supabase: Client, groupId: string) {
-  return supabase.from("menu_item_option_groups").delete().eq("id", groupId);
-}
-
-export async function createOption(
-  supabase: Client,
-  optionGroupId: string,
-  input: MenuOptionInput,
-) {
-  return supabase
-    .from("menu_item_options")
-    .insert({
-      option_group_id: optionGroupId,
-      name: input.name,
-      price_delta: input.priceDelta,
-    })
-    .select()
-    .single();
-}
-
-export async function deleteOption(supabase: Client, optionId: string) {
-  return supabase.from("menu_item_options").delete().eq("id", optionId);
-}
 
 export async function uploadMenuImage(
   supabase: Client,
@@ -278,7 +290,7 @@ export async function listAddonsForItems(supabase: Client, menuItemIds: string[]
   return supabase
     .from("menu_item_addons")
     .select(
-      "addon_item_id, menu_items!menu_item_addons_addon_item_id_fkey(id, name, price, image_url, is_available, category_id, menu_categories(id, name))",
+      "addon_item_id, menu_items!menu_item_addons_addon_item_id_fkey(id, name, price, image_url, is_available, show_as_addon, category_id, menu_categories(id, name))",
     )
     .in("menu_item_id", menuItemIds)
     .returns<MenuItemAddonEntry[]>();

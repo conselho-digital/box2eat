@@ -55,10 +55,17 @@ export function useMenuItemCart(item: MenuItem, company: MenuItemCartCompany) {
   }
 
   function isValid() {
-    return item.menu_item_option_groups.every((g) => {
+    const optionsValid = item.menu_item_option_groups.every((g) => {
       const count = selected[g.id]?.length ?? 0;
       return count >= g.min_select && count <= g.max_select;
     });
+    const addonsValid = item.menu_item_addon_categories.every((group) => {
+      const count = item.menu_item_addons.filter(
+        (a) => a.menu_items.category_id === group.category_id && selectedAddonIds.has(a.addon_item_id),
+      ).length;
+      return count >= group.min_select;
+    });
+    return optionsValid && addonsValid;
   }
 
   function flashAdded() {

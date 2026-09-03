@@ -660,6 +660,45 @@ export type Database = {
           },
         ]
       }
+      menu_item_addon_categories: {
+        Row: {
+          category_id: string
+          created_at: string
+          id: string
+          menu_item_id: string
+          min_select: number
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          id?: string
+          menu_item_id: string
+          min_select?: number
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          id?: string
+          menu_item_id?: string
+          min_select?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_addon_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "menu_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_addon_categories_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_item_addons: {
         Row: {
           addon_item_id: string
@@ -789,6 +828,7 @@ export type Database = {
           is_available: boolean
           name: string
           price: number
+          show_as_addon: boolean
           sort_order: number
           updated_at: string
         }
@@ -802,6 +842,7 @@ export type Database = {
           is_available?: boolean
           name: string
           price: number
+          show_as_addon?: boolean
           sort_order?: number
           updated_at?: string
         }
@@ -815,6 +856,7 @@ export type Database = {
           is_available?: boolean
           name?: string
           price?: number
+          show_as_addon?: boolean
           sort_order?: number
           updated_at?: string
         }
