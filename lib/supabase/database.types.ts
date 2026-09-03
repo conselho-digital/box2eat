@@ -40,8 +40,6 @@ type DeliveryPartnerRow = {
   rating_count: number
   rejection_reason: string | null
   status: string
-  stripe_account_id: string | null
-  stripe_charges_enabled: boolean
   updated_at: string
   user_id: string
   vehicle_plate: string | null
@@ -101,8 +99,6 @@ export type Database = {
           state: string | null
           status: string
           street: string | null
-          stripe_account_id: string | null
-          stripe_charges_enabled: boolean
           updated_at: string
           view_count: number
         }
@@ -138,8 +134,6 @@ export type Database = {
           state?: string | null
           status?: string
           street?: string | null
-          stripe_account_id?: string | null
-          stripe_charges_enabled?: boolean
           updated_at?: string
           view_count?: number
         }
@@ -175,8 +169,6 @@ export type Database = {
           state?: string | null
           status?: string
           street?: string | null
-          stripe_account_id?: string | null
-          stripe_charges_enabled?: boolean
           updated_at?: string
           view_count?: number
         }
@@ -351,8 +343,6 @@ export type Database = {
           rating_count?: number
           rejection_reason?: string | null
           status?: string
-          stripe_account_id?: string | null
-          stripe_charges_enabled?: boolean
           updated_at?: string
           user_id: string
           vehicle_plate?: string | null
@@ -370,8 +360,6 @@ export type Database = {
           rating_count?: number
           rejection_reason?: string | null
           status?: string
-          stripe_account_id?: string | null
-          stripe_charges_enabled?: boolean
           updated_at?: string
           user_id?: string
           vehicle_plate?: string | null

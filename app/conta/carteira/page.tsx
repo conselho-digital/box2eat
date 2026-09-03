@@ -4,7 +4,6 @@ import { listMyPaymentMethods } from "@/lib/domain/payments";
 
 const PROVIDER_LABEL: Record<string, string> = {
   mercadopago: "Mercado Pago",
-  stripe: "Stripe",
 };
 
 const METHOD_LABEL: Record<string, string> = {
@@ -29,7 +28,7 @@ export default async function WalletPage() {
         <h2 className="text-2xl font-semibold">Carteira</h2>
         <p className="text-sm text-muted-foreground">
           O Box2eat não guarda os dados do seu cartão — cada pagamento é feito direto com o
-          Mercado Pago ou o Stripe no checkout.
+          Mercado Pago no checkout.
         </p>
       </div>
 

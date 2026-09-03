@@ -17,7 +17,7 @@ export default async function PaymentPickerPage({
 
   const { data: order } = await supabase
     .from("orders")
-    .select("id, customer_id, status, total, companies(name, stripe_charges_enabled)")
+    .select("id, customer_id, status, total, companies(name)")
     .eq("id", orderId)
     .maybeSingle();
 
@@ -31,12 +31,7 @@ export default async function PaymentPickerPage({
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-6 p-6">
-      <PaymentPicker
-        orderId={order.id}
-        companyName={company?.name ?? ""}
-        total={order.total}
-        stripeEnabled={Boolean(company?.stripe_charges_enabled)}
-      />
+      <PaymentPicker orderId={order.id} companyName={company?.name ?? ""} total={order.total} />
     </div>
   );
 }

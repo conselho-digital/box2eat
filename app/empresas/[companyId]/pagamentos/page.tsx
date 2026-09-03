@@ -1,7 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMyMembership } from "@/lib/domain/companies-detail";
-import { StripeConnectCard } from "@/components/companies/stripe-connect-card";
 import { MercadoPagoConnectCard } from "@/components/companies/mercadopago-connect-card";
 import { AcceptedPaymentMethodsForm } from "@/components/companies/accepted-payment-methods-form";
 
@@ -28,16 +27,11 @@ export default async function CompanyPaymentsPage({
       <div>
         <h2 className="font-medium">Recebimentos</h2>
         <p className="text-sm text-muted-foreground">
-          Conecte uma conta para receber os pagamentos dos pedidos. Sem conexão, os pagamentos por
-          Pix e cartão via Mercado Pago continuam funcionando pela conta da plataforma.
+          Conecte sua conta Mercado Pago para receber os pagamentos dos pedidos. Sem conexão, Pix e
+          cartão continuam funcionando pela conta da plataforma.
         </p>
       </div>
       <MercadoPagoConnectCard companyId={company.id} connected={Boolean(company.mercadopago_user_id)} />
-      <StripeConnectCard
-        companyId={company.id}
-        chargesEnabled={company.stripe_charges_enabled}
-        hasAccount={Boolean(company.stripe_account_id)}
-      />
       <AcceptedPaymentMethodsForm
         companyId={company.id}
         initialMethods={company.accepted_payment_methods}

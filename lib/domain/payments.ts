@@ -53,20 +53,6 @@ export async function createMercadoPagoCheckout(supabase: Client, orderId: strin
   });
 }
 
-export async function createStripeCheckout(supabase: Client, orderId: string) {
-  return invokePaymentFunction<{ url: string }>(supabase, "stripe-create-checkout-session", {
-    order_id: orderId,
-    origin: window.location.origin,
-  });
-}
-
-export async function createStripeConnectOnboardingLink(supabase: Client, companyId: string) {
-  return invokePaymentFunction<{ url: string }>(supabase, "stripe-connect-onboarding", {
-    company_id: companyId,
-    origin: window.location.origin,
-  });
-}
-
 export async function createMercadoPagoConnectOnboardingLink(supabase: Client, companyId: string) {
   return invokePaymentFunction<{ url: string }>(supabase, "mercadopago-connect-onboarding", {
     company_id: companyId,

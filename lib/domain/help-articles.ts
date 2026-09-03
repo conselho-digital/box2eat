@@ -20,9 +20,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pagamentos",
     title: "Formas de pagamento",
-    summary: "Pix e cartão, processados com segurança pelo Mercado Pago ou Stripe.",
+    summary: "Pix e cartão, processados com segurança pelo Mercado Pago.",
     body: [
-      "O Box2eat não guarda os dados do seu cartão. Cada pagamento acontece direto na página segura do Mercado Pago ou do Stripe.",
+      "O Box2eat não guarda os dados do seu cartão. Cada pagamento acontece direto na página segura do Mercado Pago.",
       "Se o pagamento falhar, você pode tentar novamente pela própria página do pedido, sem precisar refazer o carrinho.",
     ],
   },
@@ -52,7 +52,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     body: [
       "Crie uma conta restaurante em Menu > Criar uma conta Restaurante e cadastre seu cardápio.",
       "Assim que seu restaurante for criado, ele já fica visível para os clientes — sem espera de aprovação.",
-      "Conecte o Mercado Pago ou o Stripe para começar a receber pelos pedidos.",
+      "Conecte o Mercado Pago para começar a receber pelos pedidos.",
     ],
   },
   {
