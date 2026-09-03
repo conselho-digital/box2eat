@@ -87,34 +87,37 @@
 .dark {
   --background: oklch(0.2 0.02 40);
   --foreground: oklch(0.96 0.01 70);
-  --card: oklch(0.25 0.025 40);
+  /* Cards/popovers/secondary/accent step up in lightness from background
+     (0.2) so each layer reads as clearly distinct — the old values (all
+     within 0.25-0.34) were too close together to tell apart. */
+  --card: oklch(0.29 0.025 40);
   --card-foreground: oklch(0.96 0.01 70);
-  --popover: oklch(0.25 0.025 40);
+  --popover: oklch(0.29 0.025 40);
   --popover-foreground: oklch(0.96 0.01 70);
   --primary: oklch(0.705 0.213 47.604);
   --primary-foreground: oklch(0.2 0.02 40);
-  --secondary: oklch(0.3 0.025 40);
+  --secondary: oklch(0.34 0.025 40);
   --secondary-foreground: oklch(0.96 0.01 70);
-  --muted: oklch(0.3 0.025 40);
-  --muted-foreground: oklch(0.68 0.03 55);
-  --accent: oklch(0.34 0.05 42);
+  --muted: oklch(0.34 0.025 40);
+  --muted-foreground: oklch(0.7 0.03 55);
+  --accent: oklch(0.39 0.05 42);
   --accent-foreground: oklch(0.96 0.02 60);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 17%);
   --ring: oklch(0.705 0.15 47.604);
   --chart-1: oklch(0.705 0.213 47.604);
   --chart-2: oklch(0.646 0.222 41.116);
   --chart-3: oklch(0.553 0.195 38.402);
   --chart-4: oklch(0.47 0.157 37.304);
   --chart-5: oklch(0.4 0.13 35);
-  --sidebar: oklch(0.23 0.02 40);
+  --sidebar: oklch(0.25 0.02 40);
   --sidebar-foreground: oklch(0.96 0.01 70);
   --sidebar-primary: oklch(0.705 0.213 47.604);
   --sidebar-primary-foreground: oklch(0.2 0.02 40);
-  --sidebar-accent: oklch(0.34 0.05 42);
+  --sidebar-accent: oklch(0.39 0.05 42);
   --sidebar-accent-foreground: oklch(0.96 0.02 60);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: oklch(0.705 0.15 47.604);
 }
 
