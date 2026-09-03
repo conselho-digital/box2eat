@@ -17,7 +17,7 @@ export type CompanyOrder = Database["public"]["Tables"]["orders"]["Row"] & {
   > | null;
 };
 
-const ACTIVE_STATUSES = ["placed", "accepted", "preparing", "ready_for_pickup"];
+const ACTIVE_STATUSES = ["placed", "accepted", "preparing", "ready_for_pickup", "assigned", "picked_up"];
 
 export async function listMyOrders(supabase: Client) {
   return supabase
@@ -80,6 +80,12 @@ export async function markPreparing(supabase: Client, orderId: string) {
 
 export async function markReady(supabase: Client, orderId: string) {
   return supabase.rpc("mark_ready", { p_order_id: orderId });
+}
+
+/** Restaurant confirms pickup by entering the code the courier shows them
+ *  in person — replaces the courier's own self-report of "peguei o pedido". */
+export async function confirmPickup(supabase: Client, orderId: string, code: string) {
+  return supabase.rpc("confirm_pickup", { p_order_id: orderId, p_code: code });
 }
 
 export async function markDelivered(supabase: Client, orderId: string) {

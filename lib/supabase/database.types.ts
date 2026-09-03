@@ -22,6 +22,7 @@ type OrderRow = {
   notes: string | null
   payment_method: string | null
   payment_status: string | null
+  pickup_code: string | null
   status: string
   subtotal: number
   total: number
@@ -1116,6 +1117,7 @@ export type Database = {
           notes?: string | null
           payment_method?: string | null
           payment_status?: string | null
+          pickup_code?: string | null
           status?: string
           subtotal: number
           total: number
@@ -1134,6 +1136,7 @@ export type Database = {
           notes?: string | null
           payment_method?: string | null
           payment_status?: string | null
+          pickup_code?: string | null
           status?: string
           subtotal?: number
           total?: number
@@ -1672,8 +1675,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      mark_picked_up: {
-        Args: { p_order_id: string }
+      confirm_pickup: {
+        Args: { p_code: string; p_order_id: string }
         Returns: OrderRow
         SetofOptions: {
           from: "*"

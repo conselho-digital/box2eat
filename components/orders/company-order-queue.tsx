@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
 import {
   acceptOrder,
+  confirmPickup,
   isActiveOrder,
   listCompanyOrders,
   markDelivered,
@@ -29,6 +31,8 @@ const STATUS_LABEL: Record<string, string> = {
   accepted: "Aceito",
   preparing: "Em preparo",
   ready_for_pickup: "Pronto",
+  assigned: "Aguardando coleta",
+  picked_up: "Coletado",
   delivered: "Entregue",
   rejected: "Recusado",
   cancelled: "Cancelado",
@@ -118,14 +122,19 @@ function OrderCard({
 }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const [pickupCodeInput, setPickupCodeInput] = useState("");
 
-  function makeMutation(fn: (supabase: ReturnType<typeof createClient>) => Promise<{ error: unknown }>) {
+  function makeMutation(
+    fn: (supabase: ReturnType<typeof createClient>) => Promise<{ error: unknown }>,
+    describeError?: (message: string) => string,
+  ) {
     return async () => {
       setError(null);
       const supabase = createClient();
       const { error } = await fn(supabase);
       if (error) {
-        setError(error instanceof Error ? error.message : "Não foi possível atualizar o pedido.");
+        const message = error instanceof Error ? error.message : "Não foi possível atualizar o pedido.";
+        setError(describeError ? describeError(message) : message);
         return;
       }
       queryClient.invalidateQueries({ queryKey });
@@ -141,6 +150,13 @@ function OrderCard({
   const delivered = useMutation({ mutationFn: makeMutation((s) => markDelivered(s, order.id)) });
   const notifyPreferred = useMutation({
     mutationFn: makeMutation((s) => notifyPreferredDeliveryPartner(s, order.id)),
+  });
+  const confirmPickupMutation = useMutation({
+    mutationFn: makeMutation(
+      (s) => confirmPickup(s, order.id, pickupCodeInput),
+      (message) => (message.includes("invalid_pickup_code") ? "Código incorreto." : message),
+    ),
+    onSuccess: () => setPickupCodeInput(""),
   });
 
   return (
@@ -212,6 +228,30 @@ function OrderCard({
                 </Button>
               )}
             </>
+          )}
+          {order.status === "assigned" && (
+            <div className="flex items-center gap-2">
+              <Input
+                value={pickupCodeInput}
+                onChange={(e) => setPickupCodeInput(e.target.value)}
+                placeholder="Código do entregador"
+                className="h-8 w-40"
+                maxLength={4}
+                inputMode="numeric"
+              />
+              <Button
+                size="sm"
+                onClick={() => confirmPickupMutation.mutate()}
+                disabled={confirmPickupMutation.isPending || pickupCodeInput.trim().length === 0}
+              >
+                Confirmar coleta
+              </Button>
+            </div>
+          )}
+          {order.status === "picked_up" && (
+            <p className="text-sm text-muted-foreground">
+              Coletado — aguardando o entregador confirmar a entrega.
+            </p>
           )}
         </div>
       )}

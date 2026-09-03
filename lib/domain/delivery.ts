@@ -111,10 +111,6 @@ export async function claimOrder(supabase: Client, orderId: string) {
   return supabase.rpc("assign_delivery_partner", { p_order_id: orderId });
 }
 
-export async function pickUpOrder(supabase: Client, orderId: string) {
-  return supabase.rpc("mark_picked_up", { p_order_id: orderId });
-}
-
 /** How a company wants ready orders routed to a courier: "platform" leaves
  *  them for any online delivery partner to claim (the default); "preferred"
  *  always notifies preferredDeliveryPartnerId directly when an order is

@@ -9,7 +9,6 @@ import {
   getMyDeliveryPartner,
   listAvailableOrders,
   listMyActiveDeliveries,
-  pickUpOrder,
   setOnline,
   updateLocation,
   type AvailableOrder,
@@ -103,15 +102,6 @@ export function DeliveryDashboard({ userId }: { userId: string }) {
     },
   });
 
-  const pickUp = useMutation({
-    mutationFn: async (orderId: string) => {
-      const supabase = createClient();
-      const { error } = await pickUpOrder(supabase, orderId);
-      if (error) throw error;
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: activeKey }),
-  });
-
   const deliver = useMutation({
     mutationFn: async (orderId: string) => {
       const supabase = createClient();
@@ -160,11 +150,12 @@ export function DeliveryDashboard({ userId }: { userId: string }) {
               {order.companies.street}, {order.companies.city}
             </p>
             <p className="mt-1">{currency.format(order.total)}</p>
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex flex-col gap-2">
               {order.status === "assigned" && (
-                <Button size="sm" onClick={() => pickUp.mutate(order.id)} disabled={pickUp.isPending}>
-                  Marquei que peguei
-                </Button>
+                <p className="rounded-md border border-dashed p-2 text-sm">
+                  Mostre este código ao restaurante para confirmar a coleta:{" "}
+                  <span className="font-mono text-base font-semibold">{order.pickup_code}</span>
+                </p>
               )}
               {order.status === "picked_up" && (
                 <Button size="sm" onClick={() => deliver.mutate(order.id)} disabled={deliver.isPending}>
