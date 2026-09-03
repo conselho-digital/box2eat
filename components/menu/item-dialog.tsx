@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { XIcon } from "lucide-react";
+import { InfoIcon, XIcon } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -76,6 +76,7 @@ export function ItemDialog({
   const [selectedAddonIds, setSelectedAddonIds] = useState<Set<string>>(() =>
     selectedAddonsFromItem(item),
   );
+  const [showAvailabilityInfo, setShowAvailabilityInfo] = useState(false);
 
   const {
     register,
@@ -320,35 +321,56 @@ export function ItemDialog({
             />
           </div>
 
-          <div className="flex items-center gap-4 border-t pt-4">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={localAvailable}
-                onChange={(e) => setLocalAvailable(e.target.checked)}
-              />
-              Item
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={localShowAsAddon}
-                onChange={(e) => setLocalShowAsAddon(e.target.checked)}
-              />
-              Adicional
-            </label>
-            {item && (
-              <Button
+          <div className="flex flex-col gap-2 border-t pt-4">
+            <div className="flex items-center gap-4">
+              <button
                 type="button"
-                size="sm"
-                variant="destructive"
-                className="ml-auto"
-                onClick={() => {
-                  if (window.confirm(`Excluir "${item.name}"?`)) deleteMutation.mutate();
-                }}
+                onClick={() => setShowAvailabilityInfo((v) => !v)}
+                aria-label="Sobre Item e Adicional"
+                className="rounded-full p-1 text-muted-foreground hover:bg-muted"
               >
-                Excluir item
-              </Button>
+                <InfoIcon className="size-4" />
+              </button>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={localAvailable}
+                  onChange={(e) => setLocalAvailable(e.target.checked)}
+                />
+                Item
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={localShowAsAddon}
+                  onChange={(e) => setLocalShowAsAddon(e.target.checked)}
+                />
+                Adicional
+              </label>
+              {item && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="destructive"
+                  className="ml-auto"
+                  onClick={() => {
+                    if (window.confirm(`Excluir "${item.name}"?`)) deleteMutation.mutate();
+                  }}
+                >
+                  Excluir item
+                </Button>
+              )}
+            </div>
+            {showAvailabilityInfo && (
+              <p className="text-xs text-muted-foreground">
+                <strong className="text-foreground">Item</strong> mostra este produto na lista do
+                cardápio para os clientes comprarem diretamente.{" "}
+                <strong className="text-foreground">Adicional</strong> faz ele aparecer como opção
+                de &ldquo;opcional&rdquo; quando outros itens do cardápio o oferecem (ex: uma bebida
+                ligada a um combo). São independentes: dá pra desmarcar um sem afetar o outro — por exemplo,
+                esconder uma bebida em falta de todos os opcionais de uma vez, sem tirá-la do
+                cardápio.
+              </p>
             )}
           </div>
 
