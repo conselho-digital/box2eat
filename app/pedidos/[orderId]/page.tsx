@@ -21,7 +21,12 @@ export default async function OrderPage({
 
   return (
     <div className="mx-auto w-full max-w-2xl flex-1 p-6">
-      <OrderTracking orderId={orderId} initialOrder={order} isCustomer={order.customer_id === user.id} />
+      <OrderTracking
+        orderId={orderId}
+        initialOrder={order}
+        isCustomer={order.customer_id === user.id}
+        userId={user.id}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
 } from "@/lib/domain/delivery";
 import { markDelivered, subscribeToDeliveryUpdates } from "@/lib/domain/orders";
 import { PreferredPartnerRequests } from "./preferred-partner-requests";
+import { OrderChat } from "../orders/order-chat";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -152,15 +153,31 @@ export function DeliveryDashboard({ userId }: { userId: string }) {
             <p className="mt-1">{currency.format(order.total)}</p>
             <div className="mt-2 flex flex-col gap-2">
               {order.status === "assigned" && (
-                <p className="rounded-md border border-dashed p-2 text-sm">
-                  Mostre este código ao restaurante para confirmar a coleta:{" "}
-                  <span className="font-mono text-base font-semibold">{order.pickup_code}</span>
-                </p>
+                <>
+                  <p className="rounded-md border border-dashed p-2 text-sm">
+                    Mostre este código ao restaurante para confirmar a coleta:{" "}
+                    <span className="font-mono text-base font-semibold">{order.pickup_code}</span>
+                  </p>
+                  <OrderChat
+                    orderId={order.id}
+                    thread="restaurant_courier"
+                    currentUserId={userId}
+                    title="Chat com o restaurante"
+                  />
+                </>
               )}
               {order.status === "picked_up" && (
-                <Button size="sm" onClick={() => deliver.mutate(order.id)} disabled={deliver.isPending}>
-                  Marcar entregue
-                </Button>
+                <>
+                  <Button size="sm" onClick={() => deliver.mutate(order.id)} disabled={deliver.isPending}>
+                    Marcar entregue
+                  </Button>
+                  <OrderChat
+                    orderId={order.id}
+                    thread="courier_customer"
+                    currentUserId={userId}
+                    title="Chat com o cliente"
+                  />
+                </>
               )}
             </div>
           </div>

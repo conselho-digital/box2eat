@@ -1015,6 +1015,51 @@ export type Database = {
           },
         ]
       }
+      order_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          order_id: string
+          sender_id: string
+          sender_role: string
+          thread: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          order_id: string
+          sender_id: string
+          sender_role: string
+          thread: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          sender_id?: string
+          sender_role?: string
+          thread?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_reports: {
         Row: {
           created_at: string
@@ -1762,6 +1807,24 @@ export type Database = {
       respond_preferred_delivery_partner: {
         Args: { p_accept: boolean; p_company_id: string }
         Returns: undefined
+      }
+      send_order_message: {
+        Args: { p_body: string; p_order_id: string }
+        Returns: {
+          body: string
+          created_at: string
+          id: string
+          order_id: string
+          sender_id: string
+          sender_role: string
+          thread: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "order_messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       submit_review: {
         Args: {

@@ -18,6 +18,7 @@ import {
   type CompanyOrder,
 } from "@/lib/domain/orders";
 import { getCompanyDeliveryPreference, notifyPreferredDeliveryPartner } from "@/lib/domain/delivery";
+import { OrderChat } from "./order-chat";
 import {
   DeliveryPreferenceSettings,
   deliveryPreferenceQueryKey,
@@ -38,7 +39,7 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: "Cancelado",
 };
 
-export function CompanyOrderQueue({ companyId }: { companyId: string }) {
+export function CompanyOrderQueue({ companyId, userId }: { companyId: string; userId: string }) {
   const queryClient = useQueryClient();
   const queryKey = ["company-orders", companyId];
 
@@ -89,6 +90,7 @@ export function CompanyOrderQueue({ companyId }: { companyId: string }) {
             key={order.id}
             order={order}
             queryKey={queryKey}
+            userId={userId}
             askDeliveryPreference={
               deliverySettings?.delivery_preference === "ask" &&
               Boolean(deliverySettings?.preferred_delivery_partner_confirmed)
@@ -101,7 +103,7 @@ export function CompanyOrderQueue({ companyId }: { companyId: string }) {
         <div className="flex flex-col gap-3">
           <h2 className="font-medium">Histórico</h2>
           {history.map((order) => (
-            <OrderCard key={order.id} order={order} queryKey={queryKey} readOnly />
+            <OrderCard key={order.id} order={order} queryKey={queryKey} userId={userId} readOnly />
           ))}
         </div>
       )}
@@ -112,11 +114,13 @@ export function CompanyOrderQueue({ companyId }: { companyId: string }) {
 function OrderCard({
   order,
   queryKey,
+  userId,
   readOnly,
   askDeliveryPreference,
 }: {
   order: CompanyOrder;
   queryKey: unknown[];
+  userId: string;
   readOnly?: boolean;
   askDeliveryPreference?: boolean;
 }) {
@@ -230,22 +234,30 @@ function OrderCard({
             </>
           )}
           {order.status === "assigned" && (
-            <div className="flex items-center gap-2">
-              <Input
-                value={pickupCodeInput}
-                onChange={(e) => setPickupCodeInput(e.target.value)}
-                placeholder="Código do entregador"
-                className="h-8 w-40"
-                maxLength={4}
-                inputMode="numeric"
+            <div className="flex w-full flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <Input
+                  value={pickupCodeInput}
+                  onChange={(e) => setPickupCodeInput(e.target.value)}
+                  placeholder="Código do entregador"
+                  className="h-8 w-40"
+                  maxLength={4}
+                  inputMode="numeric"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => confirmPickupMutation.mutate()}
+                  disabled={confirmPickupMutation.isPending || pickupCodeInput.trim().length === 0}
+                >
+                  Confirmar coleta
+                </Button>
+              </div>
+              <OrderChat
+                orderId={order.id}
+                thread="restaurant_courier"
+                currentUserId={userId}
+                title="Chat com o entregador"
               />
-              <Button
-                size="sm"
-                onClick={() => confirmPickupMutation.mutate()}
-                disabled={confirmPickupMutation.isPending || pickupCodeInput.trim().length === 0}
-              >
-                Confirmar coleta
-              </Button>
             </div>
           )}
           {order.status === "picked_up" && (

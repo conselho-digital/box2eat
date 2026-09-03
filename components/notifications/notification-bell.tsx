@@ -50,6 +50,16 @@ const NOTIFICATION_LINK: Record<string, (data: unknown) => string | null> = {
     return companyId ? `/empresas/${companyId}/pedidos` : null;
   },
   order_status_changed_delivery: () => "/entregador/painel",
+  order_message_courier_to_company: (data) => {
+    const companyId = (data as { company_id?: string } | null)?.company_id;
+    return companyId ? `/empresas/${companyId}/pedidos` : null;
+  },
+  order_message_company_to_courier: () => "/entregador/painel",
+  order_message_courier_to_customer: (data) => {
+    const orderId = (data as { order_id?: string } | null)?.order_id;
+    return orderId ? `/pedidos/${orderId}` : null;
+  },
+  order_message_customer_to_courier: () => "/entregador/painel",
 };
 
 export function NotificationBell({ userId }: { userId: string }) {

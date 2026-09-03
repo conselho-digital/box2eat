@@ -13,6 +13,7 @@ import {
   type OrderWithItems,
 } from "@/lib/domain/orders";
 import { listReviewsForOrder } from "@/lib/domain/reviews";
+import { OrderChat } from "./order-chat";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -21,6 +22,8 @@ const STATUS_STEPS = [
   { key: "accepted", label: "Aceito pelo restaurante" },
   { key: "preparing", label: "Em preparo" },
   { key: "ready_for_pickup", label: "Pronto" },
+  { key: "assigned", label: "Entregador a caminho para retirada" },
+  { key: "picked_up", label: "Coletado pelo entregador" },
   { key: "delivered", label: "Entregue" },
 ];
 
@@ -28,10 +31,12 @@ export function OrderTracking({
   orderId,
   initialOrder,
   isCustomer,
+  userId,
 }: {
   orderId: string;
   initialOrder: OrderWithItems;
   isCustomer: boolean;
+  userId: string;
 }) {
   const queryClient = useQueryClient();
   const queryKey = ["order", orderId];
@@ -134,6 +139,17 @@ export function OrderTracking({
           ))}
         </ol>
       )}
+
+      {isCustomer &&
+        order.delivery_partner_id &&
+        (order.status === "picked_up" || order.status === "delivered") && (
+          <OrderChat
+            orderId={orderId}
+            thread="courier_customer"
+            currentUserId={userId}
+            title="Chat com o entregador"
+          />
+        )}
 
       <div className="flex flex-col divide-y rounded-lg border">
         {order.order_items.map((item) => (
