@@ -20,6 +20,7 @@ export function CompanyDashboardTabsRow() {
     { href: `/empresas/${companyId}/pedidos`, label: "Pedidos" },
     { href: `/empresas/${companyId}/pagamentos`, label: "Pagamentos" },
     { href: `/empresas/${companyId}/cupons`, label: "Cupons" },
+    { href: `/empresas/${companyId}/configuracoes`, label: "Configurações" },
   ];
 
   return (

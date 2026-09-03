@@ -10,6 +10,7 @@ export const ACCOUNT_TABS = [
   { href: "/conta/seguranca", label: "Segurança" },
   { href: "/conta/favoritos", label: "Favoritos" },
   { href: "/conta/pedidos", label: "Pedidos" },
+  { href: "/conta/configuracoes", label: "Configurações" },
 ];
 
 export function AccountTabs({

@@ -1285,6 +1285,17 @@ export type Database = {
           default_payment_method: string | null
           full_name: string
           id: string
+          notify_company_courier_messages: boolean
+          notify_company_order_updates: boolean
+          notify_courier_messages: boolean
+          notify_customer_messages: boolean
+          notify_delivery_customer_messages: boolean
+          notify_delivery_new_orders: boolean
+          notify_delivery_order_updates: boolean
+          notify_new_orders: boolean
+          notify_order_updates: boolean
+          notify_promotions: boolean
+          notify_restaurant_messages: boolean
           phone: string | null
           recovery_email: string | null
           recovery_requested_at: string | null
@@ -1297,6 +1308,17 @@ export type Database = {
           default_payment_method?: string | null
           full_name?: string
           id: string
+          notify_company_courier_messages?: boolean
+          notify_company_order_updates?: boolean
+          notify_courier_messages?: boolean
+          notify_customer_messages?: boolean
+          notify_delivery_customer_messages?: boolean
+          notify_delivery_new_orders?: boolean
+          notify_delivery_order_updates?: boolean
+          notify_new_orders?: boolean
+          notify_order_updates?: boolean
+          notify_promotions?: boolean
+          notify_restaurant_messages?: boolean
           phone?: string | null
           recovery_email?: string | null
           recovery_requested_at?: string | null
@@ -1309,6 +1331,17 @@ export type Database = {
           default_payment_method?: string | null
           full_name?: string
           id?: string
+          notify_company_courier_messages?: boolean
+          notify_company_order_updates?: boolean
+          notify_courier_messages?: boolean
+          notify_customer_messages?: boolean
+          notify_delivery_customer_messages?: boolean
+          notify_delivery_new_orders?: boolean
+          notify_delivery_order_updates?: boolean
+          notify_new_orders?: boolean
+          notify_order_updates?: boolean
+          notify_promotions?: boolean
+          notify_restaurant_messages?: boolean
           phone?: string | null
           recovery_email?: string | null
           recovery_requested_at?: string | null

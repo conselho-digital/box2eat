@@ -33,6 +33,45 @@ export async function markAllNotificationsRead(supabase: Client, userId: string)
     .is("read_at", null);
 }
 
+export const NOTIFICATION_PREFERENCE_COLUMNS = [
+  "notify_order_updates",
+  "notify_promotions",
+  "notify_courier_messages",
+  "notify_new_orders",
+  "notify_company_order_updates",
+  "notify_customer_messages",
+  "notify_company_courier_messages",
+  "notify_delivery_new_orders",
+  "notify_restaurant_messages",
+  "notify_delivery_customer_messages",
+  "notify_delivery_order_updates",
+] as const;
+
+export type NotificationPreferenceColumn = (typeof NOTIFICATION_PREFERENCE_COLUMNS)[number];
+
+export type NotificationPreferences = Pick<
+  Database["public"]["Tables"]["profiles"]["Row"],
+  NotificationPreferenceColumn
+>;
+
+export async function getNotificationPreferences(supabase: Client, userId: string) {
+  return supabase
+    .from("profiles")
+    .select(NOTIFICATION_PREFERENCE_COLUMNS.join(", "))
+    .eq("id", userId)
+    .single<NotificationPreferences>();
+}
+
+export async function updateNotificationPreference(
+  supabase: Client,
+  userId: string,
+  column: NotificationPreferenceColumn,
+  value: boolean,
+) {
+  const update: Partial<Record<NotificationPreferenceColumn, boolean>> = { [column]: value };
+  return supabase.from("profiles").update(update).eq("id", userId);
+}
+
 /** Realtime: fires when a new notification is inserted for the current user. */
 export function subscribeToNotifications(supabase: Client, userId: string, onChange: () => void) {
   const channel = supabase

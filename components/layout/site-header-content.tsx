@@ -80,7 +80,7 @@ export function SiteHeaderContent({
             <span className="hidden sm:flex">
               <CartButton />
             </span>
-            {isHome && <NotificationBell userId={user.id} />}
+            {(isHome || companyDashboardId) && <NotificationBell userId={user.id} />}
             <span className="hidden sm:flex">
               <SideMenu
                 loggedIn

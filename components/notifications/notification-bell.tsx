@@ -44,6 +44,11 @@ const NOTIFICATION_LINK: Record<string, (data: unknown) => string | null> = {
     const companyId = (data as { company_id?: string } | null)?.company_id;
     return companyId ? `/empresas/${companyId}/pedidos` : null;
   },
+  order_status_changed_company: (data) => {
+    const companyId = (data as { company_id?: string } | null)?.company_id;
+    return companyId ? `/empresas/${companyId}/pedidos` : null;
+  },
+  order_status_changed_delivery: () => "/entregador/painel",
 };
 
 export function NotificationBell({ userId }: { userId: string }) {
