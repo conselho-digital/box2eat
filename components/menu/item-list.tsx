@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Check, X, Trash2, ImageOff } from "lucide-react";
+import { Plus, Check, X, Trash2, ImageOff, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -18,6 +18,7 @@ import { deleteItem, type MenuItem } from "@/lib/domain/menu";
 import { itemsQueryKey, useCategories, useMenuItems } from "./hooks";
 import { useLongPress } from "./use-long-press";
 import { ItemDialog } from "./item-dialog";
+import { PhotoLightbox } from "./photo-lightbox";
 
 const currency = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -39,24 +40,57 @@ function ItemCard({
   onOpen: () => void;
   onToggleSelect: () => void;
 }) {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const longPress = useLongPress({
     onLongPress: onToggleSelect,
     onClick: () => (selectionMode ? onToggleSelect() : onOpen()),
   });
 
+  const photos = [
+    ...(item.image_url ? [item.image_url] : []),
+    ...item.menu_item_images
+      .slice()
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((i) => i.url),
+  ];
+
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       {...longPress}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (selectionMode) onToggleSelect();
+          else onOpen();
+        }
+      }}
       className="relative flex touch-manipulation items-center gap-3 rounded-lg border p-3 text-left select-none"
     >
-      <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          if (selectionMode) {
+            onToggleSelect();
+            return;
+          }
+          if (photos.length > 0) setLightboxOpen(true);
+        }}
+        className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-muted"
+      >
         {item.image_url ? (
           <Image src={item.image_url} alt="" fill className="object-cover" />
         ) : (
           <div className="flex size-full items-center justify-center text-muted-foreground">
             <ImageOff className="size-5" />
           </div>
+        )}
+        {!selectionMode && photos.length > 0 && (
+          <span className="absolute right-0.5 bottom-0.5 flex size-4 items-center justify-center rounded-full bg-black/60 text-white">
+            <ZoomIn className="size-2.5" />
+          </span>
         )}
         {selectionMode && (
           <div
@@ -69,15 +103,27 @@ function ItemCard({
             </span>
           </div>
         )}
-      </div>
+      </button>
       <div className={`flex min-w-0 flex-1 flex-col ${!item.is_available ? "opacity-50" : ""}`}>
         <span className="truncate font-medium">{item.name}</span>
         <span className="text-sm text-muted-foreground">{currency.format(item.price)}</span>
         {!item.is_available && (
           <span className="text-xs text-muted-foreground">Indisponível</span>
         )}
+        {item.menu_item_addons.length > 0 && (
+          <div className="mt-1 flex flex-col gap-0.5">
+            {item.menu_item_addons.map((addon) => (
+              <span key={addon.addon_item_id} className="truncate text-xs text-muted-foreground">
+                {addon.menu_items.menu_categories?.name ?? "Sem categoria"} · {addon.menu_items.name}{" "}
+                · {currency.format(addon.menu_items.price)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
-    </button>
+
+      <PhotoLightbox photos={photos} open={lightboxOpen} onOpenChange={setLightboxOpen} />
+    </div>
   );
 }
 

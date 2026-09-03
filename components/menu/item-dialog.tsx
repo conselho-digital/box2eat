@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { InfoIcon, PlusIcon, XIcon } from "lucide-react";
+import { InfoIcon, PlusIcon, Trash2Icon, XIcon, ZoomInIcon } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -267,6 +267,21 @@ export function ItemDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-md" showCloseButton={false}>
         <div className="absolute top-2 right-2 flex items-center gap-1">
+          {item && (
+            <Button
+              type="button"
+              size="icon-sm"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => {
+                if (window.confirm(`Excluir "${item.name}"?`)) deleteMutation.mutate();
+              }}
+            >
+              <Trash2Icon />
+              <span className="sr-only">Excluir item</span>
+            </Button>
+          )}
           <Button
             type="button"
             size="sm"
@@ -305,7 +320,7 @@ export function ItemDialog({
                     <button
                       type="button"
                       onClick={() => setLightboxOpen(true)}
-                      className="block size-16 overflow-hidden rounded-lg"
+                      className="relative block size-16 overflow-hidden rounded-lg"
                     >
                       <Image
                         src={url}
@@ -315,6 +330,9 @@ export function ItemDialog({
                         unoptimized
                         className="size-16 object-cover"
                       />
+                      <span className="absolute right-0.5 bottom-0.5 flex size-4 items-center justify-center rounded-full bg-black/60 text-white">
+                        <ZoomInIcon className="size-2.5" />
+                      </span>
                     </button>
                     <button
                       type="button"
@@ -411,19 +429,6 @@ export function ItemDialog({
                 />
                 Adicional
               </label>
-              {item && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="destructive"
-                  className="ml-auto"
-                  onClick={() => {
-                    if (window.confirm(`Excluir "${item.name}"?`)) deleteMutation.mutate();
-                  }}
-                >
-                  Excluir item
-                </Button>
-              )}
             </div>
             {showAvailabilityInfo && (
               <p className="text-xs text-muted-foreground">
