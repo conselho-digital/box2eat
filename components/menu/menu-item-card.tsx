@@ -3,23 +3,19 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { MenuItemOptionsDialog } from "@/components/menu/menu-item-options-dialog";
-import { useMenuItemCart } from "@/components/menu/use-menu-item-cart";
+import { useMenuItemCart, type MenuItemCartCompany } from "@/components/menu/use-menu-item-cart";
 import type { MenuItem } from "@/lib/domain/menu";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
 export function MenuItemCard({
   item,
-  companyId,
-  companyName,
-  companySlug,
+  company,
 }: {
   item: MenuItem;
-  companyId: string;
-  companyName: string;
-  companySlug: string;
+  company: MenuItemCartCompany;
 }) {
-  const cart = useMenuItemCart(item, companyId, companyName, companySlug);
+  const cart = useMenuItemCart(item, company);
 
   return (
     <>

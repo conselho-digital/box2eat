@@ -4,7 +4,7 @@ import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import type { PublicCompany } from "@/lib/domain/companies";
+import { formatCompanyAddress, type PublicCompany } from "@/lib/domain/companies";
 import { computeDeliveryInfo, formatRatingLine, formatWaitTime } from "@/lib/domain/restaurant-display";
 import type { QueueInfo } from "@/lib/domain/queue";
 import type { MenuItem } from "@/lib/domain/menu";
@@ -30,6 +30,13 @@ export function RestaurantMenuCarousel({
   if (items.length === 0) return null;
 
   const rating = formatRatingLine(company.rating_avg, company.delivered_orders_count);
+  const cartCompany = {
+    id: company.id,
+    name: company.name,
+    slug: company.slug,
+    logoUrl: company.cover_image_url,
+    address: formatCompanyAddress(company),
+  };
   const delivery = computeDeliveryInfo(
     loggedIn,
     company.delivery_fee_base,
@@ -96,13 +103,7 @@ export function RestaurantMenuCarousel({
         className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 pb-1 sm:-mx-6 sm:px-6"
       >
         {items.map((item) => (
-          <BestSellerItemCard
-            key={item.id}
-            item={item}
-            companyId={company.id}
-            companyName={company.name}
-            companySlug={company.slug}
-          />
+          <BestSellerItemCard key={item.id} item={item} company={cartCompany} />
         ))}
       </div>
     </section>

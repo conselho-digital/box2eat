@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import type { Cart } from "@/lib/domain/cart";
+import type { RestaurantCart } from "@/lib/domain/cart";
 
 type Client = SupabaseClient<Database>;
 
@@ -16,7 +16,7 @@ export type DeliveryAddressInput = {
 
 export async function submitOrder(
   supabase: Client,
-  cart: Cart,
+  cart: RestaurantCart,
   deliveryAddress: DeliveryAddressInput,
   notes?: string,
   couponCode?: string,

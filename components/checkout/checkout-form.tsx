@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/components/cart/cart-provider";
 import { createClient } from "@/lib/supabase/client";
 import { submitOrder } from "@/lib/domain/checkout";
-import { cartSubtotal } from "@/lib/domain/cart";
+import { restaurantSubtotal } from "@/lib/domain/cart";
 import { validateCoupon } from "@/lib/domain/coupons";
 import {
   geocodeAddress,
@@ -161,18 +161,28 @@ export function CheckoutForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset/getValues are stable; only re-sync when the selection itself changes
   }, [selectedAddress?.id, manualEntry]);
 
-  if (!cart || cart.items.length === 0) {
+  if (!cart || cart.length === 0) {
     return <p className="text-sm text-muted-foreground">Seu carrinho está vazio.</p>;
   }
 
-  const subtotal = cartSubtotal(cart);
+  if (cart.length > 1) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Você tem itens de mais de um restaurante no carrinho. Volte ao carrinho e deixe apenas os
+        itens de um restaurante para continuar.
+      </p>
+    );
+  }
+
+  const restaurant = cart[0];
+  const subtotal = restaurantSubtotal(restaurant);
 
   async function applyCoupon() {
     if (!couponInput.trim()) return;
     setCouponError(null);
     setApplyingCoupon(true);
     const supabase = createClient();
-    const { data, error } = await validateCoupon(supabase, cart!.companyId, couponInput.trim(), subtotal);
+    const { data, error } = await validateCoupon(supabase, restaurant.companyId, couponInput.trim(), subtotal);
     setApplyingCoupon(false);
     if (error || !data || !data.valid) {
       setAppliedCoupon(null);
@@ -186,7 +196,7 @@ export function CheckoutForm({
     setFormError(null);
     const { notes, ...address } = values;
     const supabase = createClient();
-    const { data, error } = await submitOrder(supabase, cart!, address, notes, appliedCoupon?.code);
+    const { data, error } = await submitOrder(supabase, restaurant, address, notes, appliedCoupon?.code);
     if (error || !data) {
       setFormError(describeCheckoutError(error?.message ?? "Erro desconhecido"));
       return;
@@ -198,9 +208,9 @@ export function CheckoutForm({
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-lg border p-3 text-sm">
-        <p className="font-medium">{cart.companyName}</p>
+        <p className="font-medium">{restaurant.companyName}</p>
         <p className="text-muted-foreground">
-          {cart.items.length} item(ns) · Subtotal {currency.format(subtotal)}
+          {restaurant.items.length} item(ns) · Subtotal {currency.format(subtotal)}
         </p>
         {appliedCoupon && (
           <p className="mt-1 text-primary">
