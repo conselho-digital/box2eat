@@ -35,6 +35,7 @@ const NOTIFICATION_LINK: Record<string, (data: unknown) => string | null> = {
     return orderId ? `/pedidos/${orderId}` : null;
   },
   preferred_delivery_offer: () => "/entregador/painel",
+  nearby_delivery_offer: () => "/entregador/painel",
   preferred_delivery_request: () => "/entregador/painel",
   preferred_delivery_confirmed: (data) => {
     const companyId = (data as { company_id?: string } | null)?.company_id;
