@@ -54,18 +54,20 @@ export function BusinessHoursEditor({
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         {week.map((day) => (
-          <div key={day.dayOfWeek} className="flex items-center gap-3 text-sm">
-            <span className="w-20 shrink-0">{WEEKDAY_LABELS[day.dayOfWeek]}</span>
-            <label className="flex shrink-0 items-center gap-1.5">
-              <input
-                type="checkbox"
-                checked={!day.isClosed}
-                onChange={(e) => updateDay(day.dayOfWeek, { isClosed: !e.target.checked })}
-              />
-              Aberto
-            </label>
+          <div key={day.dayOfWeek} className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center">
+            <div className="flex items-center gap-3">
+              <span className="w-20 shrink-0">{WEEKDAY_LABELS[day.dayOfWeek]}</span>
+              <label className="flex shrink-0 items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  checked={!day.isClosed}
+                  onChange={(e) => updateDay(day.dayOfWeek, { isClosed: !e.target.checked })}
+                />
+                Aberto
+              </label>
+            </div>
             {!day.isClosed && (
-              <>
+              <div className="flex items-center gap-2 pl-20 sm:pl-0">
                 <input
                   type="time"
                   value={day.opensAt ?? ""}
@@ -79,7 +81,7 @@ export function BusinessHoursEditor({
                   onChange={(e) => updateDay(day.dayOfWeek, { closesAt: e.target.value })}
                   className="h-8 rounded-lg border border-input bg-background px-2 text-sm"
                 />
-              </>
+              </div>
             )}
           </div>
         ))}
