@@ -22,6 +22,7 @@ export async function submitOrder(
   notes?: string,
   couponCode?: string,
   paymentMethod?: AcceptedPaymentMethod,
+  deliveryCoords?: { lat: number; lng: number } | null,
 ) {
   const items = cart.items.map((item) => ({
     menu_item_id: item.menuItemId,
@@ -36,6 +37,10 @@ export async function submitOrder(
     p_notes: notes || undefined,
     p_coupon_code: couponCode || undefined,
     p_payment_method: paymentMethod,
+    // Feeds the same ETA-based fee formula shown on this page
+    // (computeDeliveryInfo) so the charged fee matches what was displayed.
+    p_delivery_lat: deliveryCoords?.lat,
+    p_delivery_lng: deliveryCoords?.lng,
   };
 
   // create_order is declared RETURNS public.orders (a single row, not

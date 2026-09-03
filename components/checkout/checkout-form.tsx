@@ -261,6 +261,7 @@ export function CheckoutForm({
       notes,
       appliedCoupon?.code,
       resolvedMethod,
+      userLat !== null && userLng !== null ? { lat: userLat, lng: userLng } : null,
     );
     if (error || !data) {
       setFormError(describeCheckoutError(error?.message ?? "Erro desconhecido"));

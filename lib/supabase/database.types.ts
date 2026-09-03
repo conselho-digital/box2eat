@@ -1549,6 +1549,8 @@ export type Database = {
           p_company_id: string
           p_coupon_code?: string
           p_delivery_address: Json
+          p_delivery_lat?: number
+          p_delivery_lng?: number
           p_items: Json
           p_notes?: string
           p_payment_method?: string
@@ -1629,6 +1631,10 @@ export type Database = {
       get_qr_login_status: {
         Args: { p_token: string }
         Returns: { status: string; token_hash: string | null }[]
+      }
+      haversine_distance_km: {
+        Args: { lat1: number; lat2: number; lng1: number; lng2: number }
+        Returns: number
       }
       is_approved_delivery_partner: { Args: never; Returns: boolean }
       is_company_member: { Args: { p_company_id: string }; Returns: boolean }
