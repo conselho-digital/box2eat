@@ -51,16 +51,17 @@ export function ItemDialog({
   item,
   open,
   onOpenChange,
-  onItemCreated,
+  onAddAnother,
 }: {
   companyId: string;
   /** null means "create a new item" instead of editing one. */
   item: MenuItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Called right after a new item is created, so the caller can switch
-   *  this same dialog into edit mode for it. */
-  onItemCreated?: (item: MenuItem) => void;
+  /** Called after "Adicionar mais um" saves the current item, so the
+   *  caller can treat this same (still-open) dialog as a fresh "new
+   *  item" going forward. */
+  onAddAnother?: () => void;
 }) {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -80,6 +81,7 @@ export function ItemDialog({
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors },
   } = useForm<MenuItemInput>({
     resolver: zodResolver(menuItemSchema),
@@ -125,8 +127,20 @@ export function ItemDialog({
     });
   }
 
+  /** Clears the dialog back to a blank "new item" state without closing
+   *  it — used after "Adicionar mais um" saves the current item. */
+  function resetForCreate() {
+    reset({ name: "", description: "", price: undefined, categoryName: "" });
+    setImageFile(null);
+    setImagePreview(null);
+    setLocalAvailable(true);
+    setLocalShowAsAddon(true);
+    setAddonGroups([]);
+    setSelectedAddonIds(new Set());
+  }
+
   const saveMutation = useMutation({
-    mutationFn: async (values: MenuItemInput) => {
+    mutationFn: async ({ values, addAnother }: { values: MenuItemInput; addAnother: boolean }) => {
       const supabase = createClient();
       let savedId: string;
 
@@ -177,12 +191,17 @@ export function ItemDialog({
 
       const { data: finalItem, error: fetchError } = await getItem(supabase, savedId);
       if (fetchError) throw fetchError;
-      return { savedItem: finalItem, wasCreate: !item };
+      return { savedItem: finalItem, addAnother };
     },
-    onSuccess: ({ savedItem, wasCreate }) => {
+    onSuccess: ({ savedItem, addAnother }) => {
       queryClient.invalidateQueries({ queryKey: itemsQueryKey(companyId) });
       queryClient.invalidateQueries({ queryKey: ["menu-item", savedItem.id] });
-      if (wasCreate) onItemCreated?.(savedItem);
+      if (addAnother) {
+        resetForCreate();
+        onAddAnother?.();
+      } else {
+        onOpenChange(false);
+      }
     },
   });
 
@@ -206,8 +225,17 @@ export function ItemDialog({
           <Button
             type="button"
             size="sm"
+            variant="outline"
             disabled={saveMutation.isPending}
-            onClick={handleSubmit((values) => saveMutation.mutate(values))}
+            onClick={handleSubmit((values) => saveMutation.mutate({ values, addAnother: true }))}
+          >
+            Adicionar mais um
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={saveMutation.isPending}
+            onClick={handleSubmit((values) => saveMutation.mutate({ values, addAnother: false }))}
           >
             {saveMutation.isPending ? "Salvando…" : "Salvar"}
           </Button>

@@ -237,7 +237,7 @@ export function ItemList({ companyId }: { companyId: string }) {
         onOpenChange={(open) => {
           if (!open) setDialogItem(null);
         }}
-        onItemCreated={(item) => setDialogItem(item)}
+        onAddAnother={() => setDialogItem("new")}
       />
     </div>
   );
