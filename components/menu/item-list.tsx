@@ -12,6 +12,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/client";
 import { deleteItem, type MenuItem } from "@/lib/domain/menu";
 import { itemsQueryKey, useCategories, useMenuItems } from "./hooks";
@@ -118,15 +119,27 @@ export function ItemList({ companyId }: { companyId: string }) {
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando…</p>;
 
-  const filtered =
-    categoryFilter === ALL_CATEGORIES
-      ? (items ?? [])
-      : (items ?? []).filter((item) => item.category_id === categoryFilter);
+  const showAll = categoryFilter === ALL_CATEGORIES;
+  const filtered = showAll
+    ? (items ?? [])
+    : (items ?? []).filter((item) => item.category_id === categoryFilter);
 
-  const categoryLabel =
-    categoryFilter === ALL_CATEGORIES
-      ? "Todas as categorias"
-      : (categories?.find((c) => c.id === categoryFilter)?.name ?? "Categoria");
+  const categoryLabel = showAll
+    ? "Todas as categorias"
+    : (categories?.find((c) => c.id === categoryFilter)?.name ?? "Categoria");
+
+  // Grouped by category so "Todas as categorias" can show a separator + label
+  // between each category's items instead of one undifferentiated list.
+  const groups = showAll
+    ? Object.values(
+        filtered.reduce<Record<string, { name: string; items: MenuItem[] }>>((acc, item) => {
+          const key = item.category_id ?? "__uncategorized";
+          const name = item.menu_categories?.name ?? "Sem categoria";
+          (acc[key] ??= { name, items: [] }).items.push(item);
+          return acc;
+        }, {}),
+      )
+    : [{ name: categoryLabel, items: filtered }];
 
   return (
     <div className="flex flex-col gap-4">
@@ -169,7 +182,7 @@ export function ItemList({ companyId }: { companyId: string }) {
                 </Button>
               }
             />
-            <DropdownMenuContent>
+            <DropdownMenuContent className="w-56">
               <DropdownMenuRadioGroup value={categoryFilter} onValueChange={setCategoryFilter}>
                 <DropdownMenuRadioItem value={ALL_CATEGORIES}>
                   Todas as categorias
@@ -194,15 +207,25 @@ export function ItemList({ companyId }: { companyId: string }) {
         <p className="text-sm text-muted-foreground">Nenhum item no cardápio ainda.</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {filtered.map((item) => (
-            <ItemCard
-              key={item.id}
-              item={item}
-              selectionMode={selectionMode}
-              selected={selectedIds.has(item.id)}
-              onOpen={() => setDialogItem(item)}
-              onToggleSelect={() => toggleSelect(item.id)}
-            />
+          {groups.map((group, index) => (
+            <div key={group.name + index} className="flex flex-col gap-2">
+              {showAll && (
+                <>
+                  {index > 0 && <Separator className="my-1" />}
+                  <span className="text-xs font-medium text-muted-foreground">{group.name}</span>
+                </>
+              )}
+              {group.items.map((item) => (
+                <ItemCard
+                  key={item.id}
+                  item={item}
+                  selectionMode={selectionMode}
+                  selected={selectedIds.has(item.id)}
+                  onOpen={() => setDialogItem(item)}
+                  onToggleSelect={() => toggleSelect(item.id)}
+                />
+              ))}
+            </div>
           ))}
         </div>
       )}
