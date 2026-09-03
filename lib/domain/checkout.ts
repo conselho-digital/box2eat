@@ -15,6 +15,26 @@ export type DeliveryAddressInput = {
   postal_code?: string;
 };
 
+/** Single-line rendering of an order's delivery_address snapshot — used as
+ *  the Google Maps destination fallback for orders placed before coordinates
+ *  were captured, and anywhere else the raw jsonb needs a readable string. */
+export function formatDeliveryAddress(address: {
+  street?: string | null;
+  number?: string | null;
+  neighborhood?: string | null;
+  city?: string | null;
+  state?: string | null;
+}) {
+  const streetLine = [address.street, address.number].filter(Boolean).join(", ");
+  const cityLine = [
+    address.neighborhood,
+    address.city && address.state ? `${address.city} - ${address.state}` : address.city,
+  ]
+    .filter(Boolean)
+    .join(", ");
+  return [streetLine, cityLine].filter(Boolean).join(" · ");
+}
+
 export async function submitOrder(
   supabase: Client,
   cart: RestaurantCart,

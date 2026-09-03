@@ -16,6 +16,8 @@ type OrderRow = {
   delivered_at: string | null
   delivery_address: Json | null
   delivery_fee: number
+  delivery_lat: number | null
+  delivery_lng: number | null
   delivery_partner_id: string | null
   discount_total: number
   id: string
@@ -1156,6 +1158,8 @@ export type Database = {
           delivered_at?: string | null
           delivery_address?: Json | null
           delivery_fee?: number
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           delivery_partner_id?: string | null
           discount_total?: number
           id?: string
@@ -1175,6 +1179,8 @@ export type Database = {
           delivered_at?: string | null
           delivery_address?: Json | null
           delivery_fee?: number
+          delivery_lat?: number | null
+          delivery_lng?: number | null
           delivery_partner_id?: string | null
           discount_total?: number
           id?: string

@@ -14,6 +14,8 @@ import {
   type AvailableOrder,
 } from "@/lib/domain/delivery";
 import { markDelivered, subscribeToDeliveryUpdates } from "@/lib/domain/orders";
+import { formatDeliveryAddress } from "@/lib/domain/checkout";
+import { buildGoogleMapsDirectionsUrl } from "@/lib/geo";
 import { PreferredPartnerRequests } from "./preferred-partner-requests";
 import { OrderChat } from "../orders/order-chat";
 
@@ -168,6 +170,28 @@ export function DeliveryDashboard({ userId }: { userId: string }) {
               )}
               {order.status === "picked_up" && (
                 <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    render={
+                      <a
+                        href={buildGoogleMapsDirectionsUrl(
+                          order.delivery_lat !== null && order.delivery_lng !== null
+                            ? { lat: order.delivery_lat, lng: order.delivery_lng }
+                            : {
+                                address: formatDeliveryAddress(
+                                  (order.delivery_address ?? {}) as Record<string, string | null>,
+                                ),
+                              },
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      />
+                    }
+                    nativeButton={false}
+                  >
+                    Rota até o cliente
+                  </Button>
                   <Button size="sm" onClick={() => deliver.mutate(order.id)} disabled={deliver.isPending}>
                     Marcar entregue
                   </Button>
