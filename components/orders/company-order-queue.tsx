@@ -15,6 +15,11 @@ import {
   subscribeToCompanyOrders,
   type CompanyOrder,
 } from "@/lib/domain/orders";
+import { getCompanyDeliveryPreference, notifyPreferredDeliveryPartner } from "@/lib/domain/delivery";
+import {
+  DeliveryPreferenceSettings,
+  deliveryPreferenceQueryKey,
+} from "./delivery-preference-settings";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const timeFormat = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" });
@@ -51,6 +56,16 @@ export function CompanyOrderQueue({ companyId }: { companyId: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- queryKey is stable per companyId
   }, [companyId]);
 
+  const { data: deliverySettings } = useQuery({
+    queryKey: deliveryPreferenceQueryKey(companyId),
+    queryFn: async () => {
+      const supabase = createClient();
+      const { data, error } = await getCompanyDeliveryPreference(supabase, companyId);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   if (isLoading) return <p className="text-sm text-muted-foreground">Carregando…</p>;
 
   const active = (orders ?? []).filter((o) => isActiveOrder(o.status));
@@ -58,13 +73,20 @@ export function CompanyOrderQueue({ companyId }: { companyId: string }) {
 
   return (
     <div className="flex flex-col gap-8">
+      <DeliveryPreferenceSettings companyId={companyId} />
+
       <div className="flex flex-col gap-3">
         <h2 className="font-medium">Pedidos em andamento</h2>
         {active.length === 0 && (
           <p className="text-sm text-muted-foreground">Nenhum pedido no momento.</p>
         )}
         {active.map((order) => (
-          <OrderCard key={order.id} order={order} queryKey={queryKey} />
+          <OrderCard
+            key={order.id}
+            order={order}
+            queryKey={queryKey}
+            askDeliveryPreference={deliverySettings?.delivery_preference === "ask"}
+          />
         ))}
       </div>
 
@@ -84,10 +106,12 @@ function OrderCard({
   order,
   queryKey,
   readOnly,
+  askDeliveryPreference,
 }: {
   order: CompanyOrder;
   queryKey: unknown[];
   readOnly?: boolean;
+  askDeliveryPreference?: boolean;
 }) {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
@@ -112,6 +136,9 @@ function OrderCard({
   const preparing = useMutation({ mutationFn: makeMutation((s) => markPreparing(s, order.id)) });
   const ready = useMutation({ mutationFn: makeMutation((s) => markReady(s, order.id)) });
   const delivered = useMutation({ mutationFn: makeMutation((s) => markDelivered(s, order.id)) });
+  const notifyPreferred = useMutation({
+    mutationFn: makeMutation((s) => notifyPreferredDeliveryPartner(s, order.id)),
+  });
 
   return (
     <div className="rounded-lg border p-3">
@@ -163,9 +190,25 @@ function OrderCard({
             </Button>
           )}
           {order.status === "ready_for_pickup" && (
-            <Button size="sm" onClick={() => delivered.mutate()} disabled={delivered.isPending}>
-              Marcar entregue
-            </Button>
+            <>
+              <Button size="sm" onClick={() => delivered.mutate()} disabled={delivered.isPending}>
+                Marcar entregue
+              </Button>
+              {askDeliveryPreference && !order.delivery_partner_id && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => notifyPreferred.mutate()}
+                  disabled={notifyPreferred.isPending || notifyPreferred.isSuccess}
+                >
+                  {notifyPreferred.isSuccess
+                    ? "Entregador notificado"
+                    : notifyPreferred.isPending
+                      ? "Notificando…"
+                      : "Notificar entregador de preferência"}
+                </Button>
+              )}
+            </>
           )}
         </div>
       )}

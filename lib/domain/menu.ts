@@ -21,22 +21,25 @@ export type MenuItemAddonEntry = {
   > & { menu_categories: Pick<MenuCategory, "id" | "name"> | null };
 };
 /** For this item's own "opcional" configuration: how many selections are
- *  required from each category of addons attached to it (0 = optional). */
+ *  required from each category of addons attached to it. */
 export type MenuItemAddonCategory = {
   id: string;
   category_id: string;
   min_select: number;
   menu_categories: Pick<MenuCategory, "id" | "name"> | null;
 };
+/** An extra gallery photo beyond the item's cover photo (menu_items.image_url). */
+export type MenuItemImage = Database["public"]["Tables"]["menu_item_images"]["Row"];
 export type MenuItem = Database["public"]["Tables"]["menu_items"]["Row"] & {
   menu_item_option_groups: MenuOptionGroup[];
   menu_categories: Pick<MenuCategory, "id" | "name"> | null;
   menu_item_addons: MenuItemAddonEntry[];
   menu_item_addon_categories: MenuItemAddonCategory[];
+  menu_item_images: MenuItemImage[];
 };
 
 export const ITEM_WITH_OPTIONS_SELECT =
-  "*, menu_categories(id, name), menu_item_option_groups(*, menu_item_options(*)), menu_item_addons!menu_item_addons_menu_item_id_fkey(addon_item_id, menu_items!menu_item_addons_addon_item_id_fkey(id, name, price, image_url, is_available, show_as_addon, category_id, menu_categories(id, name))), menu_item_addon_categories(id, category_id, min_select, menu_categories(id, name))";
+  "*, menu_categories(id, name), menu_item_option_groups(*, menu_item_options(*)), menu_item_addons!menu_item_addons_menu_item_id_fkey(addon_item_id, menu_items!menu_item_addons_addon_item_id_fkey(id, name, price, image_url, is_available, show_as_addon, category_id, menu_categories(id, name))), menu_item_addon_categories(id, category_id, min_select, menu_categories(id, name)), menu_item_images(id, url, sort_order)";
 
 export async function listCategories(supabase: Client, companyId: string) {
   return supabase
@@ -220,6 +223,23 @@ export async function setItemAddonCategories(
       category_id: g.categoryId,
       min_select: g.minSelect,
     })),
+  );
+  return { error: insertError };
+}
+
+/** Replaces the full set of extra gallery photos for menuItemId, in order —
+ *  same clear-then-insert approach as setItemAddons. The item's cover photo
+ *  (menu_items.image_url) is managed separately via updateItem. */
+export async function setItemImages(supabase: Client, menuItemId: string, urls: string[]) {
+  const { error: deleteError } = await supabase
+    .from("menu_item_images")
+    .delete()
+    .eq("menu_item_id", menuItemId);
+  if (deleteError) return { error: deleteError };
+  if (urls.length === 0) return { error: null };
+
+  const { error: insertError } = await supabase.from("menu_item_images").insert(
+    urls.map((url, index) => ({ menu_item_id: menuItemId, url, sort_order: index })),
   );
   return { error: insertError };
 }

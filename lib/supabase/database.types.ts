@@ -78,6 +78,7 @@ export type Database = {
           created_at: string
           delivered_orders_count: number
           delivery_fee_base: number
+          delivery_preference: string
           delivery_radius_km: number | null
           description: string | null
           id: string
@@ -93,6 +94,7 @@ export type Database = {
           owner_id: string
           phone: string | null
           postal_code: string | null
+          preferred_delivery_partner_id: string | null
           rating_avg: number | null
           rating_count: number
           slug: string
@@ -113,6 +115,7 @@ export type Database = {
           created_at?: string
           delivered_orders_count?: number
           delivery_fee_base?: number
+          delivery_preference?: string
           delivery_radius_km?: number | null
           description?: string | null
           id?: string
@@ -128,6 +131,7 @@ export type Database = {
           owner_id: string
           phone?: string | null
           postal_code?: string | null
+          preferred_delivery_partner_id?: string | null
           rating_avg?: number | null
           rating_count?: number
           slug: string
@@ -148,6 +152,7 @@ export type Database = {
           created_at?: string
           delivered_orders_count?: number
           delivery_fee_base?: number
+          delivery_preference?: string
           delivery_radius_km?: number | null
           description?: string | null
           id?: string
@@ -163,6 +168,7 @@ export type Database = {
           owner_id?: string
           phone?: string | null
           postal_code?: string | null
+          preferred_delivery_partner_id?: string | null
           rating_avg?: number | null
           rating_count?: number
           slug?: string
@@ -179,6 +185,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "companies_preferred_delivery_partner_id_fkey"
+            columns: ["preferred_delivery_partner_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_partners"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -725,6 +738,38 @@ export type Database = {
           },
           {
             foreignKeyName: "menu_item_addons_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_item_images: {
+        Row: {
+          created_at: string
+          id: string
+          menu_item_id: string
+          sort_order: number
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          menu_item_id: string
+          sort_order?: number
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          menu_item_id?: string
+          sort_order?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_images_menu_item_id_fkey"
             columns: ["menu_item_id"]
             isOneToOne: false
             referencedRelation: "menu_items"
@@ -1541,6 +1586,10 @@ export type Database = {
         Args: { p_company_ids: string[]; p_limit_per_company?: number }
         Returns: { company_id: string; menu_item_id: string; rnk: number; total_quantity: number }[]
       }
+      get_delivery_partner_name: {
+        Args: { p_user_id: string }
+        Returns: string
+      }
       get_qr_login_status: {
         Args: { p_token: string }
         Returns: { status: string; token_hash: string | null }[]
@@ -1611,9 +1660,20 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      find_delivery_partner_by_email: {
+        Args: { p_email: string }
+        Returns: {
+          full_name: string
+          user_id: string
+        }[]
+      }
       menu_item_company_id: {
         Args: { p_menu_item_id: string }
         Returns: string
+      }
+      notify_preferred_delivery_partner: {
+        Args: { p_order_id: string }
+        Returns: undefined
       }
       notify_user: {
         Args: {

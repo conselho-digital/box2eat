@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { InfoIcon, XIcon } from "lucide-react";
+import { InfoIcon, PlusIcon, XIcon } from "lucide-react";
 import {
   Dialog,
   DialogClose,
@@ -26,12 +26,15 @@ import {
   uploadMenuImage,
   setItemAddons,
   setItemAddonCategories,
+  setItemImages,
   type MenuItem,
 } from "@/lib/domain/menu";
 import { menuItemSchema, type MenuItemInput } from "@/lib/validations/menu";
 import { itemsQueryKey, useCategories, useMenuItems } from "./hooks";
 import { CategoryCombobox } from "./category-combobox";
 import { ItemAddonPicker, type AddonGroupDraft } from "./item-addon-picker";
+import { PhotoLightbox } from "./photo-lightbox";
+import { useCloseOnBack } from "@/components/hooks/use-close-on-back";
 
 function groupsFromItem(item: MenuItem | null): AddonGroupDraft[] {
   if (!item) return [];
@@ -44,6 +47,25 @@ function groupsFromItem(item: MenuItem | null): AddonGroupDraft[] {
 
 function selectedAddonsFromItem(item: MenuItem | null): Set<string> {
   return new Set(item?.menu_item_addons.map((a) => a.addon_item_id) ?? []);
+}
+
+/** Existing (already-uploaded) photos or newly staged files, in display
+ *  order — the first one is the item's cover photo (menu_items.image_url). */
+type PhotoDraft =
+  | { key: string; kind: "existing"; url: string }
+  | { key: string; kind: "new"; file: File; previewUrl: string };
+
+function photosFromItem(item: MenuItem | null): PhotoDraft[] {
+  if (!item) return [];
+  const urls: string[] = [];
+  if (item.image_url) urls.push(item.image_url);
+  urls.push(
+    ...item.menu_item_images
+      .slice()
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((i) => i.url),
+  );
+  return urls.map((url) => ({ key: crypto.randomUUID(), kind: "existing", url }));
 }
 
 export function ItemDialog({
@@ -68,8 +90,8 @@ export function ItemDialog({
   const { data: categories } = useCategories(companyId);
   const { data: items } = useMenuItems(companyId);
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(item?.image_url ?? null);
+  const [photos, setPhotos] = useState<PhotoDraft[]>(() => photosFromItem(item));
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [localAvailable, setLocalAvailable] = useState(item?.is_available ?? true);
   const [localShowAsAddon, setLocalShowAsAddon] = useState(item?.show_as_addon ?? true);
   const [addonGroups, setAddonGroups] = useState<AddonGroupDraft[]>(() => groupsFromItem(item));
@@ -77,6 +99,8 @@ export function ItemDialog({
     selectedAddonsFromItem(item),
   );
   const [showAvailabilityInfo, setShowAvailabilityInfo] = useState(false);
+
+  useCloseOnBack(open, () => onOpenChange(false));
 
   const {
     register,
@@ -128,12 +152,25 @@ export function ItemDialog({
     });
   }
 
+  function addPhotos(files: FileList) {
+    const drafts: PhotoDraft[] = Array.from(files).map((file) => ({
+      key: crypto.randomUUID(),
+      kind: "new",
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+    setPhotos((prev) => [...prev, ...drafts]);
+  }
+
+  function removePhoto(key: string) {
+    setPhotos((prev) => prev.filter((p) => p.key !== key));
+  }
+
   /** Clears the dialog back to a blank "new item" state without closing
    *  it — used after "Adicionar mais um" saves the current item. */
   function resetForCreate() {
     reset({ name: "", description: "", price: undefined, categoryName: "" });
-    setImageFile(null);
-    setImagePreview(null);
+    setPhotos([]);
     setLocalAvailable(true);
     setLocalShowAsAddon(true);
     setAddonGroups([]);
@@ -166,18 +203,25 @@ export function ItemDialog({
         }
       }
 
-      if (imageFile) {
-        const { data: publicUrl, error: uploadError } = await uploadMenuImage(
-          supabase,
-          companyId,
-          imageFile,
-        );
-        if (uploadError) throw uploadError;
-        const { error: imageError } = await updateItem(supabase, companyId, savedId, {
-          imageUrl: publicUrl,
-        });
-        if (imageError) throw imageError;
-      }
+      const uploadedUrls = await Promise.all(
+        photos.map(async (photo) => {
+          if (photo.kind === "existing") return photo.url;
+          const { data: publicUrl, error: uploadError } = await uploadMenuImage(
+            supabase,
+            companyId,
+            photo.file,
+          );
+          if (uploadError) throw uploadError;
+          return publicUrl;
+        }),
+      );
+      const [coverUrl = null, ...galleryUrls] = uploadedUrls;
+      const { error: imageError } = await updateItem(supabase, companyId, savedId, {
+        imageUrl: coverUrl,
+      });
+      if (imageError) throw imageError;
+      const { error: imagesError } = await setItemImages(supabase, savedId, galleryUrls);
+      if (imagesError) throw imagesError;
 
       const { error: addonsError } = await setItemAddons(supabase, savedId, [...selectedAddonIds]);
       if (addonsError) throw addonsError;
@@ -252,44 +296,64 @@ export function ItemDialog({
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Label>Foto</Label>
-            <div className="flex items-center gap-3">
-              {imagePreview ? (
-                <Image
-                  src={imagePreview}
-                  alt=""
-                  width={64}
-                  height={64}
-                  unoptimized
-                  className="size-16 rounded-lg object-cover"
-                />
-              ) : (
-                <div className="flex size-16 items-center justify-center rounded-lg border border-dashed text-xs text-muted-foreground">
-                  Sem foto
-                </div>
-              )}
+            <Label>Fotos</Label>
+            <div className="flex flex-wrap items-center gap-2">
+              {photos.map((photo) => {
+                const url = photo.kind === "existing" ? photo.url : photo.previewUrl;
+                return (
+                  <div key={photo.key} className="relative size-16 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setLightboxOpen(true)}
+                      className="block size-16 overflow-hidden rounded-lg"
+                    >
+                      <Image
+                        src={url}
+                        alt=""
+                        width={64}
+                        height={64}
+                        unoptimized
+                        className="size-16 object-cover"
+                      />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(photo.key)}
+                      aria-label="Remover foto"
+                      className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-foreground text-background"
+                    >
+                      <XIcon className="size-3" />
+                    </button>
+                  </div>
+                );
+              })}
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
                 onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setImageFile(file);
-                  setImagePreview(URL.createObjectURL(file));
+                  if (e.target.files?.length) addPhotos(e.target.files);
+                  e.target.value = "";
                 }}
               />
-              <Button
+              <button
                 type="button"
-                size="sm"
-                variant="outline"
                 onClick={() => fileInputRef.current?.click()}
+                aria-label="Adicionar foto"
+                className="flex size-16 shrink-0 items-center justify-center rounded-lg border border-dashed text-muted-foreground hover:bg-muted"
               >
-                {imagePreview ? "Trocar foto" : "Escolher foto"}
-              </Button>
+                <PlusIcon className="size-5" />
+              </button>
             </div>
           </div>
+
+          <PhotoLightbox
+            photos={photos.map((p) => (p.kind === "existing" ? p.url : p.previewUrl))}
+            open={lightboxOpen}
+            onOpenChange={setLightboxOpen}
+          />
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="item-name">Nome do item</Label>

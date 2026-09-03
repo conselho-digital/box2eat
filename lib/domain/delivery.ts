@@ -114,3 +114,47 @@ export async function claimOrder(supabase: Client, orderId: string) {
 export async function pickUpOrder(supabase: Client, orderId: string) {
   return supabase.rpc("mark_picked_up", { p_order_id: orderId });
 }
+
+/** How a company wants ready orders routed to a courier: "platform" leaves
+ *  them for any online delivery partner to claim (the default); "preferred"
+ *  always notifies preferredDeliveryPartnerId directly when an order is
+ *  ready; "ask" leaves that decision to staff per order. */
+export type DeliveryPreference = "platform" | "preferred" | "ask";
+
+export async function getCompanyDeliveryPreference(supabase: Client, companyId: string) {
+  return supabase
+    .from("companies")
+    .select("delivery_preference, preferred_delivery_partner_id")
+    .eq("id", companyId)
+    .single();
+}
+
+export async function setCompanyDeliveryPreference(
+  supabase: Client,
+  companyId: string,
+  input: { deliveryPreference: DeliveryPreference; preferredDeliveryPartnerId: string | null },
+) {
+  return supabase
+    .from("companies")
+    .update({
+      delivery_preference: input.deliveryPreference,
+      preferred_delivery_partner_id: input.preferredDeliveryPartnerId,
+    })
+    .eq("id", companyId);
+}
+
+/** Looks up an approved delivery partner by e-mail, for the "entregador de
+ *  preferência" picker — restricted server-side to company staff. */
+export async function findDeliveryPartnerByEmail(supabase: Client, email: string) {
+  return supabase.rpc("find_delivery_partner_by_email", { p_email: email });
+}
+
+export async function getDeliveryPartnerName(supabase: Client, userId: string) {
+  return supabase.rpc("get_delivery_partner_name", { p_user_id: userId });
+}
+
+/** "Ask each time" mode: staff explicitly routes one ready order to the
+ *  company's preferred courier instead of leaving it for the open pool. */
+export async function notifyPreferredDeliveryPartner(supabase: Client, orderId: string) {
+  return supabase.rpc("notify_preferred_delivery_partner", { p_order_id: orderId });
+}
