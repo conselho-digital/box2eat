@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMyMembership } from "@/lib/domain/companies-detail";
-import { CompanyCategoryForm } from "@/components/companies/company-category-form";
+import { AnalyticsDashboard } from "@/components/companies/analytics/analytics-dashboard";
 
 export default async function CompanyOverviewPage({
   params,
@@ -19,16 +19,5 @@ export default async function CompanyOverviewPage({
   const { data: membership } = await getMyMembership(supabase, companyId, user.id);
   if (!membership) notFound();
 
-  const company = membership.companies;
-
-  return (
-    <div className="flex flex-col gap-2 text-sm text-muted-foreground">
-      {company.description && <p>{company.description}</p>}
-      {company.phone && <p>Telefone: {company.phone}</p>}
-      <div>
-        <p className="mb-1.5">Categoria</p>
-        <CompanyCategoryForm companyId={company.id} category={company.category} />
-      </div>
-    </div>
-  );
+  return <AnalyticsDashboard companyId={membership.companies.id} />;
 }

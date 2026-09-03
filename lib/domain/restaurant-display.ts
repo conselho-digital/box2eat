@@ -64,8 +64,8 @@ const DELIVERY_FEE_PER_MINUTE = 0.5;
 
 export type DeliveryInfo =
   | { kind: "add_address" }
-  | { kind: "eta"; label: string; etaMinutes: number }
-  | { kind: "flat"; label: string };
+  | { kind: "eta"; label: string; etaMinutes: number; feeAmount: number }
+  | { kind: "flat"; label: string; feeAmount: number };
 
 /** Logged-in without a saved address/location → prompt to add one instead of
  *  a fee. With one, price delivery at R$0,50/min of estimated travel time
@@ -80,17 +80,27 @@ export function computeDeliveryInfo(
   userLng: number | null,
 ): DeliveryInfo {
   if (!loggedIn) {
-    return { kind: "flat", label: formatDeliveryFee(deliveryFeeBase) };
+    return { kind: "flat", label: formatDeliveryFee(deliveryFeeBase), feeAmount: deliveryFeeBase };
   }
   if (userLat === null || userLng === null) {
     return { kind: "add_address" };
   }
   if (companyLat === null || companyLng === null) {
-    return { kind: "flat", label: formatDeliveryFee(deliveryFeeBase) };
+    return { kind: "flat", label: formatDeliveryFee(deliveryFeeBase), feeAmount: deliveryFeeBase };
   }
   const distanceKm = haversineDistanceKm(userLat, userLng, companyLat, companyLng);
   const etaMinutes = Math.max(1, Math.round((distanceKm / DELIVERY_SPEED_KMH) * 60));
-  return { kind: "eta", label: currency.format(etaMinutes * DELIVERY_FEE_PER_MINUTE), etaMinutes };
+  const feeAmount = etaMinutes * DELIVERY_FEE_PER_MINUTE;
+  return { kind: "eta", label: currency.format(feeAmount), etaMinutes, feeAmount };
+}
+
+const arrivalTimeFormat = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
+
+/** Clock time the order should arrive by, for the checkout page — travel
+ *  ETA plus the restaurant's average prep time as a buffer. */
+export function formatEstimatedArrival(etaMinutes: number, avgPrepTimeMinutes: number | null) {
+  const totalMinutes = etaMinutes + (avgPrepTimeMinutes ?? 20);
+  return arrivalTimeFormat.format(new Date(Date.now() + totalMinutes * 60_000));
 }
 
 type PromotionBadgeInput = {

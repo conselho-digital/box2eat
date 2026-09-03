@@ -88,6 +88,25 @@ export async function listPromotedCompanies(supabase: Client) {
   return { data: promotions, error: null };
 }
 
+export type ActiveCoupon = Pick<
+  Coupon,
+  "id" | "code" | "promo_type" | "discount_type" | "discount_value"
+>;
+
+/** Active coupons for one restaurant — backs the checkout page's
+ *  promotions-count card. */
+export async function listActiveCouponsForCompany(supabase: Client, companyId: string) {
+  const nowIso = new Date().toISOString();
+  return supabase
+    .from("coupons")
+    .select("id, code, promo_type, discount_type, discount_value")
+    .eq("company_id", companyId)
+    .eq("is_active", true)
+    .lte("valid_from", nowIso)
+    .or(`valid_until.is.null,valid_until.gte.${nowIso}`)
+    .returns<ActiveCoupon[]>();
+}
+
 // validate_coupon is declared RETURNS TABLE(...) (genuinely array-shaped,
 // unlike the single-row-returning order/company RPCs elsewhere in this
 // codebase) — .single() is correct and safe here since the function always

@@ -70,6 +70,7 @@ export type Database = {
     Tables: {
       companies: {
         Row: {
+          accepted_payment_methods: string[]
           avg_prep_time_minutes: number | null
           category: string | null
           city: string | null
@@ -106,6 +107,7 @@ export type Database = {
           view_count: number
         }
         Insert: {
+          accepted_payment_methods?: string[]
           avg_prep_time_minutes?: number | null
           category?: string | null
           city?: string | null
@@ -142,6 +144,7 @@ export type Database = {
           view_count?: number
         }
         Update: {
+          accepted_payment_methods?: string[]
           avg_prep_time_minutes?: number | null
           category?: string | null
           city?: string | null
@@ -238,6 +241,47 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      company_business_hours: {
+        Row: {
+          closes_at: string | null
+          company_id: string
+          created_at: string
+          day_of_week: number
+          id: string
+          is_closed: boolean
+          opens_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          closes_at?: string | null
+          company_id: string
+          created_at?: string
+          day_of_week: number
+          id?: string
+          is_closed?: boolean
+          opens_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          closes_at?: string | null
+          company_id?: string
+          created_at?: string
+          day_of_week?: number
+          id?: string
+          is_closed?: boolean
+          opens_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_business_hours_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -1160,6 +1204,7 @@ export type Database = {
           avatar_url: string | null
           cpf: string | null
           created_at: string
+          default_payment_method: string | null
           full_name: string
           id: string
           phone: string | null
@@ -1171,6 +1216,7 @@ export type Database = {
           avatar_url?: string | null
           cpf?: string | null
           created_at?: string
+          default_payment_method?: string | null
           full_name?: string
           id: string
           phone?: string | null
@@ -1182,6 +1228,7 @@ export type Database = {
           avatar_url?: string | null
           cpf?: string | null
           created_at?: string
+          default_payment_method?: string | null
           full_name?: string
           id?: string
           phone?: string | null
@@ -1393,6 +1440,7 @@ export type Database = {
           p_delivery_address: Json
           p_items: Json
           p_notes?: string
+          p_payment_method?: string
         }
         Returns: OrderRow
         SetofOptions: {
@@ -1446,6 +1494,18 @@ export type Database = {
       get_company_queue_info: {
         Args: { p_company_ids: string[] }
         Returns: { avg_minutes: number | null; company_id: string; has_queue: boolean }[]
+      }
+      get_company_sales_over_time: {
+        Args: { p_company_id: string; p_days?: number }
+        Returns: { day: string; order_count: number; revenue: number }[]
+      }
+      get_company_top_products: {
+        Args: { p_company_id: string; p_days?: number; p_limit?: number; p_offset?: number }
+        Returns: { item_name: string; total_quantity: number; total_revenue: number }[]
+      }
+      get_company_payment_method_usage: {
+        Args: { p_company_id: string; p_days?: number }
+        Returns: { order_count: number; payment_method: string; revenue: number }[]
       }
       get_best_selling_items_for_companies: {
         Args: { p_company_ids: string[]; p_limit_per_company?: number }

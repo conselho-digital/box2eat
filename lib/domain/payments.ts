@@ -66,3 +66,10 @@ export async function createStripeConnectOnboardingLink(supabase: Client, compan
     origin: window.location.origin,
   });
 }
+
+export async function createMercadoPagoConnectOnboardingLink(supabase: Client, companyId: string) {
+  return invokePaymentFunction<{ url: string }>(supabase, "mercadopago-connect-onboarding", {
+    company_id: companyId,
+    origin: window.location.origin,
+  });
+}
