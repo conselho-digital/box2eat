@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
-import type { CreateCompanyInput } from "@/lib/validations/company";
+import type { CreateCompanyInput, UpdateCompanySettingsInput } from "@/lib/validations/company";
+import { RESERVED_SLUGS } from "@/lib/validations/company";
+import type { AcceptedPaymentMethod } from "@/lib/domain/payment-methods";
 import { haversineDistanceKm } from "@/lib/geo";
 
 type Client = SupabaseClient<Database>;
@@ -126,8 +128,55 @@ export async function createCompany(supabase: Client, input: CreateCompanyInput)
   });
 }
 
-export async function updateCompanyCategory(supabase: Client, companyId: string, category: string) {
-  return supabase.from("companies").update({ category }).eq("id", companyId);
+export async function updateCompanySettings(
+  supabase: Client,
+  companyId: string,
+  input: UpdateCompanySettingsInput,
+) {
+  return supabase
+    .from("companies")
+    .update({
+      name: input.name,
+      slug: input.slug,
+      phone: input.phone || null,
+      category: input.category ?? null,
+    })
+    .eq("id", companyId);
+}
+
+/** Used by the settings form to warn before saving a slug that's already
+ *  taken or reserved — the database constraint is still the source of
+ *  truth, this is just a friendlier up-front check. */
+export async function isSlugAvailable(supabase: Client, slug: string, excludeCompanyId: string) {
+  if (RESERVED_SLUGS.has(slug)) return { available: false, error: null };
+  const { data, error } = await supabase
+    .from("companies")
+    .select("id")
+    .eq("slug", slug)
+    .neq("id", excludeCompanyId)
+    .maybeSingle();
+  if (error) return { available: null, error };
+  return { available: !data, error: null };
+}
+
+/** Just what the checkout page needs about the restaurant in the cart:
+ *  coordinates for the delivery-time estimate and which payment methods
+ *  it accepts. Fetched fresh rather than carried in the cart itself, so it
+ *  can't go stale if the restaurant moves or changes its settings. */
+export async function getCompanyCheckoutInfo(supabase: Client, companyId: string) {
+  return supabase
+    .from("companies")
+    .select("id, lat, lng, avg_prep_time_minutes, delivery_fee_base, accepted_payment_methods")
+    .eq("id", companyId)
+    .single();
+}
+
+export async function updateAcceptedPaymentMethods(
+  supabase: Client,
+  companyId: string,
+  methods: AcceptedPaymentMethod[],
+) {
+  return supabase.from("companies").update({ accepted_payment_methods: methods }).eq("id", companyId);
 }
 
 export async function incrementCompanyView(supabase: Client, companyId: string) {

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { RestaurantCart } from "@/lib/domain/cart";
+import type { AcceptedPaymentMethod } from "@/lib/domain/payment-methods";
 
 type Client = SupabaseClient<Database>;
 
@@ -20,6 +21,7 @@ export async function submitOrder(
   deliveryAddress: DeliveryAddressInput,
   notes?: string,
   couponCode?: string,
+  paymentMethod?: AcceptedPaymentMethod,
 ) {
   const items = cart.items.map((item) => ({
     menu_item_id: item.menuItemId,
@@ -33,6 +35,7 @@ export async function submitOrder(
     p_delivery_address: deliveryAddress,
     p_notes: notes || undefined,
     p_coupon_code: couponCode || undefined,
+    p_payment_method: paymentMethod,
   };
 
   // create_order is declared RETURNS public.orders (a single row, not

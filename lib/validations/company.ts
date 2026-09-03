@@ -26,3 +26,18 @@ export const createCompanySchema = z.object({
 });
 
 export type CreateCompanyInput = z.infer<typeof createCompanySchema>;
+
+export const updateCompanySettingsSchema = z.object({
+  name: z.string().trim().min(2, "Informe o nome do restaurante"),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(2, "Informe uma URL curta")
+    .regex(slugPattern, "Use apenas letras minúsculas, números e hífens")
+    .refine((value) => !RESERVED_SLUGS.has(value), "Essa URL é reservada. Escolha outra."),
+  phone: z.string().trim().optional(),
+  category: z.enum(FOOD_CATEGORIES).optional(),
+});
+
+export type UpdateCompanySettingsInput = z.infer<typeof updateCompanySettingsSchema>;

@@ -15,6 +15,7 @@ export function CompanyDashboardTabsRow() {
   const companyId = match[1];
   const tabs = [
     { href: `/empresas/${companyId}`, label: "Visão geral" },
+    { href: `/empresas/${companyId}/restaurante`, label: "Restaurante" },
     { href: `/empresas/${companyId}/cardapio`, label: "Cardápio" },
     { href: `/empresas/${companyId}/pedidos`, label: "Pedidos" },
     { href: `/empresas/${companyId}/pagamentos`, label: "Pagamentos" },

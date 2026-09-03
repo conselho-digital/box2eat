@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,11 +11,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/components/cart/cart-provider";
 import { createClient } from "@/lib/supabase/client";
 import { submitOrder } from "@/lib/domain/checkout";
 import { restaurantSubtotal } from "@/lib/domain/cart";
 import { validateCoupon } from "@/lib/domain/coupons";
+import { getCompanyCheckoutInfo } from "@/lib/domain/companies";
+import { updateDefaultPaymentMethod } from "@/lib/domain/account";
+import {
+  computeDeliveryInfo,
+  formatEstimatedArrival,
+} from "@/lib/domain/restaurant-display";
+import {
+  ACCEPTED_PAYMENT_METHODS,
+  PAYMENT_OPTIONS,
+  companyAcceptsOption,
+  isOfflinePaymentMethod,
+  resolveOrderPaymentMethod,
+  type PaymentOption,
+} from "@/lib/domain/payment-methods";
 import {
   geocodeAddress,
   listMyAddresses,
@@ -22,6 +38,8 @@ import {
   type UserAddress,
 } from "@/lib/domain/address";
 import { AddressMapView } from "@/components/account/address-map-view";
+import { PromotionsCard } from "@/components/checkout/promotions-card";
+import { PaymentMethodPicker } from "@/components/checkout/payment-method-picker";
 import {
   deliveryAddressSchema,
   type DeliveryAddressFormInput,
@@ -60,9 +78,13 @@ function describeCouponMessage(message: string): string {
 export function CheckoutForm({
   userId,
   initialAddresses,
+  customerPhone,
+  initialDefaultPaymentMethod,
 }: {
   userId: string;
   initialAddresses: UserAddress[];
+  customerPhone: string | null;
+  initialDefaultPaymentMethod: PaymentOption | null;
 }) {
   const router = useRouter();
   const { cart, clearCart } = useCart();
@@ -71,6 +93,9 @@ export function CheckoutForm({
   const [couponError, setCouponError] = useState<string | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number } | null>(null);
+  const [selectedPayment, setSelectedPayment] = useState<PaymentOption | null>(
+    initialDefaultPaymentMethod,
+  );
 
   const { data: addresses } = useQuery({
     queryKey: ["my-addresses", userId],
@@ -161,11 +186,24 @@ export function CheckoutForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reset/getValues are stable; only re-sync when the selection itself changes
   }, [selectedAddress?.id, manualEntry]);
 
+  const restaurant = cart?.length === 1 ? cart[0] : null;
+
+  const { data: companyInfo } = useQuery({
+    queryKey: ["checkout-company-info", restaurant?.companyId],
+    queryFn: async () => {
+      const supabase = createClient();
+      const { data, error } = await getCompanyCheckoutInfo(supabase, restaurant!.companyId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: Boolean(restaurant),
+  });
+
   if (!cart || cart.length === 0) {
     return <p className="text-sm text-muted-foreground">Seu carrinho está vazio.</p>;
   }
 
-  if (cart.length > 1) {
+  if (!restaurant) {
     return (
       <p className="text-sm text-muted-foreground">
         Você tem itens de mais de um restaurante no carrinho. Volte ao carrinho e deixe apenas os
@@ -174,15 +212,34 @@ export function CheckoutForm({
     );
   }
 
-  const restaurant = cart[0];
   const subtotal = restaurantSubtotal(restaurant);
+
+  const userLat = !manualEntry && selectedAddress ? selectedAddress.lat : (coords?.lat ?? null);
+  const userLng = !manualEntry && selectedAddress ? selectedAddress.lng : (coords?.lng ?? null);
+
+  const deliveryInfo = companyInfo
+    ? computeDeliveryInfo(true, companyInfo.delivery_fee_base, companyInfo.lat, companyInfo.lng, userLat, userLng)
+    : null;
+  const deliveryFeeAmount =
+    deliveryInfo && deliveryInfo.kind !== "add_address" ? deliveryInfo.feeAmount : 0;
+  const discountAmount = appliedCoupon?.discount ?? 0;
+  const total = Math.max(0, subtotal - discountAmount + deliveryFeeAmount);
+
+  const acceptedMethods = companyInfo?.accepted_payment_methods ?? [...ACCEPTED_PAYMENT_METHODS];
+  const availableOptions = PAYMENT_OPTIONS.filter((option) =>
+    companyAcceptsOption(acceptedMethods, option),
+  );
+  const effectivePayment =
+    selectedPayment && availableOptions.includes(selectedPayment)
+      ? selectedPayment
+      : (availableOptions[0] ?? null);
 
   async function applyCoupon() {
     if (!couponInput.trim()) return;
     setCouponError(null);
     setApplyingCoupon(true);
     const supabase = createClient();
-    const { data, error } = await validateCoupon(supabase, restaurant.companyId, couponInput.trim(), subtotal);
+    const { data, error } = await validateCoupon(supabase, restaurant!.companyId, couponInput.trim(), subtotal);
     setApplyingCoupon(false);
     if (error || !data || !data.valid) {
       setAppliedCoupon(null);
@@ -196,13 +253,28 @@ export function CheckoutForm({
     setFormError(null);
     const { notes, ...address } = values;
     const supabase = createClient();
-    const { data, error } = await submitOrder(supabase, restaurant, address, notes, appliedCoupon?.code);
+    const resolvedMethod = effectivePayment ? resolveOrderPaymentMethod(effectivePayment) : undefined;
+    const { data, error } = await submitOrder(
+      supabase,
+      restaurant!,
+      address,
+      notes,
+      appliedCoupon?.code,
+      resolvedMethod,
+    );
     if (error || !data) {
       setFormError(describeCheckoutError(error?.message ?? "Erro desconhecido"));
       return;
     }
+    if (effectivePayment && effectivePayment !== initialDefaultPaymentMethod) {
+      updateDefaultPaymentMethod(supabase, userId, effectivePayment).catch(() => {});
+    }
     clearCart();
-    router.push(`/checkout/pagamento/${data.id}`);
+    router.push(
+      resolvedMethod && isOfflinePaymentMethod(resolvedMethod)
+        ? `/pedidos/${data.id}`
+        : `/checkout/pagamento/${data.id}`,
+    );
   }
 
   return (
@@ -212,34 +284,9 @@ export function CheckoutForm({
         <p className="text-muted-foreground">
           {restaurant.items.length} item(ns) · Subtotal {currency.format(subtotal)}
         </p>
-        {appliedCoupon && (
-          <p className="mt-1 text-primary">
-            Cupom {appliedCoupon.code}: -{currency.format(appliedCoupon.discount)}
-          </p>
-        )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="coupon">Cupom de desconto</Label>
-        <div className="flex gap-2">
-          <Input
-            id="coupon"
-            placeholder="Código do cupom"
-            value={couponInput}
-            onChange={(e) => {
-              setCouponInput(e.target.value);
-              setAppliedCoupon(null);
-              setCouponError(null);
-            }}
-          />
-          <Button type="button" variant="outline" onClick={applyCoupon} disabled={applyingCoupon}>
-            {applyingCoupon ? "Aplicando…" : "Aplicar"}
-          </Button>
-        </div>
-        {couponError && <p className="text-sm text-destructive">{couponError}</p>}
-      </div>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
             <Label>Endereço de entrega</Label>
@@ -251,13 +298,18 @@ export function CheckoutForm({
           </div>
 
           {!manualEntry && selectedAddress && (
-            <div className="rounded-lg border p-3 text-sm">
-              <p className="font-medium">{selectedAddress.label || "Endereço"}</p>
-              <p className="text-muted-foreground">{addressLine(selectedAddress)}</p>
-              <p className="text-muted-foreground">
-                {selectedAddress.city}/{selectedAddress.state}
-              </p>
-            </div>
+            <>
+              {selectedAddress.lat !== null && selectedAddress.lng !== null && (
+                <AddressMapView lat={selectedAddress.lat} lng={selectedAddress.lng} onChange={() => {}} />
+              )}
+              <div className="rounded-lg border p-3 text-sm">
+                <p className="font-medium">{selectedAddress.label || "Endereço"}</p>
+                <p className="text-muted-foreground">{addressLine(selectedAddress)}</p>
+                <p className="text-muted-foreground">
+                  {selectedAddress.city}/{selectedAddress.state}
+                </p>
+              </div>
+            </>
           )}
 
           {pickerOpen && (
@@ -319,7 +371,7 @@ export function CheckoutForm({
         </div>
 
         {(manualEntry || !selectedAddress) && (
-          <>
+          <div className="flex flex-col gap-1.5">
             <Button
               type="button"
               variant="outline"
@@ -383,8 +435,101 @@ export function CheckoutForm({
                 onChange={(newLat, newLng) => setCoords({ lat: newLat, lng: newLng })}
               />
             </div>
+          </div>
+        )}
+
+        <Separator />
+
+        <div>
+          <p className="text-sm font-medium">Telefone</p>
+          {customerPhone ? (
+            <p className="text-sm text-muted-foreground">{customerPhone}</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Nenhum telefone cadastrado ·{" "}
+              <Link href="/conta/dados-pessoais" className="text-primary hover:underline">
+                adicionar
+              </Link>
+            </p>
+          )}
+        </div>
+
+        {deliveryInfo?.kind === "eta" && (
+          <>
+            <Separator />
+            <div>
+              <p className="text-sm font-medium">Estimativa de entrega</p>
+              <p className="text-sm text-muted-foreground">
+                Chega até às{" "}
+                {formatEstimatedArrival(deliveryInfo.etaMinutes, companyInfo?.avg_prep_time_minutes ?? null)}
+              </p>
+            </div>
           </>
         )}
+
+        <Separator />
+
+        <PromotionsCard companyId={restaurant.companyId} companySlug={restaurant.companySlug} />
+
+        <Separator />
+
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="coupon">Cupom de desconto</Label>
+          <div className="flex gap-2">
+            <Input
+              id="coupon"
+              placeholder="Código do cupom"
+              value={couponInput}
+              onChange={(e) => {
+                setCouponInput(e.target.value);
+                setAppliedCoupon(null);
+                setCouponError(null);
+              }}
+            />
+            <Button type="button" variant="outline" onClick={applyCoupon} disabled={applyingCoupon}>
+              {applyingCoupon ? "Aplicando…" : "Aplicar"}
+            </Button>
+          </div>
+          {couponError && <p className="text-sm text-destructive">{couponError}</p>}
+        </div>
+
+        <div className="flex flex-col gap-1 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span>{currency.format(subtotal)}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Taxa de entrega</span>
+            <span>{deliveryInfo && deliveryInfo.kind !== "add_address" ? deliveryInfo.label : "—"}</span>
+          </div>
+          {appliedCoupon && (
+            <div className="flex items-center justify-between text-primary">
+              <span>Cupom {appliedCoupon.code}</span>
+              <span>-{currency.format(discountAmount)}</span>
+            </div>
+          )}
+          <div className="mt-1 flex items-center justify-between border-t pt-1 font-semibold">
+            <span>Total</span>
+            <span>{currency.format(total)}</span>
+          </div>
+        </div>
+
+        <Separator />
+
+        <div className="flex flex-col gap-1.5">
+          <Label>Forma de pagamento</Label>
+          {availableOptions.length > 0 ? (
+            <PaymentMethodPicker
+              availableOptions={availableOptions}
+              selected={effectivePayment}
+              onSelect={setSelectedPayment}
+            />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Esse restaurante ainda não configurou formas de pagamento.
+            </p>
+          )}
+        </div>
 
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="notes">Observações do pedido</Label>

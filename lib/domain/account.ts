@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
 import type { ProfileInput } from "@/lib/validations/account";
+import type { PaymentOption } from "@/lib/domain/payment-methods";
 
 type Client = SupabaseClient<Database>;
 
@@ -21,6 +22,14 @@ export async function updateFullName(supabase: Client, userId: string, fullName:
 
 export async function updateContactPhone(supabase: Client, userId: string, phone: string) {
   return supabase.from("profiles").update({ phone: phone || null }).eq("id", userId);
+}
+
+export async function updateDefaultPaymentMethod(
+  supabase: Client,
+  userId: string,
+  method: PaymentOption,
+) {
+  return supabase.from("profiles").update({ default_payment_method: method }).eq("id", userId);
 }
 
 export async function updateEmail(supabase: Client, email: string) {
