@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
-import { createMercadoPagoCheckout } from "@/lib/domain/payments";
+import { createAsaasCheckout } from "@/lib/domain/payments";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -31,7 +31,7 @@ export function PaymentPicker({
     setLoading(true);
     try {
       const supabase = createClient();
-      const { url } = await createMercadoPagoCheckout(supabase, orderId);
+      const { url } = await createAsaasCheckout(supabase, orderId);
       window.location.href = url;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível iniciar o pagamento.");
@@ -49,7 +49,7 @@ export function PaymentPicker({
       </CardHeader>
       <CardContent className="flex flex-col gap-3">
         <Button type="button" onClick={pay} disabled={loading}>
-          {loading ? "Redirecionando…" : "Pagar com Pix ou cartão (Mercado Pago)"}
+          {loading ? "Redirecionando…" : "Pagar com Pix ou cartão"}
         </Button>
         {error && <p className="text-sm text-destructive">{error}</p>}
       </CardContent>

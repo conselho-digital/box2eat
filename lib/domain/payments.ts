@@ -59,3 +59,13 @@ export async function createMercadoPagoConnectOnboardingLink(supabase: Client, c
     origin: window.location.origin,
   });
 }
+
+/** Cliente paga para a conta master da plataforma (sem split na cobrança)
+ *  — restaurante e entregador só recebem depois que o pedido virar
+ *  "completed" (ou for ajustado por uma disputa), via asaas-payout. */
+export async function createAsaasCheckout(supabase: Client, orderId: string) {
+  return invokePaymentFunction<{ url: string }>(supabase, "asaas-create-payment", {
+    order_id: orderId,
+    origin: window.location.origin,
+  });
+}
