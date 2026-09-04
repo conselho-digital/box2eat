@@ -1671,6 +1671,16 @@ export type Database = {
       }
       company_is_visible: { Args: { p_company_id: string }; Returns: boolean }
       company_role: { Args: { p_company_id: string }; Returns: string }
+      complete_order: {
+        Args: { p_order_id: string }
+        Returns: OrderRow
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_order: {
         Args: {
           p_company_id: string
