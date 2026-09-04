@@ -31,7 +31,7 @@ export default async function CompanyPaymentsPage({
           cartão continuam funcionando pela conta da plataforma.
         </p>
       </div>
-      <MercadoPagoConnectCard companyId={company.id} connected={Boolean(company.mercadopago_user_id)} />
+      <MercadoPagoConnectCard companyId={company.id} connected={Boolean(company.asaas_account_id)} />
       <AcceptedPaymentMethodsForm
         companyId={company.id}
         initialMethods={company.accepted_payment_methods}

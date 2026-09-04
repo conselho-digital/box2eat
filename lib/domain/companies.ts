@@ -15,7 +15,7 @@ export type PublicCompany = Pick<
   | "description"
   | "min_order_value"
   | "is_open"
-  | "mercadopago_user_id"
+  | "asaas_account_id"
   | "rating_avg"
   | "rating_count"
   | "lat"
@@ -33,13 +33,13 @@ export type PublicCompany = Pick<
 >;
 
 /** A company can only take orders once it's open AND has connected its
- *  Mercado Pago account — without one, there's nowhere for the payment to
+ *  Asaas account — without one, there's nowhere for the payout to
  *  go. create_order enforces this server-side; this mirrors it for display. */
 export function isCompanyAcceptingOrders(company: {
   is_open: boolean;
-  mercadopago_user_id: string | null;
+  asaas_account_id: string | null;
 }) {
-  return company.is_open && company.mercadopago_user_id !== null;
+  return company.is_open && company.asaas_account_id !== null;
 }
 
 /** Single-line delivery address for display (cart cards, checkout summaries).
@@ -68,7 +68,7 @@ export type CompanySearchParams = {
 };
 
 const PUBLIC_COMPANY_COLUMNS =
-  "id, name, slug, description, min_order_value, is_open, mercadopago_user_id, rating_avg, rating_count, lat, lng, category, cover_image_url, delivery_fee_base, avg_prep_time_minutes, delivered_orders_count, street, number, neighborhood, city, state" as const;
+  "id, name, slug, description, min_order_value, is_open, asaas_account_id, rating_avg, rating_count, lat, lng, category, cover_image_url, delivery_fee_base, avg_prep_time_minutes, delivered_orders_count, street, number, neighborhood, city, state" as const;
 
 /** Shared by the home listing and the map view: same filters, same "closest first" logic. */
 export async function listPublicCompanies(supabase: Client, params: CompanySearchParams) {

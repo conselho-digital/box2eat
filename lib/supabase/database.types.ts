@@ -11,6 +11,7 @@ export type Json =
 // it's nested inside.
 type OrderRow = {
   company_id: string
+  completed_at: string | null
   created_at: string
   customer_id: string
   delivered_at: string | null
@@ -35,6 +36,7 @@ type OrderRow = {
 type DeliveryPartnerRow = {
   approved_at: string | null
   approved_by: string | null
+  asaas_account_id: string | null
   created_at: string
   current_lat: number | null
   current_lng: number | null
@@ -90,7 +92,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           logo_url: string | null
-          mercadopago_user_id: string | null
+          asaas_account_id: string | null
           min_order_value: number
           name: string
           neighborhood: string | null
@@ -128,7 +130,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
-          mercadopago_user_id?: string | null
+          asaas_account_id?: string | null
           min_order_value?: number
           name: string
           neighborhood?: string | null
@@ -166,7 +168,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           logo_url?: string | null
-          mercadopago_user_id?: string | null
+          asaas_account_id?: string | null
           min_order_value?: number
           name?: string
           neighborhood?: string | null
@@ -354,6 +356,7 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          asaas_account_id?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -371,6 +374,7 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          asaas_account_id?: string | null
           created_at?: string
           current_lat?: number | null
           current_lng?: number | null
@@ -1069,30 +1073,81 @@ export type Database = {
           },
         ]
       }
-      order_reports: {
+      order_report_item_refunds: {
         Row: {
           created_at: string
           id: string
+          order_item_id: string
+          refund_pct: number
+          report_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_item_id: string
+          refund_pct: number
+          report_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_item_id?: string
+          refund_pct?: number
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_report_item_refunds_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_report_item_refunds_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "order_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_reports: {
+        Row: {
+          created_at: string
+          delivery_refund_pct: number | null
+          id: string
           message: string
           order_id: string
+          photo_urls: string[] | null
+          resolved_at: string | null
+          resolved_by: string | null
           status: string
           type: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          delivery_refund_pct?: number | null
           id?: string
           message: string
           order_id: string
+          photo_urls?: string[] | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: string
           type: string
           user_id: string
         }
         Update: {
           created_at?: string
+          delivery_refund_pct?: number | null
           id?: string
           message?: string
           order_id?: string
+          photo_urls?: string[] | null
+          resolved_at?: string | null
+          resolved_by?: string | null
           status?: string
           type?: string
           user_id?: string
@@ -1103,6 +1158,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_reports_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1160,6 +1222,7 @@ export type Database = {
         Row: OrderRow
         Insert: {
           company_id: string
+          completed_at?: string | null
           created_at?: string
           customer_id: string
           delivered_at?: string | null
@@ -1182,6 +1245,7 @@ export type Database = {
         }
         Update: {
           company_id?: string
+          completed_at?: string | null
           created_at?: string
           customer_id?: string
           delivered_at?: string | null
