@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/database.types";
+import type { AsaasOnboardingInput } from "@/lib/validations/payments";
 
 type Client = SupabaseClient<Database>;
 
@@ -68,4 +69,28 @@ export async function createAsaasCheckout(supabase: Client, orderId: string) {
     order_id: orderId,
     origin: window.location.origin,
   });
+}
+
+/** Cria a subconta Asaas do restaurante ou do entregador (KYC direto via
+ *  API, sem redirect) e grava o walletId retornado como asaas_account_id
+ *  na tabela certa — é o destino usado depois pelo repasse (asaas-payout). */
+export async function connectAsaasAccount(
+  supabase: Client,
+  entityType: "company" | "delivery_partner",
+  entityId: string,
+  input: AsaasOnboardingInput,
+) {
+  const { data, error } = await supabase.functions.invoke<{ wallet_id: string }>(
+    "asaas-onboarding",
+    {
+      body: { entity_type: entityType, entity_id: entityId, ...input },
+    },
+  );
+  if (error) {
+    const context = (error as { context?: Response }).context;
+    const detail = context ? await context.text().catch(() => null) : null;
+    throw new Error(detail || error.message);
+  }
+  if (!data) throw new Error("Resposta vazia do provedor de pagamento");
+  return data;
 }

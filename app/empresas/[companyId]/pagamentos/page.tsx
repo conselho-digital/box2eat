@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getMyMembership } from "@/lib/domain/companies-detail";
-import { MercadoPagoConnectCard } from "@/components/companies/mercadopago-connect-card";
+import { AsaasConnectForm } from "@/components/payments/asaas-connect-form";
 import { AcceptedPaymentMethodsForm } from "@/components/companies/accepted-payment-methods-form";
 
 export default async function CompanyPaymentsPage({
@@ -27,11 +27,17 @@ export default async function CompanyPaymentsPage({
       <div>
         <h2 className="font-medium">Recebimentos</h2>
         <p className="text-sm text-muted-foreground">
-          Conecte sua conta Mercado Pago para receber os pagamentos dos pedidos. Sem conexão, Pix e
-          cartão continuam funcionando pela conta da plataforma.
+          Conecte sua conta Asaas para poder aceitar pedidos. O cliente paga pela plataforma e o
+          valor é repassado depois que cada pedido é entregue e não há nenhuma reclamação aberta.
         </p>
       </div>
-      <MercadoPagoConnectCard companyId={company.id} connected={Boolean(company.asaas_account_id)} />
+      <AsaasConnectForm
+        entityType="company"
+        entityId={company.id}
+        connected={Boolean(company.asaas_account_id)}
+        title="Asaas"
+        description="Preencha os dados do restaurante para conectar a conta que vai receber os repasses."
+      />
       <AcceptedPaymentMethodsForm
         companyId={company.id}
         initialMethods={company.accepted_payment_methods}
