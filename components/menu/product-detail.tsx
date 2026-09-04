@@ -6,7 +6,7 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MenuItemOptionsDialog } from "@/components/menu/menu-item-options-dialog";
 import { useMenuItemCart, type MenuItemCartCompany } from "@/components/menu/use-menu-item-cart";
-import type { MenuItem } from "@/lib/domain/menu";
+import { getDiscountedPrice, type MenuItem } from "@/lib/domain/menu";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -16,6 +16,10 @@ const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "
 export function ProductDetail({ item, company }: { item: MenuItem; company: MenuItemCartCompany }) {
   const router = useRouter();
   const cart = useMenuItemCart(item, company);
+  const hasDiscount = item.promotion_type === "discount" && !!item.discount_percent;
+  const discountedPrice = hasDiscount
+    ? getDiscountedPrice(item.price, item.discount_percent!)
+    : null;
 
   function handleAddClick() {
     if (cart.hasOptions) {
@@ -55,7 +59,21 @@ export function ProductDetail({ item, company }: { item: MenuItem; company: Menu
       <div className="flex flex-col gap-1">
         <h1 className="text-xl font-semibold">{item.name}</h1>
         {item.description && <p className="text-sm text-muted-foreground">{item.description}</p>}
-        <p className="mt-1 text-lg font-semibold">{currency.format(item.price)}</p>
+        {hasDiscount ? (
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-sm text-muted-foreground line-through">
+              {currency.format(item.price)}
+            </span>
+            <span className="rounded bg-destructive px-1.5 py-0.5 text-xs font-semibold text-destructive-foreground">
+              -{item.discount_percent}% OFF
+            </span>
+            <span className="text-lg font-semibold text-destructive">
+              {currency.format(discountedPrice!)}
+            </span>
+          </div>
+        ) : (
+          <p className="mt-1 text-lg font-semibold">{currency.format(item.price)}</p>
+        )}
       </div>
 
       <Button onClick={handleAddClick} disabled={!item.is_available} className="mt-2">

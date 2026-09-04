@@ -885,6 +885,7 @@ export type Database = {
           company_id: string
           created_at: string
           description: string | null
+          discount_percent: number | null
           id: string
           image_url: string | null
           is_available: boolean
@@ -900,6 +901,7 @@ export type Database = {
           company_id: string
           created_at?: string
           description?: string | null
+          discount_percent?: number | null
           id?: string
           image_url?: string | null
           is_available?: boolean
@@ -915,6 +917,7 @@ export type Database = {
           company_id?: string
           created_at?: string
           description?: string | null
+          discount_percent?: number | null
           id?: string
           image_url?: string | null
           is_available?: boolean

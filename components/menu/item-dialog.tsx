@@ -108,6 +108,9 @@ export function ItemDialog({
   );
   const [bannerPhotoKey, setBannerPhotoKey] = useState<string | null>(null);
   const [promotionError, setPromotionError] = useState<string | null>(null);
+  const [discountPercent, setDiscountPercent] = useState<string>(
+    item?.discount_percent != null ? String(item.discount_percent) : "",
+  );
 
   useCloseOnBack(open, () => onOpenChange(false));
 
@@ -203,12 +206,14 @@ export function ItemDialog({
     setPromotionType("none");
     setBannerPhotoKey(null);
     setPromotionError(null);
+    setDiscountPercent("");
   }
 
   const saveMutation = useMutation({
     mutationFn: async ({ values, addAnother }: { values: MenuItemInput; addAnother: boolean }) => {
       const supabase = createClient();
       let savedId: string;
+      const discountPercentValue = promotionType === "discount" ? Number(discountPercent) : null;
 
       if (item) {
         const { data, error } = await updateItem(supabase, companyId, item.id, {
@@ -216,6 +221,7 @@ export function ItemDialog({
           isAvailable: localAvailable,
           showAsAddon: localShowAsAddon,
           promotionType,
+          discountPercent: discountPercentValue,
         });
         if (error) throw error;
         savedId = data.id;
@@ -228,6 +234,7 @@ export function ItemDialog({
             isAvailable: localAvailable,
             showAsAddon: localShowAsAddon,
             promotionType,
+            discountPercent: discountPercentValue,
           });
           if (flagsError) throw flagsError;
         }
@@ -313,6 +320,13 @@ export function ItemDialog({
     if (promotionType === "free_addon" && !addonGroups.some((g) => g.categoryId)) {
       setPromotionError("Adicione um opcional para o cliente escolher de graça nesta promoção.");
       return false;
+    }
+    if (promotionType === "discount") {
+      const pct = Number(discountPercent);
+      if (!discountPercent || !Number.isInteger(pct) || pct < 1 || pct > 99) {
+        setPromotionError("Informe um percentual de desconto entre 1 e 99.");
+        return false;
+      }
     }
     setPromotionError(null);
     return true;
@@ -497,11 +511,32 @@ export function ItemDialog({
               <option value="none">Nenhuma</option>
               <option value="buy2_pay1">2x1 — Compre 2, pague 1</option>
               <option value="free_addon">+1 Brinde — compre e ganhe um opcional grátis</option>
+              <option value="discount">Desconto — % off no preço</option>
             </select>
             {promotionType === "free_addon" && (
               <p className="text-xs text-muted-foreground">
                 Adicione abaixo o opcional que o cliente vai poder escolher de graça.
               </p>
+            )}
+            {promotionType === "discount" && (
+              <div className="flex items-center gap-2">
+                <Input
+                  id="item-discount-percent"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={99}
+                  step={1}
+                  placeholder="Ex.: 50"
+                  value={discountPercent}
+                  onChange={(e) => {
+                    setDiscountPercent(e.target.value);
+                    setPromotionError(null);
+                  }}
+                  className="w-24"
+                />
+                <span className="text-sm text-muted-foreground">% de desconto</span>
+              </div>
             )}
             {promotionType !== "none" && photos.length > 0 && (
               <div className="flex flex-col gap-1.5">

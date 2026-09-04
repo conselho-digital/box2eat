@@ -35,8 +35,10 @@ export const MAX_ITEM_PHOTOS = 3;
 
 /** "none": no promotion. "buy2_pay1": every 2nd unit ordered is free.
  *  "free_addon": ordering this item requires picking one of its "opcional"
- *  addons, which is free instead of priced — enforced in create_order. */
-export type PromotionType = "none" | "buy2_pay1" | "free_addon";
+ *  addons, which is free instead of priced. "discount": a flat % off the
+ *  item's own price (menu_items.discount_percent, 1-99) — all enforced in
+ *  create_order. */
+export type PromotionType = "none" | "buy2_pay1" | "free_addon" | "discount";
 export type MenuItem = Database["public"]["Tables"]["menu_items"]["Row"] & {
   menu_item_option_groups: MenuOptionGroup[];
   menu_categories: Pick<MenuCategory, "id" | "name"> | null;
@@ -44,6 +46,12 @@ export type MenuItem = Database["public"]["Tables"]["menu_items"]["Row"] & {
   menu_item_addon_categories: MenuItemAddonCategory[];
   menu_item_images: MenuItemImage[];
 };
+
+/** Mirrors create_order's rounding for the "discount" promotion, so the
+ *  price shown on item cards always matches what gets charged. */
+export function getDiscountedPrice(price: number, discountPercent: number) {
+  return Math.round(price * (1 - discountPercent / 100) * 100) / 100;
+}
 
 export const ITEM_WITH_OPTIONS_SELECT =
   "*, menu_categories(id, name), menu_item_option_groups(*, menu_item_options(*)), menu_item_addons!menu_item_addons_menu_item_id_fkey(addon_item_id, menu_items!menu_item_addons_addon_item_id_fkey(id, name, price, image_url, is_available, show_as_addon, category_id, menu_categories(id, name))), menu_item_addon_categories(id, category_id, min_select, menu_categories(id, name)), menu_item_images(id, url, sort_order)";
@@ -158,6 +166,7 @@ export async function updateItem(
     isAvailable?: boolean;
     showAsAddon?: boolean;
     promotionType?: PromotionType;
+    discountPercent?: number | null;
   },
 ) {
   let categoryId: string | null | undefined;
@@ -178,6 +187,7 @@ export async function updateItem(
       ...(input.isAvailable !== undefined && { is_available: input.isAvailable }),
       ...(input.showAsAddon !== undefined && { show_as_addon: input.showAsAddon }),
       ...(input.promotionType !== undefined && { promotion_type: input.promotionType }),
+      ...(input.discountPercent !== undefined && { discount_percent: input.discountPercent }),
     })
     .eq("id", itemId)
     .select(ITEM_WITH_OPTIONS_SELECT)

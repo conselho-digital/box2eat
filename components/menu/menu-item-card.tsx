@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { MenuItemOptionsDialog } from "@/components/menu/menu-item-options-dialog";
 import { useMenuItemCart, type MenuItemCartCompany } from "@/components/menu/use-menu-item-cart";
-import type { MenuItem } from "@/lib/domain/menu";
+import { getDiscountedPrice, type MenuItem } from "@/lib/domain/menu";
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -16,6 +16,10 @@ export function MenuItemCard({
   company: MenuItemCartCompany;
 }) {
   const cart = useMenuItemCart(item, company);
+  const hasDiscount = item.promotion_type === "discount" && !!item.discount_percent;
+  const discountedPrice = hasDiscount
+    ? getDiscountedPrice(item.price, item.discount_percent!)
+    : null;
 
   return (
     <>
@@ -32,7 +36,21 @@ export function MenuItemCard({
         <div className="flex flex-1 flex-col">
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-medium">{item.name}</span>
-            <span className="text-sm text-muted-foreground">{currency.format(item.price)}</span>
+            {hasDiscount ? (
+              <span className="flex items-baseline gap-1.5">
+                <span className="text-xs text-muted-foreground line-through">
+                  {currency.format(item.price)}
+                </span>
+                <span className="rounded bg-destructive px-1 py-0.5 text-[10px] font-semibold text-destructive-foreground">
+                  -{item.discount_percent}% OFF
+                </span>
+                <span className="text-sm font-semibold text-destructive">
+                  {currency.format(discountedPrice!)}
+                </span>
+              </span>
+            ) : (
+              <span className="text-sm text-muted-foreground">{currency.format(item.price)}</span>
+            )}
           </div>
           {item.description && (
             <p className="text-sm text-muted-foreground">{item.description}</p>

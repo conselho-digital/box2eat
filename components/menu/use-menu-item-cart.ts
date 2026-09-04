@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
-import type { MenuItem } from "@/lib/domain/menu";
+import { getDiscountedPrice, type MenuItem } from "@/lib/domain/menu";
 
 export type MenuItemCartCompany = {
   id: string;
@@ -27,6 +27,10 @@ export function useMenuItemCart(item: MenuItem, company: MenuItemCartCompany) {
   }, []);
 
   const hasOptions = item.menu_item_option_groups.length > 0 || item.menu_item_addons.length > 0;
+  const unitPrice =
+    item.promotion_type === "discount" && item.discount_percent
+      ? getDiscountedPrice(item.price, item.discount_percent)
+      : item.price;
 
   function openDialog() {
     setSelected(Object.fromEntries(item.menu_item_option_groups.map((g) => [g.id, []])));
@@ -98,7 +102,7 @@ export function useMenuItemCart(item: MenuItem, company: MenuItemCartCompany) {
       name: item.name,
       description: item.description,
       imageUrl: item.image_url,
-      unitPrice: item.price,
+      unitPrice,
       quantity: 1,
       options: [...options, ...addonOptions],
     });
@@ -117,7 +121,7 @@ export function useMenuItemCart(item: MenuItem, company: MenuItemCartCompany) {
       name: item.name,
       description: item.description,
       imageUrl: item.image_url,
-      unitPrice: item.price,
+      unitPrice,
       quantity: 1,
       options: [],
     });
