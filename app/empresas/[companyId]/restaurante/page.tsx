@@ -6,6 +6,7 @@ import { RestaurantSettingsForm } from "@/components/companies/restaurant-settin
 import { RestaurantAddressForm } from "@/components/companies/restaurant-address-form";
 import { BusinessHoursEditor } from "@/components/companies/business-hours-editor";
 import { CompanyLogoForm } from "@/components/companies/company-logo-form";
+import { CompanyBannerForm } from "@/components/companies/company-banner-form";
 
 export default async function CompanyRestaurantPage({
   params,
@@ -26,28 +27,10 @@ export default async function CompanyRestaurantPage({
   const company = membership.companies;
   const { data: hours } = await listBusinessHours(supabase, companyId);
 
-  let promotedItemName: string | null = null;
-  if (company.promoted_menu_item_id) {
-    const { data: promotedItem } = await supabase
-      .from("menu_items")
-      .select("name")
-      .eq("id", company.promoted_menu_item_id)
-      .maybeSingle();
-    promotedItemName = promotedItem?.name ?? null;
-  }
-
   return (
     <div className="flex flex-col gap-6">
       <CompanyLogoForm companyId={company.id} initialLogoUrl={company.logo_url} />
-
-      <div className="rounded-lg border p-4">
-        <p className="text-sm font-medium">Banner do restaurante</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {company.cover_image_url
-            ? `Definido pelo produto em promoção${promotedItemName ? ` "${promotedItemName}"` : ""}. Para trocar, ajuste a promoção no Cardápio.`
-            : "Nenhum banner ainda — ative uma promoção em um produto no Cardápio para definir um."}
-        </p>
-      </div>
+      <CompanyBannerForm companyId={company.id} initialCoverImageUrl={company.cover_image_url} />
 
       <RestaurantSettingsForm
         companyId={company.id}

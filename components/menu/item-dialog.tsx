@@ -31,7 +31,6 @@ import {
   type MenuItem,
   type PromotionType,
 } from "@/lib/domain/menu";
-import { setPromotedMenuItemBanner, clearPromotedMenuItemBanner } from "@/lib/domain/companies";
 import { menuItemSchema, type MenuItemInput } from "@/lib/validations/menu";
 import { itemsQueryKey, useCategories, useMenuItems } from "./hooks";
 import { CategoryCombobox } from "./category-combobox";
@@ -106,7 +105,6 @@ export function ItemDialog({
   const [promotionType, setPromotionType] = useState<PromotionType>(
     (item?.promotion_type as PromotionType) ?? "none",
   );
-  const [bannerPhotoKey, setBannerPhotoKey] = useState<string | null>(null);
   const [promotionError, setPromotionError] = useState<string | null>(null);
   const [discountPercent, setDiscountPercent] = useState<string>(
     item?.discount_percent != null ? String(item.discount_percent) : "",
@@ -158,9 +156,6 @@ export function ItemDialog({
   function onPromotionChange(value: PromotionType) {
     setPromotionType(value);
     setPromotionError(null);
-    if (value !== "none" && !bannerPhotoKey && photos.length > 0) {
-      setBannerPhotoKey(photos[0].key);
-    }
   }
 
   function toggleAddon(itemId: string) {
@@ -204,7 +199,6 @@ export function ItemDialog({
     setAddonGroups([]);
     setSelectedAddonIds(new Set());
     setPromotionType("none");
-    setBannerPhotoKey(null);
     setPromotionError(null);
     setDiscountPercent("");
   }
@@ -260,21 +254,6 @@ export function ItemDialog({
       const { error: imagesError } = await setItemImages(supabase, savedId, galleryUrls);
       if (imagesError) throw imagesError;
 
-      const bannerIndex = photos.findIndex((p) => p.key === bannerPhotoKey);
-      const bannerUrl = bannerIndex >= 0 ? uploadedUrls[bannerIndex] : null;
-      if (promotionType !== "none" && bannerUrl) {
-        const { error: bannerError } = await setPromotedMenuItemBanner(
-          supabase,
-          companyId,
-          savedId,
-          bannerUrl,
-        );
-        if (bannerError) throw bannerError;
-      } else if (promotionType === "none") {
-        const { error: clearError } = await clearPromotedMenuItemBanner(supabase, companyId, savedId);
-        if (clearError) throw clearError;
-      }
-
       const { error: addonsError } = await setItemAddons(supabase, savedId, [...selectedAddonIds]);
       if (addonsError) throw addonsError;
 
@@ -312,10 +291,6 @@ export function ItemDialog({
     if (promotionType === "none") {
       setPromotionError(null);
       return true;
-    }
-    if (photos.length === 0 || !bannerPhotoKey) {
-      setPromotionError("Adicione uma foto para usar no banner desta promoção.");
-      return false;
     }
     if (promotionType === "free_addon" && !addonGroups.some((g) => g.categoryId)) {
       setPromotionError("Adicione um opcional para o cliente escolher de graça nesta promoção.");
@@ -536,31 +511,6 @@ export function ItemDialog({
                   className="w-24"
                 />
                 <span className="text-sm text-muted-foreground">% de desconto</span>
-              </div>
-            )}
-            {promotionType !== "none" && photos.length > 0 && (
-              <div className="flex flex-col gap-1.5">
-                <p className="text-xs text-muted-foreground">
-                  Escolha a foto que vai virar o banner do restaurante enquanto esta promoção
-                  estiver ativa:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {photos.map((photo) => {
-                    const url = photo.kind === "existing" ? photo.url : photo.previewUrl;
-                    return (
-                      <button
-                        key={photo.key}
-                        type="button"
-                        onClick={() => setBannerPhotoKey(photo.key)}
-                        className={`relative size-16 shrink-0 overflow-hidden rounded-lg border ${
-                          bannerPhotoKey === photo.key ? "ring-2 ring-primary" : ""
-                        }`}
-                      >
-                        <Image src={url} alt="" fill unoptimized className="object-cover" />
-                      </button>
-                    );
-                  })}
-                </div>
               </div>
             )}
             {promotionError && <p className="text-sm text-destructive">{promotionError}</p>}
