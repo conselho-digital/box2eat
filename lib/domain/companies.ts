@@ -214,11 +214,44 @@ export async function getCompanyCheckoutInfo(supabase: Client, companyId: string
     .single();
 }
 
-/** The photo shown on the company's banners/cards across the app (home
- *  carousels, map, storefront) — either a fresh upload or one of the
- *  company's own product photos, picked via CompanyCoverPhotoForm. */
-export async function updateCompanyCoverImage(supabase: Client, companyId: string, url: string) {
-  return supabase.from("companies").update({ cover_image_url: url }).eq("id", companyId);
+/** The restaurant's own square profile photo (companies.logo_url) — shown
+ *  wherever the app needs a compact restaurant identity, like the cart.
+ *  Either a fresh upload or one of the company's own product photos. */
+export async function updateCompanyLogo(supabase: Client, companyId: string, url: string) {
+  return supabase.from("companies").update({ logo_url: url }).eq("id", companyId);
+}
+
+/** The wide banner photo shown on home carousels/cards (cover_image_url) —
+ *  unlike the logo, this can't be set directly: it always comes from
+ *  whichever product is currently marked "em promoção" (menu_items.
+ *  promotion_type), via the photo picker on that product's own item dialog.
+ *  promoted_menu_item_id tracks the source so it can be cleared correctly
+ *  when that product's promotion is turned back off. */
+export async function setPromotedMenuItemBanner(
+  supabase: Client,
+  companyId: string,
+  menuItemId: string,
+  url: string,
+) {
+  return supabase
+    .from("companies")
+    .update({ cover_image_url: url, promoted_menu_item_id: menuItemId })
+    .eq("id", companyId);
+}
+
+/** Only clears the banner if menuItemId is still the current source — so
+ *  turning off an old promotion never clobbers a different product's
+ *  active one. */
+export async function clearPromotedMenuItemBanner(
+  supabase: Client,
+  companyId: string,
+  menuItemId: string,
+) {
+  return supabase
+    .from("companies")
+    .update({ cover_image_url: null, promoted_menu_item_id: null })
+    .eq("id", companyId)
+    .eq("promoted_menu_item_id", menuItemId);
 }
 
 export async function updateAcceptedPaymentMethods(

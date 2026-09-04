@@ -100,6 +100,7 @@ export type Database = {
           postal_code: string | null
           preferred_delivery_partner_confirmed: boolean
           preferred_delivery_partner_id: string | null
+          promoted_menu_item_id: string | null
           rating_avg: number | null
           rating_count: number
           slug: string
@@ -138,6 +139,7 @@ export type Database = {
           postal_code?: string | null
           preferred_delivery_partner_confirmed?: boolean
           preferred_delivery_partner_id?: string | null
+          promoted_menu_item_id?: string | null
           rating_avg?: number | null
           rating_count?: number
           slug: string
@@ -176,6 +178,7 @@ export type Database = {
           postal_code?: string | null
           preferred_delivery_partner_confirmed?: boolean
           preferred_delivery_partner_id?: string | null
+          promoted_menu_item_id?: string | null
           rating_avg?: number | null
           rating_count?: number
           slug?: string
@@ -199,6 +202,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "delivery_partners"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "companies_promoted_menu_item_id_fkey"
+            columns: ["promoted_menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -880,6 +890,7 @@ export type Database = {
           is_available: boolean
           name: string
           price: number
+          promotion_type: string
           show_as_addon: boolean
           sort_order: number
           updated_at: string
@@ -894,6 +905,7 @@ export type Database = {
           is_available?: boolean
           name: string
           price: number
+          promotion_type?: string
           show_as_addon?: boolean
           sort_order?: number
           updated_at?: string
@@ -908,6 +920,7 @@ export type Database = {
           is_available?: boolean
           name?: string
           price?: number
+          promotion_type?: string
           show_as_addon?: boolean
           sort_order?: number
           updated_at?: string

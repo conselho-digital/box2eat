@@ -14,22 +14,22 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createClient } from "@/lib/supabase/client";
-import { updateCompanyCoverImage } from "@/lib/domain/companies";
+import { updateCompanyLogo } from "@/lib/domain/companies";
 import { listCompanyMenuPhotos, uploadMenuImage } from "@/lib/domain/menu";
 
-/** Sets companies.cover_image_url — the photo shown on this restaurant's
- *  banners/cards across the app. Either upload one fresh photo, or reuse
- *  one already uploaded for a product, so staff aren't forced to
- *  re-upload something they already have on file. */
-export function CompanyCoverPhotoForm({
+/** Sets companies.logo_url — the restaurant's square profile photo (shown
+ *  in the cart, distinct from the wide banner photo, which now comes from
+ *  whichever product is marked "em promoção" instead). Either upload one
+ *  fresh photo, or reuse one already uploaded for a product. */
+export function CompanyLogoForm({
   companyId,
-  initialCoverImageUrl,
+  initialLogoUrl,
 }: {
   companyId: string;
-  initialCoverImageUrl: string | null;
+  initialLogoUrl: string | null;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [coverImageUrl, setCoverImageUrl] = useState(initialCoverImageUrl);
+  const [logoUrl, setLogoUrl] = useState(initialLogoUrl);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,12 +48,12 @@ export function CompanyCoverPhotoForm({
     mutationFn: async (url: string) => {
       setError(null);
       const supabase = createClient();
-      const { error } = await updateCompanyCoverImage(supabase, companyId, url);
+      const { error } = await updateCompanyLogo(supabase, companyId, url);
       if (error) throw error;
       return url;
     },
     onSuccess: (url) => {
-      setCoverImageUrl(url);
+      setLogoUrl(url);
       setPickerOpen(false);
     },
     onError: () => setError("Não foi possível salvar a foto. Tente de novo."),
@@ -78,9 +78,9 @@ export function CompanyCoverPhotoForm({
       </CardHeader>
       <CardContent>
         <div className="flex items-center gap-4">
-          <div className="relative size-20 shrink-0 overflow-hidden rounded-lg border bg-muted">
-            {coverImageUrl ? (
-              <Image src={coverImageUrl} alt="" fill unoptimized className="object-cover" />
+          <div className="relative aspect-square size-20 shrink-0 overflow-hidden rounded-lg border bg-muted">
+            {logoUrl ? (
+              <Image src={logoUrl} alt="" fill unoptimized className="object-cover" />
             ) : (
               <div className="flex size-full items-center justify-center text-muted-foreground">
                 <ImageIcon className="size-6" />
@@ -89,7 +89,7 @@ export function CompanyCoverPhotoForm({
           </div>
           <div className="flex flex-col gap-2">
             <p className="text-sm text-muted-foreground">
-              Aparece nos banners e cards do restaurante pelo app.
+              Foto quadrada, usada para identificar o restaurante pelo app (ex.: no carrinho).
             </p>
             <Button
               type="button"
@@ -98,7 +98,7 @@ export function CompanyCoverPhotoForm({
               className="w-fit"
               onClick={() => setPickerOpen(true)}
             >
-              {coverImageUrl ? "Alterar foto" : "Adicionar foto"}
+              {logoUrl ? "Alterar foto" : "Adicionar foto"}
             </Button>
           </div>
         </div>
@@ -118,6 +118,7 @@ export function CompanyCoverPhotoForm({
 
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
+                <p className="text-xs text-muted-foreground">Use uma foto quadrada.</p>
                 <input
                   ref={fileInputRef}
                   type="file"

@@ -32,6 +32,11 @@ export type MenuItemAddonCategory = {
 export type MenuItemImage = Database["public"]["Tables"]["menu_item_images"]["Row"];
 /** Cover + gallery together, per item — enforced client-side in the item dialog. */
 export const MAX_ITEM_PHOTOS = 3;
+
+/** "none": no promotion. "buy2_pay1": every 2nd unit ordered is free.
+ *  "free_addon": ordering this item requires picking one of its "opcional"
+ *  addons, which is free instead of priced — enforced in create_order. */
+export type PromotionType = "none" | "buy2_pay1" | "free_addon";
 export type MenuItem = Database["public"]["Tables"]["menu_items"]["Row"] & {
   menu_item_option_groups: MenuOptionGroup[];
   menu_categories: Pick<MenuCategory, "id" | "name"> | null;
@@ -152,6 +157,7 @@ export async function updateItem(
     imageUrl?: string | null;
     isAvailable?: boolean;
     showAsAddon?: boolean;
+    promotionType?: PromotionType;
   },
 ) {
   let categoryId: string | null | undefined;
@@ -171,6 +177,7 @@ export async function updateItem(
       ...(input.imageUrl !== undefined && { image_url: input.imageUrl }),
       ...(input.isAvailable !== undefined && { is_available: input.isAvailable }),
       ...(input.showAsAddon !== undefined && { show_as_addon: input.showAsAddon }),
+      ...(input.promotionType !== undefined && { promotion_type: input.promotionType }),
     })
     .eq("id", itemId)
     .select(ITEM_WITH_OPTIONS_SELECT)

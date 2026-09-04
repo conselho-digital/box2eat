@@ -29,7 +29,9 @@ import {
   setItemImages,
   MAX_ITEM_PHOTOS,
   type MenuItem,
+  type PromotionType,
 } from "@/lib/domain/menu";
+import { setPromotedMenuItemBanner, clearPromotedMenuItemBanner } from "@/lib/domain/companies";
 import { menuItemSchema, type MenuItemInput } from "@/lib/validations/menu";
 import { itemsQueryKey, useCategories, useMenuItems } from "./hooks";
 import { CategoryCombobox } from "./category-combobox";
@@ -101,6 +103,11 @@ export function ItemDialog({
   );
   const [showAvailabilityInfo, setShowAvailabilityInfo] = useState(false);
   const [photoLimitNotice, setPhotoLimitNotice] = useState(false);
+  const [promotionType, setPromotionType] = useState<PromotionType>(
+    (item?.promotion_type as PromotionType) ?? "none",
+  );
+  const [bannerPhotoKey, setBannerPhotoKey] = useState<string | null>(null);
+  const [promotionError, setPromotionError] = useState<string | null>(null);
 
   useCloseOnBack(open, () => onOpenChange(false));
 
@@ -145,6 +152,14 @@ export function ItemDialog({
     }
   }
 
+  function onPromotionChange(value: PromotionType) {
+    setPromotionType(value);
+    setPromotionError(null);
+    if (value !== "none" && !bannerPhotoKey && photos.length > 0) {
+      setBannerPhotoKey(photos[0].key);
+    }
+  }
+
   function toggleAddon(itemId: string) {
     setSelectedAddonIds((prev) => {
       const next = new Set(prev);
@@ -185,6 +200,9 @@ export function ItemDialog({
     setLocalShowAsAddon(true);
     setAddonGroups([]);
     setSelectedAddonIds(new Set());
+    setPromotionType("none");
+    setBannerPhotoKey(null);
+    setPromotionError(null);
   }
 
   const saveMutation = useMutation({
@@ -197,6 +215,7 @@ export function ItemDialog({
           ...values,
           isAvailable: localAvailable,
           showAsAddon: localShowAsAddon,
+          promotionType,
         });
         if (error) throw error;
         savedId = data.id;
@@ -204,10 +223,11 @@ export function ItemDialog({
         const { data: created, error } = await createItem(supabase, companyId, values);
         if (error) throw error;
         savedId = created.id;
-        if (!localAvailable || !localShowAsAddon) {
+        if (!localAvailable || !localShowAsAddon || promotionType !== "none") {
           const { error: flagsError } = await updateItem(supabase, companyId, savedId, {
             isAvailable: localAvailable,
             showAsAddon: localShowAsAddon,
+            promotionType,
           });
           if (flagsError) throw flagsError;
         }
@@ -233,14 +253,35 @@ export function ItemDialog({
       const { error: imagesError } = await setItemImages(supabase, savedId, galleryUrls);
       if (imagesError) throw imagesError;
 
+      const bannerIndex = photos.findIndex((p) => p.key === bannerPhotoKey);
+      const bannerUrl = bannerIndex >= 0 ? uploadedUrls[bannerIndex] : null;
+      if (promotionType !== "none" && bannerUrl) {
+        const { error: bannerError } = await setPromotedMenuItemBanner(
+          supabase,
+          companyId,
+          savedId,
+          bannerUrl,
+        );
+        if (bannerError) throw bannerError;
+      } else if (promotionType === "none") {
+        const { error: clearError } = await clearPromotedMenuItemBanner(supabase, companyId, savedId);
+        if (clearError) throw clearError;
+      }
+
       const { error: addonsError } = await setItemAddons(supabase, savedId, [...selectedAddonIds]);
       if (addonsError) throw addonsError;
 
       const validGroups = addonGroups.filter((g) => g.categoryId);
+      // "+1 brinde" only means something if picking the free addon is
+      // actually mandatory — force it even if staff left min_select at 0.
+      const effectiveGroups =
+        promotionType === "free_addon"
+          ? validGroups.map((g) => ({ ...g, minSelect: Math.max(g.minSelect, 1) }))
+          : validGroups;
       const { error: categoriesError } = await setItemAddonCategories(
         supabase,
         savedId,
-        validGroups.map((g) => ({ categoryId: g.categoryId, minSelect: g.minSelect })),
+        effectiveGroups.map((g) => ({ categoryId: g.categoryId, minSelect: g.minSelect })),
       );
       if (categoriesError) throw categoriesError;
 
@@ -259,6 +300,23 @@ export function ItemDialog({
       }
     },
   });
+
+  function validatePromotion(): boolean {
+    if (promotionType === "none") {
+      setPromotionError(null);
+      return true;
+    }
+    if (photos.length === 0 || !bannerPhotoKey) {
+      setPromotionError("Adicione uma foto para usar no banner desta promoção.");
+      return false;
+    }
+    if (promotionType === "free_addon" && !addonGroups.some((g) => g.categoryId)) {
+      setPromotionError("Adicione um opcional para o cliente escolher de graça nesta promoção.");
+      return false;
+    }
+    setPromotionError(null);
+    return true;
+  }
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -297,7 +355,10 @@ export function ItemDialog({
             size="sm"
             variant="outline"
             disabled={saveMutation.isPending}
-            onClick={handleSubmit((values) => saveMutation.mutate({ values, addAnother: true }))}
+            onClick={() => {
+              if (!validatePromotion()) return;
+              handleSubmit((values) => saveMutation.mutate({ values, addAnother: true }))();
+            }}
           >
             Adicionar mais um
           </Button>
@@ -305,7 +366,10 @@ export function ItemDialog({
             type="button"
             size="sm"
             disabled={saveMutation.isPending}
-            onClick={handleSubmit((values) => saveMutation.mutate({ values, addAnother: false }))}
+            onClick={() => {
+              if (!validatePromotion()) return;
+              handleSubmit((values) => saveMutation.mutate({ values, addAnother: false }))();
+            }}
           >
             {saveMutation.isPending ? "Salvando…" : "Salvar"}
           </Button>
@@ -420,6 +484,51 @@ export function ItemDialog({
                 />
               )}
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5 border-t pt-4">
+            <Label htmlFor="item-promotion">Promoção</Label>
+            <select
+              id="item-promotion"
+              value={promotionType}
+              onChange={(e) => onPromotionChange(e.target.value as PromotionType)}
+              className="h-9 rounded-lg border border-input bg-background px-3 text-sm"
+            >
+              <option value="none">Nenhuma</option>
+              <option value="buy2_pay1">2x1 — Compre 2, pague 1</option>
+              <option value="free_addon">+1 Brinde — compre e ganhe um opcional grátis</option>
+            </select>
+            {promotionType === "free_addon" && (
+              <p className="text-xs text-muted-foreground">
+                Adicione abaixo o opcional que o cliente vai poder escolher de graça.
+              </p>
+            )}
+            {promotionType !== "none" && photos.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                <p className="text-xs text-muted-foreground">
+                  Escolha a foto que vai virar o banner do restaurante enquanto esta promoção
+                  estiver ativa:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {photos.map((photo) => {
+                    const url = photo.kind === "existing" ? photo.url : photo.previewUrl;
+                    return (
+                      <button
+                        key={photo.key}
+                        type="button"
+                        onClick={() => setBannerPhotoKey(photo.key)}
+                        className={`relative size-16 shrink-0 overflow-hidden rounded-lg border ${
+                          bannerPhotoKey === photo.key ? "ring-2 ring-primary" : ""
+                        }`}
+                      >
+                        <Image src={url} alt="" fill unoptimized className="object-cover" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {promotionError && <p className="text-sm text-destructive">{promotionError}</p>}
           </div>
 
           <div className="flex flex-col gap-2 border-t pt-4">
