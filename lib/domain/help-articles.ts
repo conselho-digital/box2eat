@@ -20,9 +20,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
   {
     slug: "pagamentos",
     title: "Formas de pagamento",
-    summary: "Pix e cartão, processados com segurança pelo Mercado Pago.",
+    summary: "Pix e cartão, processados com segurança pelo Asaas.",
     body: [
-      "O Box2eat não guarda os dados do seu cartão. Cada pagamento acontece direto na página segura do Mercado Pago.",
+      "O Box2eat não guarda os dados do seu cartão. Cada pagamento acontece direto na página segura do Asaas.",
       "Se o pagamento falhar, você pode tentar novamente pela própria página do pedido, sem precisar refazer o carrinho.",
     ],
   },
@@ -52,7 +52,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     body: [
       "Crie uma conta restaurante em Menu > Criar uma conta Restaurante e cadastre seu cardápio.",
       "Assim que seu restaurante for criado, ele já fica visível para os clientes — sem espera de aprovação.",
-      "Conecte o Mercado Pago para começar a receber pelos pedidos.",
+      "Conecte sua conta Asaas em Recebimentos para começar a receber pelos pedidos.",
     ],
   },
   {
@@ -61,7 +61,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     summary: "Como se cadastrar como entregador.",
     body: [
       "Cadastre-se em Menu > Registrar-se para fazer entregas, enviando seus documentos.",
-      "Depois da aprovação, você já pode ficar online e aceitar entregas disponíveis perto de você.",
+      "Depois da aprovação, conecte sua conta Asaas nas configurações para poder receber pelas entregas — só então dá para ficar online e aceitar entregas disponíveis perto de você.",
     ],
   },
 ];

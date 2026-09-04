@@ -6,14 +6,14 @@ export type AcceptedPaymentMethod = (typeof ACCEPTED_PAYMENT_METHODS)[number];
 
 export const ACCEPTED_METHOD_LABEL: Record<AcceptedPaymentMethod, string> = {
   pix: "Pix",
-  credit_card: "Cartão online (Mercado Pago)",
+  credit_card: "Cartão online (Asaas)",
   cash: "Dinheiro",
   card_on_delivery: "Cartão na entrega",
 };
 
 /** The options offered to a customer at checkout. google_pay/samsung_wallet/
  *  apple_pay/add_card are all, for now, entry points onto the same online
- *  card checkout redirect (Mercado Pago hosted checkout) — there's no
+ *  card checkout redirect (Asaas hosted checkout) — there's no
  *  native wallet SDK or saved-card storage wired up yet, see
  *  PAYMENT_OPTION_ACCEPTED_KEY. */
 export const PAYMENT_OPTIONS = [

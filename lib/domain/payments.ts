@@ -47,20 +47,6 @@ async function invokePaymentFunction<T>(
   return data;
 }
 
-export async function createMercadoPagoCheckout(supabase: Client, orderId: string) {
-  return invokePaymentFunction<{ url: string }>(supabase, "mercadopago-create-preference", {
-    order_id: orderId,
-    origin: window.location.origin,
-  });
-}
-
-export async function createMercadoPagoConnectOnboardingLink(supabase: Client, companyId: string) {
-  return invokePaymentFunction<{ url: string }>(supabase, "mercadopago-connect-onboarding", {
-    company_id: companyId,
-    origin: window.location.origin,
-  });
-}
-
 /** Cliente paga para a conta master da plataforma (sem split na cobrança)
  *  — restaurante e entregador só recebem depois que o pedido virar
  *  "completed" (ou for ajustado por uma disputa), via asaas-payout. */
