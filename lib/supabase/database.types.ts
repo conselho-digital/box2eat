@@ -1899,6 +1899,32 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      resolve_order_report: {
+        Args: {
+          p_delivery_refund_pct?: number
+          p_item_refunds?: Json
+          p_report_id: string
+        }
+        Returns: {
+          created_at: string
+          delivery_refund_pct: number | null
+          id: string
+          message: string
+          order_id: string
+          photo_urls: string[] | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "order_reports"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       request_preferred_delivery_partner: {
         Args: { p_company_id: string; p_partner_user_id: string }
         Returns: undefined
