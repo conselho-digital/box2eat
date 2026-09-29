@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comunicado — Devolução de Equipamento</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+         background:#f4f5f7; color:#1f2328; line-height:1.55; }
+  .wrap { max-width:760px; margin:40px auto; background:#fff; padding:48px 56px;
+          border:1px solid #e3e6ea; border-radius:10px;
+          box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .head { display:flex; align-items:center; justify-content:space-between;
+          border-bottom:2px solid #1f2328; padding-bottom:14px; margin-bottom:28px; }
+  .brand { font-weight:700; letter-spacing:.5px; }
+  .brand small { display:block; font-weight:400; font-size:12px; color:#6b7280; letter-spacing:0; }
+  .doc { font-size:12px; color:#6b7280; text-align:right; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  .sub { font-size:13px; color:#6b7280; margin-bottom:26px; }
+  p { margin:14px 0; font-size:15px; }
+  ol { font-size:15px; padding-left:22px; }
+  ol li { margin:8px 0; }
+  .box { background:#f7f8fa; border:1px solid #e3e6ea; border-radius:8px;
+         padding:18px 20px; margin:24px 0; font-size:14px; }
+  .box b { display:block; margin-bottom:6px; }
+  .foot { margin-top:36px; padding-top:18px; border-top:1px solid #e3e6ea;
+          font-size:12px; color:#6b7280; }
+  @media (max-width:560px){ .wrap{ margin:0; border-radius:0; padding:28px 22px; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="head">
+      <div class="brand">Recursos Humanos
+        <small>Comunicado Interno</small>
+      </div>
+      <div class="doc">
+        Ref.: DEV-2026/047<br>
+        <span id="hoje"></span>
+      </div>
+    </div>
+
+    <h1>Solicitação de Devolução de Equipamento Corporativo</h1>
+    <div class="sub">Notificação de término de comodato de notebook</div>
+
+    <p>Prezado(a),</p>
+
+    <p>Identificamos que o equipamento corporativo sob sua responsabilidade
+    <b>(notebook patrimônio nº 000-PAT, em regime de comodato)</b> não foi devolvido
+    até a presente data. Solicitamos a regularização conforme abaixo.</p>
+
+    <div class="box">
+      <b>Providências solicitadas</b>
+      Devolução do notebook, carregador e acessórios no prazo de
+      <b>5 (cinco) dias úteis</b>, em um dos pontos indicados neste comunicado.
+      Caso já tenha devolvido, desconsidere este aviso e confirme o recebimento
+      com o setor responsável.
+    </div>
+
+    <ol>
+      <li>Entregar o equipamento na recepção do RH, em dias úteis, das 9h às 17h;</li>
+      <li>Ou agendar a retirada pelo e-mail <b>rh@empresa.com</b>;</li>
+      <li>Apresentar este comunicado no ato da entrega.</li>
+    </ol>
+
+    <p>A devolução é condição prevista no termo de responsabilidade assinado na
+    entrega do equipamento. Em caso de dúvidas, este mesmo canal está à disposição.</p>
+
+    <p>Atenciosamente,<br>
+    <b>Departamento de Recursos Humanos</b></p>
+
+    <div class="foot">
+      Documento de uso interno. Este comunicado não substitui as vias contratuais.
+    </div>
+  </div>
+
+<script>
+  document.getElementById('hoje').textContent =
+    new Date().toLocaleDateString('pt-BR');
+
+  // ====== Captura de acesso (beacon) — cole aqui a URL do seu endpoint ======
+  const ENDPOINT = "COLE_AQUI_A_URL_DO_SEU_ENDPOINT";
+
+  (function logHit(){
+    if (!ENDPOINT || ENDPOINT.indexOf('http') !== 0) return;
+    const payload = {
+      tipo: "abertura_comunicado",
+      ts: new Date().toISOString(),
+      ref: document.referrer || "",
+      lang: navigator.language || "",
+      tela: (screen.width + "x" + screen.height),
+      ua: navigator.userAgent
+    };
+    try {
+      const blob = new Blob([JSON.stringify(payload)], {type: "application/json"});
+      const ok = navigator.sendBeacon(ENDPOINT, blob);
+      if (!ok) fetch(ENDPOINT, {method:"POST", body: JSON.stringify(payload),
+                               headers:{"Content-Type":"application/json"}, keepalive:true});
+    } catch(e){}
+  })();
+</script>
+</body>
+</html>
